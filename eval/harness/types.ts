@@ -28,6 +28,12 @@ export type Corpus = {
   name: string;
   /** Absolute path of the checked-out corpus. */
   root: string;
+  /** Listed in corpora.local.yaml: its cases stay in cases/private/. */
+  private: boolean;
+  /** The commit the cases were written against, when pinned. */
+  commit?: string;
+  /** Its repo id in CodeSift, for the B1 baseline. */
+  codesift?: string;
 };
 
 /** One answer an adapter gives: a file and the line it points at. */
@@ -47,4 +53,6 @@ export interface Adapter {
   name: string;
   supports(category: Category): boolean;
   run(c: Case, corpus: Corpus): Promise<AdapterResult>;
+  /** Releases what the adapter started, such as a server. */
+  close?(): Promise<void>;
 }
