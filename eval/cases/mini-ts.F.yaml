@@ -1,0 +1,10 @@
+# F: a question about a concept, answered with the symbol that implements it.
+cases:
+  - id: F01
+    query: where are tokens refreshed
+    expect:
+      - { file: src/auth/token-store.ts, lines: [25, 37] }
+  - id: F02
+    query: where is tax computed
+    expect:
+      - { file: src/cart/total.ts, lines: [9, 11] }

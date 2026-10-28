@@ -1,0 +1,14 @@
+# E: a text or error string, answered with the symbol that contains it.
+cases:
+  - id: E01
+    query: Session expired
+    expect:
+      - { file: src/auth/token-store.ts, lines: [25, 37] }
+  - id: E02
+    query: Cart is empty
+    expect:
+      - { file: src/cart/checkout.ts, lines: [6, 13] }
+  - id: E03
+    query: Token refresh rejected
+    expect:
+      - { file: src/api/client.ts, lines: [15, 19] }

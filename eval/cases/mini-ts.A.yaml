@@ -1,0 +1,23 @@
+# A: the definition of a symbol, by its exact name. Expected: the
+# declaration's line range.
+cases:
+  - id: A01
+    query: calculateTotal
+    expect:
+      - { file: src/cart/total.ts, lines: [4, 6] }
+  - id: A02
+    query: TokenStore
+    expect:
+      - { file: src/auth/token-store.ts, lines: [2, 23] }
+  - id: A03
+    query: refreshAccessToken
+    expect:
+      - { file: src/auth/token-store.ts, lines: [25, 37] }
+  - id: A04
+    query: toKebabCase
+    expect:
+      - { file: src/utils/strings.ts, lines: [2, 8] }
+  - id: A05
+    query: checkout
+    expect:
+      - { file: src/cart/checkout.ts, lines: [6, 13] }
