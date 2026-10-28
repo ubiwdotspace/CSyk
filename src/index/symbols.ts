@@ -14,7 +14,8 @@ export type SymbolKind =
   | 'hook'
   | 'widget'
   | 'route'
-  | 'provider';
+  | 'provider'
+  | 'field';
 
 export const symbolKinds: readonly SymbolKind[] = [
   'function',
@@ -29,6 +30,7 @@ export const symbolKinds: readonly SymbolKind[] = [
   'widget',
   'route',
   'provider',
+  'field',
 ];
 
 /** A declaration found in the index. Lines are 1-based and inclusive. */

@@ -50,9 +50,15 @@ export function extractDart(root: Node, sink: SymbolSink): void {
         declareMembers(node.childForFieldName('body') ?? node.namedChildren.find((c) => c?.type.endsWith('body')) ?? null, owner);
         return;
       }
-      case 'enum_declaration':
-        if (name) sink.add(name, 'enum', node, exported(name.text));
+      case 'enum_declaration': {
+        if (!name) return;
+        const owner = sink.add(name, 'enum', node, exported(name.text));
+        for (const value of node.childForFieldName('body')?.namedChildren ?? []) {
+          const valueName = value?.type === 'enum_constant' ? value.childForFieldName('name') : null;
+          if (value && valueName) sink.add(valueName, 'field', value, exported(name.text), owner);
+        }
         return;
+      }
       case 'type_alias': {
         const alias = name ?? node.namedChildren.find((c) => c?.type === 'type_identifier');
         if (alias) sink.add(alias, 'type', node, exported(alias.text));

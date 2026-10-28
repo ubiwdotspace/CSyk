@@ -122,9 +122,15 @@ export class LspService {
     const own = (p: Position) => p.file === symbol.file && p.line === symbol.line - 1;
     const candidates = (await codeMentions(this.root, symbol.name, this.spec.extensions)).filter((p) => !own(p));
     const resolved = await pool(candidates, concurrency, async (p) => ({ p, span: (await this.definition(p))[0] }));
-    return resolved
-      .filter(({ span }) => span?.file === symbol.file && span.nameLine === symbol.line - 1)
-      .map(({ p }) => p);
+    const lines = (await readFile(join(this.root, symbol.file), 'utf8')).split('\n');
+    const declared = {
+      file: symbol.file,
+      name: symbol.name,
+      nameLine: symbol.line - 1,
+      startLine: symbol.range[0] - 1,
+      endLine: symbol.range[1] - 1,
+    };
+    return resolved.filter(({ span }) => span && resolvesTo(span, declared, lines)).map(({ p }) => p);
   }
 
   async stop(): Promise<void> {
@@ -185,3 +191,21 @@ async function pool<T, R>(items: T[], limit: number, task: (item: T) => Promise<
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   return results;
 }
+
+/**
+ * Whether a definition [span] is the [declared] symbol, whose file reads as
+ * [lines]: its own name, or one of its constructors, which a Dart
+ * instantiation resolves to and which carry the class's name inside its
+ * body.
+ */
+export function resolvesTo(
+  span: Span,
+  declared: { file: string; name: string; nameLine: number; startLine: number; endLine: number },
+  lines: readonly string[],
+): boolean {
+  if (span.file !== declared.file) return false;
+  if (span.nameLine === declared.nameLine) return true;
+  const inside = span.nameLine > declared.startLine && span.nameLine <= declared.endLine;
+  return inside && (lines[span.nameLine] ?? '').startsWith(declared.name, span.nameColumn);
+}
+

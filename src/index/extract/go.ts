@@ -4,8 +4,8 @@ import type { CodeSymbol, SymbolKind } from '../symbols.ts';
 
 /**
  * Go declarations: functions, methods (under their receiver type when it
- * is declared in the same file), types, constants and package variables.
- * A capitalised name is exported.
+ * is declared in the same file), types with their interface methods,
+ * constants and package variables. A capitalised name is exported.
  */
 export function extractGo(root: Node, sink: SymbolSink): void {
   const exported = (name: string) => /^[A-Z]/.test(name);
@@ -28,9 +28,16 @@ export function extractGo(root: Node, sink: SymbolSink): void {
         for (const spec of node.namedChildren) {
           const name = spec?.childForFieldName('name');
           if (!spec || !name || (spec.type !== 'type_spec' && spec.type !== 'type_alias')) continue;
-          const shape = spec.childForFieldName('type')?.type;
-          const kind: SymbolKind = shape === 'struct_type' ? 'class' : shape === 'interface_type' ? 'interface' : 'type';
-          types.set(name.text, sink.add(name, kind, spec, exported(name.text)));
+          const shape = spec.childForFieldName('type');
+          const kind: SymbolKind =
+            shape?.type === 'struct_type' ? 'class' : shape?.type === 'interface_type' ? 'interface' : 'type';
+          const owner = sink.add(name, kind, spec, exported(name.text));
+          types.set(name.text, owner);
+          if (shape?.type !== 'interface_type') continue;
+          for (const element of shape.namedChildren) {
+            const method = element?.type === 'method_elem' ? element.childForFieldName('name') : null;
+            if (element && method) sink.add(method, 'method', element, exported(method.text), owner);
+          }
         }
         break;
       case 'const_declaration':

@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
 import { isCodeAt, isImportAt, parseFile } from '../../src/index/parse.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
-import { servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
+import { resolvesTo, servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
 
 const run = promisify(execFile);
 
@@ -24,6 +24,7 @@ export const caseKinds: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Constant,
   SymbolKind.Method,
   SymbolKind.TypeParameter,
+  SymbolKind.EnumMember,
 ]);
 
 // Kinds whose children are members rather than locals.
@@ -128,7 +129,8 @@ export class LspOracle {
     const found = new Map<string, Span>();
     for (const mention of await this.codeMentions(name)) {
       const span = await this.resolve(mention);
-      if (span && (await this.isSymbol(name, span))) found.set(`${span.file}:${span.nameLine}`, span);
+      const declared = span && (await this.declared(name, span));
+      if (declared) found.set(`${declared.file}:${declared.nameLine}`, declared);
     }
     return [...found.values()];
   }
@@ -138,12 +140,14 @@ export class LspOracle {
    * declared name itself: imports, re-exports and uses, as lines.
    */
   async references(name: string, declaration: Span): Promise<Position[]> {
+    const lines = (await this.text(declaration.file)).split('\n');
+    const declared = { ...declaration, name };
     const refs: Position[] = [];
     for (const mention of await this.mentions(name)) {
       const own = mention.file === declaration.file && mention.line === declaration.nameLine;
       if (own) continue;
       const span = await this.resolve(mention);
-      if (span?.file === declaration.file && span.nameLine === declaration.nameLine) refs.push(mention);
+      if (span && resolvesTo(span, declared, lines)) refs.push(mention);
     }
     return refs;
   }
@@ -187,12 +191,17 @@ export class LspOracle {
     await this.lsp.stop();
   }
 
-  // Whether [span] declares a symbol of its file's outline called [name],
-  // not a name it only imports.
-  private async isSymbol(name: string, span: Span): Promise<boolean> {
+  // The declaration [span] points at, spanning all of it as the outline
+  // does (pyright and gopls give only the name), when it is a symbol of its
+  // file's outline called [name] and not a name the file only imports.
+  private async declared(name: string, span: Span): Promise<Span | undefined> {
     const symbols = await this.symbols(span.file);
     const symbol = symbols.find((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
-    return symbol !== undefined && !(await this.isImport(span.file, symbol.selectionRange.start));
+    // Only the kinds a case is about: a Dart constructor shares its class's
+    // name but is no second answer to it.
+    if (!symbol || !caseKinds.has(symbol.kind)) return undefined;
+    if (await this.isImport(span.file, symbol.selectionRange.start)) return undefined;
+    return { ...span, startLine: symbol.range.start.line, endLine: symbol.range.end.line };
   }
 
   // Mentions of [name] outside strings and comments.

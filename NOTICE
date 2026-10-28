@@ -14,3 +14,11 @@ Evaluation data
 - eval/cases/excalidraw.*.yaml quote identifiers, file paths and messages from
   Excalidraw (https://github.com/excalidraw/excalidraw), Copyright (c) 2020
   Excalidraw, MIT License. The corpus itself is fetched, not redistributed.
+- eval/cases/dispatch.*.yaml quote the same from Dispatch
+  (https://github.com/Netflix/dispatch), Copyright Netflix, Inc., Apache License 2.0.
+- eval/cases/pocketbase.*.yaml quote the same from PocketBase
+  (https://github.com/pocketbase/pocketbase), Copyright (c) 2022 - present,
+  Gani Georgiev, MIT License.
+- eval/cases/wonderous.*.yaml quote the same from Wonderous
+  (https://github.com/gskinnerTeam/flutter-wonderous-app), Copyright (c) 2022
+  gskinner.com, MIT License.

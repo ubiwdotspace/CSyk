@@ -12,11 +12,12 @@ describe('extractSymbols for TypeScript', () => {
       '  return subtotal;',
       '}',
       'export class TokenStore { save() {} private clear() {} }',
-      'export interface Item { id: string }',
+      'export interface Item { id: string; load(): void }',
       'type Id = string;',
-      'export enum Mode { A }',
+      "export enum Mode { A, B = 'b' }",
       'export const MAX_ITEMS = 10;',
       'const helper = () => 1;',
+      'const [base, { file: coverageFile, min = 90 }, ...rest] = args;',
     ].join('\n');
     expect(await names('src/a.ts', text)).toEqual([
       'function calculateTotal',
@@ -24,10 +25,18 @@ describe('extractSymbols for TypeScript', () => {
       'method save',
       'method clear',
       'interface Item',
+      'field id',
+      'method load',
       'type Id (local)',
       'enum Mode',
+      'field A',
+      'field B',
       'const MAX_ITEMS',
       'function helper (local)',
+      'const base (local)',
+      'const coverageFile (local)',
+      'const min (local)',
+      'const rest (local)',
     ]);
   });
 
@@ -77,6 +86,8 @@ describe('extractSymbols for Python', () => {
       '    local = 1',
       '    return q',
       'class Item(BaseModel):',
+      '    name: str',
+      '    price: float = 0',
       '    @property',
       '    def total(self):',
       '        return 1',
@@ -87,6 +98,8 @@ describe('extractSymbols for Python', () => {
     expect(await kinds('app/api.py', text)).toEqual([
       'route read_items',
       'class Item',
+      'field Item.name',
+      'field Item.price',
       'method Item.total',
       'method Item._check (private)',
       'const MAX_ITEMS',
@@ -111,6 +124,7 @@ describe('extractSymbols for Go', () => {
       'function New',
       'class Store',
       'interface Saver',
+      'method Saver.Save',
       'type ID',
       'const Max',
       'const min (private)',
@@ -146,6 +160,8 @@ describe('extractSymbols for Dart', () => {
       'function add',
       'const maxItems',
       'enum Mode',
+      'field Mode.a',
+      'field Mode.b',
       'type Callback',
     ]);
   });
