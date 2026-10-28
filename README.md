@@ -6,12 +6,32 @@ CSyk aims to let an agent find the right code on the first call and read only th
 for TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go and Dart (Flutter).
 Accuracy and token savings are measured by an evaluation suite, not claimed.
 
-**Status:** early. The plan is in [docs/PLAN.md](docs/PLAN.md); the evaluation harness comes
-first (P0), then the tools.
+**Status:** P1 of [the plan](docs/PLAN.md): TypeScript and JavaScript, five tools, scored in
+[docs/BASELINES.md](docs/BASELINES.md).
 
 - Runs locally; code never leaves the machine.
 - No telemetry.
 - macOS and Linux first; Windows later.
+
+## Using it
+
+Needs Node 22.12 or later. CSyk runs the TypeScript sources directly; there is no build step yet.
+
+```sh
+npm install
+claude mcp add csyk -- node /path/to/CSyk/src/server/main.ts   # serves the folder Claude runs in
+```
+
+`node src/server/main.ts <workspace>` serves another folder. The symbol index is built in memory
+when the server starts; the TypeScript compiler (`tsc --lsp`) starts on the first `refs` or `def`.
+
+| Tool | Answers |
+|---|---|
+| `find` | symbols whose name matches, best first: id, kind, line, signature |
+| `outline` | a file's symbols with line ranges, or each file's symbols under a folder |
+| `read` | one symbol's exact source, or its signature |
+| `refs` | every reference the compiler resolves to the symbol, grouped by file |
+| `def` | where a name, or the name at a file position, is declared |
 
 ## Evaluation
 
