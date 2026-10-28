@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import { categories, type Case, type Category, type Location } from './types.js';
+import { categories, type Case, type Category, type Location } from './types.ts';
 
 /** The cases of one `<corpus>.<category>.yaml` file. */
 export type CaseFile = { corpus: string; category: Category; cases: Case[] };

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
-import type { Adapter, Case, Hit } from '../harness/types.js';
+import type { Adapter, Case, Hit } from '../harness/types.ts';
 
 const run = promisify(execFile);
 

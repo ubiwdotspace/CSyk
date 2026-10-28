@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { parse } from 'yaml';
-import type { Corpus } from './types.js';
+import type { Corpus } from './types.ts';
 
 /**
  * The corpora by name: `corpora.yaml` (committed, public) overlaid by

@@ -3,13 +3,13 @@ import { dirname, join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { b0Ripgrep } from './adapters/b0-ripgrep.js';
-import { loadCaseFiles } from './harness/cases.js';
-import { loadCorpora } from './harness/corpora.js';
-import { scoreCase, summarize, type CaseScore } from './harness/metrics.js';
-import { renderTable } from './harness/report.js';
-import { countTokens } from './harness/tokens.js';
-import type { Adapter } from './harness/types.js';
+import { b0Ripgrep } from './adapters/b0-ripgrep.ts';
+import { loadCaseFiles } from './harness/cases.ts';
+import { loadCorpora } from './harness/corpora.ts';
+import { scoreCase, summarize, type CaseScore } from './harness/metrics.ts';
+import { renderTable } from './harness/report.ts';
+import { countTokens } from './harness/tokens.ts';
+import type { Adapter } from './harness/types.ts';
 
 const adapters: Record<string, Adapter> = { b0: b0Ripgrep };
 

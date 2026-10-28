@@ -15,6 +15,8 @@ first (P0), then the tools.
 
 ## Evaluation
 
+Needs Node 22.12 or later (`.nvmrc` pins 22).
+
 ```sh
 npm install
 npm test                  # harness unit tests

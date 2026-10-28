@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matches, percentile, scoreRanked, scoreSet, summarize } from './metrics.js';
+import { matches, percentile, scoreRanked, scoreSet, summarize } from './metrics.ts';
 
 const total = { file: 'src/total.ts', lines: [4, 6] as [number, number] };
 
