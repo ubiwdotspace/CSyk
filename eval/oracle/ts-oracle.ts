@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
+import { isCodeAt, parseTs } from '../../src/index/ts-parser.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
 
 const run = promisify(execFile);
@@ -108,14 +109,42 @@ export class TsOracle {
     return positions;
   }
 
-  /** The distinct repo declarations that mentions of [name] resolve to. */
+  /**
+   * The distinct declarations of [name] that a search for it means: those
+   * that mentions in code resolve to and that are top-level symbols or
+   * members, not function locals. Mentions inside strings and comments are
+   * skipped; an import path resolves to its module, which is no declaration.
+   */
   async declarations(name: string): Promise<Span[]> {
     const found = new Map<string, Span>();
-    for (const mention of await this.mentions(name)) {
+    for (const mention of await this.codeMentions(name)) {
       const span = await this.resolve(mention);
-      if (span) found.set(`${span.file}:${span.nameLine}`, span);
+      if (span && (await this.isSymbol(name, span))) found.set(`${span.file}:${span.nameLine}`, span);
     }
     return [...found.values()];
+  }
+
+  // Whether [span] declares a symbol of its file's outline called [name].
+  private async isSymbol(name: string, span: Span): Promise<boolean> {
+    const symbols = await this.symbols(span.file);
+    return symbols.some((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
+  }
+
+  // Mentions of [name] outside strings and comments.
+  private async codeMentions(name: string): Promise<Position[]> {
+    const mentions = await this.mentions(name);
+    const code: Position[] = [];
+    for (const file of new Set(mentions.map((m) => m.file))) {
+      const tree = await parseTs(file, await this.text(file));
+      try {
+        for (const m of mentions) {
+          if (m.file === file && (!tree || isCodeAt(tree, m.line, m.character))) code.push(m);
+        }
+      } finally {
+        tree?.delete();
+      }
+    }
+    return code;
   }
 
   /**
