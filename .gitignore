@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Evaluation: results and checked-out corpora are generated; private cases
+# and local corpus paths (employer code) never leave the machine.
+eval/results/
+eval/corpora/
+eval/cases/private/
+eval/corpora.local.yaml
