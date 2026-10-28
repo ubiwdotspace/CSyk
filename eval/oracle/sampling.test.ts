@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fuzzyQuery, seeded, shuffle, splitWords } from './sampling.ts';
+import { answers, fuzzyQuery, seeded, shuffle, splitWords } from './sampling.ts';
 
 describe('splitWords', () => {
   it('splits camel, Pascal, acronyms, snake and kebab case', () => {
@@ -35,3 +35,14 @@ describe('seeded shuffle', () => {
     expect([...shuffle(items, seeded(3))].sort((a, b) => a - b)).toEqual(items);
   });
 });
+
+describe('answers', () => {
+  it('matches squashed names and word prefixes in order', () => {
+    expect(answers('token store', 'TokenStore')).toBe(true);
+    expect(answers('calcTotal', 'calculateTotal')).toBe(true);
+    expect(answers('ToObject', 'arrayToObject')).toBe(true);
+    expect(answers('total calc', 'calculateTotal')).toBe(false);
+    expect(answers('calcTotal', 'calculateTax')).toBe(false);
+  });
+});
+

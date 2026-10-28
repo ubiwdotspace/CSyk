@@ -124,10 +124,31 @@ export class TsOracle {
     return [...found.values()];
   }
 
-  // Whether [span] declares a symbol of its file's outline called [name].
+  // Whether [span] declares a symbol of its file's outline called [name],
+  // not a name it only imports.
   private async isSymbol(name: string, span: Span): Promise<boolean> {
     const symbols = await this.symbols(span.file);
-    return symbols.some((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
+    const symbol = symbols.find((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
+    return symbol !== undefined && !(await this.isImport(span.file, symbol.selectionRange.start));
+  }
+
+  /** Whether the name at [at] in [file] is bound by an import. */
+  async isImport(file: string, at: { line: number; character: number }): Promise<boolean> {
+    const tree = await parseTs(file, await this.text(file));
+    try {
+      let node = tree?.rootNode.descendantForPosition({ row: at.line, column: at.character }) ?? null;
+      for (; node; node = node.parent) if (node.type === 'import_statement') return true;
+      return false;
+    } finally {
+      tree?.delete();
+    }
+  }
+
+  /** Every symbol name in the outlines of [files]. */
+  async names(files: readonly string[]): Promise<Set<string>> {
+    const names = new Set<string>();
+    for (const file of files) for (const symbol of await this.symbols(file)) names.add(symbol.name);
+    return names;
   }
 
   // Mentions of [name] outside strings and comments.

@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { symbolKinds } from '../index/symbols.ts';
-import { def, find, outline, read, refs, type ToolResult } from '../tools/tools.ts';
+import { def, find, grep, outline, read, refs, type ToolResult } from '../tools/tools.ts';
 import { Workspace } from '../workspace/workspace.ts';
 
 /**
@@ -77,6 +77,27 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
       },
     },
     (args) => answer((ws) => refs(ws, args.target, args.limit))(),
+  );
+
+  server.registerTool(
+    'grep',
+    {
+      description: 'Search text or a regex; each hit names the symbol that contains it.',
+      inputSchema: {
+        pattern: z.string(),
+        regex: z.boolean().optional(),
+        path: z.string().optional().describe('Only under this path'),
+        limit: z.number().int().min(1).max(200).optional(),
+      },
+    },
+    (args) =>
+      answer((ws) =>
+        grep(ws, args.pattern, {
+          ...(args.regex ? { regex: true } : {}),
+          ...(args.path ? { path: args.path } : {}),
+          ...(args.limit ? { limit: args.limit } : {}),
+        }),
+      )(),
   );
 
   server.registerTool(
