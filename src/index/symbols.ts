@@ -1,3 +1,6 @@
+/** The languages CSyk reads. */
+export type Lang = 'ts' | 'js' | 'py' | 'go' | 'dart';
+
 /** What a symbol is, framework roles included so they rank and filter. */
 export type SymbolKind =
   | 'function'
@@ -8,7 +11,10 @@ export type SymbolKind =
   | 'enum'
   | 'const'
   | 'component'
-  | 'hook';
+  | 'hook'
+  | 'widget'
+  | 'route'
+  | 'provider';
 
 export const symbolKinds: readonly SymbolKind[] = [
   'function',
@@ -20,6 +26,9 @@ export const symbolKinds: readonly SymbolKind[] = [
   'const',
   'component',
   'hook',
+  'widget',
+  'route',
+  'provider',
 ];
 
 /** A declaration found in the index. Lines are 1-based and inclusive. */
@@ -28,19 +37,21 @@ export type CodeSymbol = {
   id: string;
   name: string;
   kind: SymbolKind;
+  lang: Lang;
   file: string;
   /** The line of the declared name. */
   line: number;
   range: [number, number];
   /** The declaration's first line, trimmed and cut to 120 characters. */
   signature: string;
-  /** The containing class, for a method. */
+  /** The containing type, for a method. */
   parent?: string;
   exported: boolean;
   isTest: boolean;
 };
 
-const testFile = /(^|\/)(__tests__|__mocks__|e2e)\/|\.(test|spec)\.[cm]?[jt]sx?$/;
+const testFile =
+  /(^|\/)(__tests__|__mocks__|e2e|tests?)\/|\.(test|spec)\.[cm]?[jt]sx?$|(^|\/)test_[^/]*\.py$|_test\.(py|go|dart)$|(^|\/)conftest\.py$/;
 
 /** Whether [file] holds tests rather than the code under test. */
 export function isTestFile(file: string): boolean {

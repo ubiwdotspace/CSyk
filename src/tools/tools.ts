@@ -1,11 +1,12 @@
 // size-ok: the six tools share their formatting, ranking and budget code.
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
 import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
+import { codeMentions, serverFor } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
@@ -117,14 +118,21 @@ export async function refs(
 ): Promise<ToolResult> {
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
-  const found = await (await ws.ts()).references(symbol);
+  const service = await ws.precision(symbol.file);
+  // Without a language server, the mentions in code are the best there is.
+  const found = service
+    ? await service.references(symbol)
+    : (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]))).filter(
+        (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
+      );
+  const precision = service ? 'lsp' : 'text (no language server)';
   const limit = options.limit ?? 50;
   const byFile = new Map<string, number[]>();
   for (const p of found.slice(0, limit)) {
     byFile.set(p.file, [...new Set([...(byFile.get(p.file) ?? []), p.line + 1])].sort((a, b) => a - b));
   }
   const files = [...byFile].sort(([a], [b]) => a.localeCompare(b));
-  const header = `${symbol.id} · ${plural(found.length, 'ref')} in ${plural(new Set(found.map((p) => p.file)).size, 'file')} · lsp${note ? ` · ${note}` : ''}`;
+  const header = `${symbol.id} · ${plural(found.length, 'ref')} in ${plural(new Set(found.map((p) => p.file)).size, 'file')} · ${precision}${note ? ` · ${note}` : ''}`;
   const where = (file: string, line: number) => {
     const home = ws.index.containing(file, line);
     return home && home.id !== symbol.id ? `${line}·${home.name}` : `${line}`;
@@ -165,7 +173,9 @@ export async function def(
       locations: named.map((s) => ({ file: s.file, line: s.line })),
     };
   }
-  const spans = await (await ws.ts()).definition({ file: target.file, line: target.line - 1, character: target.column - 1 });
+  const service = await ws.precision(target.file);
+  if (!service) return { text: 'no language server for this file', locations: [] };
+  const spans = await service.definition({ file: target.file, line: target.line - 1, character: target.column - 1 });
   if (spans.length === 0) return { text: 'no declaration in the workspace · lsp', locations: [] };
   const locations = spans.map((s) => ({ file: s.file, line: s.nameLine + 1 }));
   const lines = locations.map((l) => {

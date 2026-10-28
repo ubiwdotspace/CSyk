@@ -5,6 +5,11 @@ This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
 Third-party components and their licences are listed here as they are added.
 
+Bundled
+- grammars/tree-sitter-dart.wasm is built from tree-sitter-dart
+  (https://github.com/UserNobody14/tree-sitter-dart), Copyright (c) 2020-2022
+  UserNobody14 and others, MIT License.
+
 Evaluation data
 - eval/cases/excalidraw.*.yaml quote identifiers, file paths and messages from
   Excalidraw (https://github.com/excalidraw/excalidraw), Copyright (c) 2020
