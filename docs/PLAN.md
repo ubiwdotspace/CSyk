@@ -3,7 +3,8 @@
 A code-search MCP server for AI agents: compiler-grade precision, minimal tokens.
 Languages: TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go, Dart (Flutter).
 
-Status: plan only, no code yet.
+Status: P0 (evaluation harness) and P1 (TS/JS index, compiler references, MCP server) are done;
+scores are in [BASELINES.md](BASELINES.md). P2 is next.
 
 ---
 
@@ -281,11 +282,11 @@ hint: read <id> for the body · refs <id> for usages
 | Phase | Scope | Exit criteria | Est. |
 |---|---|---|---|
 | P0 | Repo skeleton, eval harness, case format, TS corpus cases, baselines B0 / B1 | harness runs; baseline numbers recorded | 1 wk |
-| P1 | tree-sitter index (TS/JS) + SQLite; TS LanguageService; `find` `outline` `read` `refs` `def`; MCP stdio | TS: A ≥ 99%, C ≥ 98% | 1–2 wk |
+| P1 | tree-sitter index (TS/JS), in memory; TS precision via `tsc --lsp`; `find` `outline` `read` `refs` `def`; MCP stdio | TS: A ≥ 99%, C ≥ 98% | 1–2 wk |
 | P2 | BM25F + fuzzy + boosts + cutoff; `grep` with containing symbol; zero-hit | TS: B ≥ 95%, E ≥ 95% | 1 wk |
 | P3 | Token layer: tiers, tables / TOON, ledger, hints, `batch` | ≥ 60% fewer tokens than B0 at equal pass rate | 1 wk |
 | P4 | LSP manager (pyright, gopls, dart); Python / Go / Dart grammars; framework labels | per language: A ≥ 97%, C ≥ 95% | 2 wk |
-| P5 | `calls`, `impact`, watcher + incremental, perf | D ≥ 97%, G ≥ 90%; warm `find` p95 < 150 ms | 1–2 wk |
+| P5 | `calls`, `impact`, watcher + incremental, SQLite persistence, perf | D ≥ 97%, G ≥ 90%; warm `find` p95 < 150 ms | 1–2 wk |
 | P6 | Hooks, install script, Claude Code config snippet, agent benchmark | agent-level goal met on 2+ corpora | 1 wk |
 | P7 (opt) | Static embeddings + RRF + `semantic` | F R@5 ≥ 90% | 1 wk |
 
