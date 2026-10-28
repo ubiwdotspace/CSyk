@@ -8,6 +8,7 @@ export class SymbolSink {
   readonly lang: Lang;
   private readonly test: boolean;
   private readonly ids = new Set<string>();
+  private lines: string[] | undefined;
 
   constructor(file: string, lang: Lang) {
     this.file = file;
@@ -33,7 +34,7 @@ export class SymbolSink {
       file: this.file,
       line: name.startPosition.row + 1,
       range: [first.startPosition.row + 1, last.endPosition.row + 1],
-      signature: signatureOf(first),
+      signature: this.signatureOf(name, first),
       ...(parent ? { parent: parent.id } : {}),
       exported,
       isTest: this.test,
@@ -41,9 +42,17 @@ export class SymbolSink {
     this.symbols.push(symbol);
     return symbol;
   }
-}
 
-function signatureOf(node: Node): string {
-  const first = node.text.split('\n', 1)[0]?.trim() ?? '';
-  return first.length > 120 ? `${first.slice(0, 119)}…` : first;
+  // The declaration's first line, trimmed and cut; when decorators come
+  // first, the line that names it instead.
+  private signatureOf(name: Node, first: Node): string {
+    let line = first.text.split('\n', 1)[0] ?? '';
+    if (first.startPosition.row !== name.startPosition.row) {
+      const root = name.tree.rootNode;
+      this.lines ??= root.text.split('\n');
+      line = this.lines[name.startPosition.row - root.startPosition.row] ?? '';
+    }
+    line = line.trim();
+    return line.length > 120 ? `${line.slice(0, 119)}…` : line;
+  }
 }

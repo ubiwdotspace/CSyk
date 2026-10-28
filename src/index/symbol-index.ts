@@ -1,10 +1,18 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { listFiles } from '../workspace/files.ts';
 import type { CodeSymbol, SymbolKind } from './symbols.ts';
 import { extractSymbols, sourceExtensions } from './parse.ts';
 
 export type SearchOptions = { kind?: SymbolKind; path?: string; limit?: number };
+
+// What the index knows of a file's content, to tell whether it changed.
+type FileState = { mtimeMs: number; size: number; hash: string };
+
+/** The index of a workspace as saved on disk, to start without re-parsing. */
+type Snapshot = { version: string; files: Record<string, FileState & { symbols: CodeSymbol[] }> };
 
 // How much a kind of symbol is usually what a search is after.
 const kindWeight: Record<SymbolKind, number> = {
@@ -45,35 +53,73 @@ export class SymbolIndex {
   readonly root: string;
   private readonly byFile = new Map<string, CodeSymbol[]>();
   private readonly byName = new Map<string, CodeSymbol[]>();
+  private readonly states = new Map<string, FileState>();
+  /** Files taken from a snapshot as they were, when the index was built from one. */
+  reused = 0;
 
   private constructor(root: string) {
     this.root = root;
   }
 
-  static async build(root: string): Promise<SymbolIndex> {
+  /**
+   * Indexes every source file of [root]. With a [snapshot] path, files whose
+   * size and modification time match the saved index are taken from it, and
+   * the result is saved back there.
+   */
+  static async build(root: string, options: { snapshot?: string } = {}): Promise<SymbolIndex> {
     const index = new SymbolIndex(root);
     const files = await listFiles(root, sourceExtensions);
-    // Parsing is quick; reading files a batch at a time keeps it from waiting on disk.
+    const saved = options.snapshot ? await readSnapshot(options.snapshot) : undefined;
+    // Reading files a batch at a time keeps parsing from waiting on disk.
     for (let i = 0; i < files.length; i += 64) {
-      await Promise.all(files.slice(i, i + 64).map((file) => index.update(file)));
+      await Promise.all(
+        files.slice(i, i + 64).map(async (file) => {
+          const entry = saved?.files[file];
+          const info = entry && (await stat(join(root, file)).catch(() => undefined));
+          if (!entry || info?.mtimeMs !== entry.mtimeMs || info.size !== entry.size) return index.update(file);
+          index.put(file, entry.symbols, entry);
+          index.reused++;
+          return true;
+        }),
+      );
     }
+    if (options.snapshot) await index.save(options.snapshot);
     return index;
   }
 
-  /** Re-reads [file]; a file that is gone leaves the index. */
-  async update(file: string): Promise<void> {
-    this.remove(file);
+  /**
+   * Re-reads [file]; a file that is gone leaves the index. Whether its
+   * content changed: an unchanged file is not parsed again.
+   */
+  async update(file: string): Promise<boolean> {
     let text: string;
+    let info: { mtimeMs: number; size: number };
     try {
-      text = await readFile(join(this.root, file), 'utf8');
+      [text, info] = await Promise.all([readFile(join(this.root, file), 'utf8'), stat(join(this.root, file))]);
     } catch {
-      return;
+      const known = this.byFile.has(file);
+      this.remove(file);
+      return known;
     }
-    const symbols = await extractSymbols(file, text);
-    this.byFile.set(file, symbols);
-    for (const symbol of symbols) {
-      this.byName.set(symbol.name, [...(this.byName.get(symbol.name) ?? []), symbol]);
+    const hash = createHash('sha1').update(text).digest('hex');
+    const known = this.states.get(file);
+    if (known?.hash === hash) {
+      this.states.set(file, { mtimeMs: info.mtimeMs, size: info.size, hash });
+      return false;
     }
+    this.put(file, await extractSymbols(file, text), { mtimeMs: info.mtimeMs, size: info.size, hash });
+    return true;
+  }
+
+  /** Saves the index to [path], for the next start. */
+  async save(path: string): Promise<void> {
+    const files: Snapshot['files'] = {};
+    for (const [file, state] of this.states) files[file] = { ...state, symbols: this.byFile.get(file) ?? [] };
+    const snapshot: Snapshot = { version: await indexVersion(), files };
+    await mkdir(dirname(path), { recursive: true });
+    // Written aside and renamed, so a reader never sees half a file.
+    await writeFile(`${path}.tmp`, JSON.stringify(snapshot));
+    await rename(`${path}.tmp`, path);
   }
 
   get files(): string[] {
@@ -159,7 +205,17 @@ export class SymbolIndex {
     return scored.slice(0, 3).map((s) => s.name);
   }
 
+  private put(file: string, symbols: CodeSymbol[], state: FileState): void {
+    this.remove(file);
+    this.byFile.set(file, symbols);
+    this.states.set(file, state);
+    for (const symbol of symbols) {
+      this.byName.set(symbol.name, [...(this.byName.get(symbol.name) ?? []), symbol]);
+    }
+  }
+
   private remove(file: string): void {
+    this.states.delete(file);
     for (const symbol of this.byFile.get(file) ?? []) {
       const rest = (this.byName.get(symbol.name) ?? []).filter((s) => s.file !== file);
       if (rest.length > 0) this.byName.set(symbol.name, rest);
@@ -204,5 +260,31 @@ function editDistance(a: string, b: string, max: number): number {
     previous = current;
   }
   return previous[b.length] ?? max + 1;
+}
+
+// A snapshot saved by this version of the index code, or none.
+async function readSnapshot(path: string): Promise<Snapshot | undefined> {
+  try {
+    const snapshot = JSON.parse(await readFile(path, 'utf8')) as Snapshot;
+    return snapshot.version === (await indexVersion()) ? snapshot : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+let version: Promise<string> | undefined;
+
+// A hash of the code that turns files into symbols: a snapshot made by other
+// code is not reused.
+function indexVersion(): Promise<string> {
+  version ??= (async () => {
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const hash = createHash('sha1');
+    for (const name of (await readdir(dir, { recursive: true })).sort()) {
+      if (/\.[jt]s$/.test(name) && !name.includes('.test.')) hash.update(name).update(await readFile(join(dir, name)));
+    }
+    return hash.digest('hex').slice(0, 16);
+  })();
+  return version;
 }
 

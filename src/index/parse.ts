@@ -145,3 +145,74 @@ export function isImportAt(tree: Tree, line: number, column: number): boolean {
   }
   return false;
 }
+
+// Parents through which a callee's own name is reached: `a.b`, `pkg.F`,
+// Dart's `.b` selector.
+const memberTypes = new Set(['member_expression', 'attribute', 'selector_expression', 'unconditional_assignable_selector']);
+
+/**
+ * Whether the name at the 0-based [line] and [column] of [tree] is called
+ * there: `f()`, `a.f()`, `new F()`, `@f`, `<F />`, Dart's `F()`.
+ */
+export function isCallAt(tree: Tree, line: number, column: number): boolean {
+  let node: Node | null = tree.rootNode.descendantForPosition({ row: line, column });
+  if (!node?.isNamed) return false;
+  // Climb from a property name to the member access it ends.
+  while (node.parent && memberTypes.has(node.parent.type) && node.parent.lastNamedChild?.id === node.id) node = node.parent;
+  const parent = node.parent;
+  if (!parent) return false;
+  switch (parent.type) {
+    case 'call_expression':
+    case 'call':
+      return parent.childForFieldName('function')?.id === node.id;
+    case 'new_expression':
+      // Dart's `new F()` names the type without a field.
+      return parent.childForFieldName('constructor')?.id === node.id || node.type === 'type_identifier';
+    case 'decorator':
+    case 'const_object_expression':
+      return true;
+    case 'jsx_opening_element':
+    case 'jsx_self_closing_element':
+      return parent.childForFieldName('name')?.id === node.id;
+    case 'selector':
+      // Dart: `a.f(…)` is `a`, then the selector `.f`, then one holding the arguments.
+      return isDartArguments(parent.nextNamedSibling);
+    default:
+      return parent.type !== 'selector' && node.type === 'identifier' && isDartArguments(node.nextNamedSibling);
+  }
+}
+
+/**
+ * Whether the name at the 0-based [line] and [column] of [tree] is reached
+ * through a member access (`this.f`, `self.f`, `pkg.F`), as a method handed
+ * over as a callback is.
+ */
+export function isMemberAt(tree: Tree, line: number, column: number): boolean {
+  const node = tree.rootNode.descendantForPosition({ row: line, column });
+  const parent = node?.parent;
+  return !!node && !!parent && memberTypes.has(parent.type) && parent.lastNamedChild?.id === node.id;
+}
+
+// Where a name stands for a type, not a value that can be called.
+const typeContexts = new Set(['type_annotation', 'type_arguments', 'type', 'generic_type', 'type_parameters']);
+
+/**
+ * Whether the name at the 0-based [line] and [column] of [tree] is used as
+ * a value: called, or handed over (`map(f)`, `wrap(F)`), as the servers'
+ * call hierarchies count it. Imports, exports and types are not uses.
+ */
+export function isValueUseAt(tree: Tree, line: number, column: number): boolean {
+  const node = tree.rootNode.descendantForPosition({ row: line, column });
+  if (!node) return false;
+  if (isCallAt(tree, line, column)) return true;
+  if (node.type === 'type_identifier' || node.parent?.type === 'export_statement') return false;
+  for (let n = node.parent; n; n = n.parent) {
+    if (importTypes.has(n.type) || n.type === 'export_specifier' || typeContexts.has(n.type)) return false;
+  }
+  return true;
+}
+
+function isDartArguments(node: Node | null): boolean {
+  return node?.type === 'selector' && node.firstNamedChild?.type === 'argument_part';
+}
+

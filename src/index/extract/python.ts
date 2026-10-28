@@ -12,17 +12,19 @@ const routeDecorator = /^@[\w.]+\.(get|post|put|patch|delete|options|head|trace|
  * is private; everything else is exported.
  */
 export function extractPython(root: Node, sink: SymbolSink): void {
-  const define = (node: Node, decorators: string[], parent?: CodeSymbol) => {
+  // [outer] is the decorated definition, when there is one: its range
+  // starts at the decorators.
+  const define = (node: Node, decorators: string[], parent?: CodeSymbol, outer = node) => {
     const name = node.childForFieldName('name');
     if (!name) return;
     const exported = !name.text.startsWith('_');
     if (node.type === 'function_definition') {
       const route = decorators.some((d) => routeDecorator.test(d));
-      sink.add(name, route ? 'route' : parent ? 'method' : 'function', node, exported, parent);
+      sink.add(name, route ? 'route' : parent ? 'method' : 'function', outer, exported, parent);
       return;
     }
     if (node.type === 'class_definition' && !parent) {
-      const owner = sink.add(name, 'class', node, exported);
+      const owner = sink.add(name, 'class', outer, exported);
       for (const member of node.childForFieldName('body')?.namedChildren ?? []) {
         if (member) visit(member, owner);
       }
@@ -33,7 +35,7 @@ export function extractPython(root: Node, sink: SymbolSink): void {
     if (node.type === 'decorated_definition') {
       const definition = node.childForFieldName('definition');
       const decorators = node.namedChildren.filter((c) => c?.type === 'decorator').map((c) => c?.text ?? '');
-      if (definition) define(definition, decorators, parent);
+      if (definition) define(definition, decorators, parent, node);
       return;
     }
     if (node.type === 'function_definition' || node.type === 'class_definition') {

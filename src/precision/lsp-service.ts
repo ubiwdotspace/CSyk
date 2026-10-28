@@ -6,6 +6,7 @@ import { basename, delimiter, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
+import type { Tree } from 'web-tree-sitter';
 import { inDocLink, isCodeAt, parseFile } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
 import { listFiles } from '../workspace/files.ts';
@@ -77,6 +78,12 @@ export const servers: readonly ServerSpec[] = [
   },
 ];
 
+/** How to install each server CSyk cannot start, for `status`. */
+export const installHints: Record<string, string> = {
+  gopls: 'go install golang.org/x/tools/gopls@latest',
+  dart: 'install the Dart or Flutter SDK',
+};
+
 /** The server for [file]'s language, if CSyk has one. */
 export function serverFor(file: string): ServerSpec | undefined {
   return servers.find((s) => s.extensions.has(extname(file)));
@@ -90,6 +97,9 @@ export class LspService {
   readonly root: string;
   readonly spec: ServerSpec;
   private readonly lsp: LspClient;
+  private readonly definitions = new Map<string, Promise<Span[]>>();
+  private readonly mentions = new Map<string, Promise<Position[]>>();
+  private readonly filters = new Map<ReferenceOptions['where'], number>();
 
   private constructor(root: string, spec: ServerSpec, lsp: LspClient) {
     this.root = root;
@@ -106,9 +116,20 @@ export class LspService {
     return new LspService(root, spec, lsp);
   }
 
-  /** Where the name at [at] is declared, inside the workspace. */
+  /**
+   * Where the name at [at] is declared, inside the workspace. Answers are
+   * kept until a file changes: callers two levels up ask about the same
+   * mentions many times.
+   */
   definition(at: Position): Promise<Span[]> {
-    return this.lsp.definition(at);
+    const key = `${at.file}:${at.line}:${at.character}`;
+    let found = this.definitions.get(key);
+    if (!found) {
+      if (this.definitions.size > 500_000) this.definitions.clear();
+      found = this.lsp.definition(at);
+      this.definitions.set(key, found);
+    }
+    return found;
   }
 
   /**
@@ -116,21 +137,63 @@ export class LspService {
    * (comments and strings left out, documentation links kept) that the
    * server resolves to its declaration. Each file resolves in its own
    * project, so references cross packages. Names written under another
-   * name (`import { a as b }`) are not followed.
+   * name (`import { a as b }`) are not followed. With [viaSupertypes], a
+   * method also gets the uses of the interface or base methods it
+   * implements or overrides, which calls through those types dispatch to.
+   * The [overloads] of a function are the same function: a use of any is
+   * a use of it. Only mentions [where] accepts are resolved.
    */
-  async references(symbol: CodeSymbol): Promise<Position[]> {
-    const own = (p: Position) => p.file === symbol.file && p.line === symbol.line - 1;
-    const candidates = (await codeMentions(this.root, symbol.name, this.spec.extensions)).filter((p) => !own(p));
-    const resolved = await pool(candidates, concurrency, async (p) => ({ p, span: (await this.definition(p))[0] }));
+  async references(symbol: CodeSymbol, options: ReferenceOptions = {}): Promise<Position[]> {
+    const group = [symbol, ...(options.overloads ?? [])];
+    const own = (p: Position) => group.some((s) => p.file === s.file && p.line === s.line - 1);
+    const candidates = (await this.mentionsOf(symbol.name, options.where)).filter((p) => !own(p));
+    // An overloaded function resolves to all its signatures; any of them will do.
+    const resolved = await pool(candidates, concurrency, async (p) => ({ p, spans: await this.definition(p) }));
     const lines = (await readFile(join(this.root, symbol.file), 'utf8')).split('\n');
-    const declared = {
-      file: symbol.file,
-      name: symbol.name,
-      nameLine: symbol.line - 1,
-      startLine: symbol.range[0] - 1,
-      endLine: symbol.range[1] - 1,
-    };
-    return resolved.filter(({ span }) => span && resolvesTo(span, declared, lines)).map(({ p }) => p);
+    const declared = group.map((s) => ({
+      file: s.file,
+      name: s.name,
+      nameLine: s.line - 1,
+      startLine: s.range[0] - 1,
+      endLine: s.range[1] - 1,
+    }));
+    const isOurs = (spans: Span[]) => spans.some((span) => declared.some((d) => resolvesTo(span, d, lines)));
+    const found = resolved.filter(({ spans }) => isOurs(spans)).map(({ p }) => p);
+    if (!options.viaSupertypes || !symbol.parent) return found;
+    // A call through an interface or base type resolves to its method; it
+    // reaches this one when this one implements or overrides that method.
+    const others = new Map<string, { at: Position; mentions: Position[] }>();
+    for (const { p, spans } of resolved) {
+      const [span] = spans;
+      if (!span || isOurs(spans)) continue;
+      const key = `${span.file}:${span.nameLine}:${span.nameColumn}`;
+      const entry = others.get(key) ?? { at: { file: span.file, line: span.nameLine, character: span.nameColumn }, mentions: [] };
+      entry.mentions.push(p);
+      others.set(key, entry);
+    }
+    const related = await pool([...others.values()].slice(0, 20), concurrency, async ({ at, mentions }) =>
+      isOurs(await this.lsp.implementations(at)) ? mentions : [],
+    );
+    return [...found, ...related.flat()];
+  }
+
+  // The code mentions of [name] that [where] accepts, kept until a file changes.
+  private mentionsOf(name: string, where: ReferenceOptions['where']): Promise<Position[]> {
+    if (!this.filters.has(where)) this.filters.set(where, this.filters.size);
+    const key = `${this.filters.get(where)}:${name}`;
+    let found = this.mentions.get(key);
+    if (!found) {
+      found = codeMentions(this.root, name, this.spec.extensions, where);
+      this.mentions.set(key, found);
+    }
+    return found;
+  }
+
+  /** Tells the server [file] changed on disk; what was kept may no longer hold. */
+  changed(file: string): Promise<void> {
+    this.definitions.clear();
+    this.mentions.clear();
+    return this.lsp.changed(file);
   }
 
   async stop(): Promise<void> {
@@ -138,12 +201,24 @@ export class LspService {
   }
 }
 
+export type ReferenceOptions = {
+  viaSupertypes?: boolean;
+  overloads?: readonly CodeSymbol[];
+  /** Which mentions in code count, such as calls only; all by default. */
+  where?: (tree: Tree, line: number, column: number) => boolean;
+};
+
 /**
  * Whole-word mentions of [name] in code (not comments or strings, though
  * documentation links count) in files with one of [extensions], as LSP
- * positions.
+ * positions; with [where], only the code mentions it accepts.
  */
-export async function codeMentions(root: string, name: string, extensions: ReadonlySet<string>): Promise<Position[]> {
+export async function codeMentions(
+  root: string,
+  name: string,
+  extensions: ReadonlySet<string>,
+  where?: ReferenceOptions['where'],
+): Promise<Position[]> {
   const globs = [...extensions].flatMap((ext) => ['-g', `*${ext}`]);
   let stdout = '';
   try {
@@ -169,7 +244,11 @@ export async function codeMentions(root: string, name: string, extensions: Reado
     const tree = await parseFile(file, await readFile(join(root, file), 'utf8'));
     try {
       for (const { text, ...p } of positions) {
-        if (!tree || isCodeAt(tree, p.line, p.character) || inDocLink(text, p.character)) mentions.push(p);
+        if (where) {
+          if (tree && isCodeAt(tree, p.line, p.character) && where(tree, p.line, p.character)) mentions.push(p);
+        } else if (!tree || isCodeAt(tree, p.line, p.character) || inDocLink(text, p.character)) {
+          mentions.push(p);
+        }
       }
     } finally {
       tree?.delete();
@@ -179,7 +258,7 @@ export async function codeMentions(root: string, name: string, extensions: Reado
 }
 
 /** Maps [items] through [task], at most [limit] at a time, keeping order. */
-async function pool<T, R>(items: T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
+export async function pool<T, R>(items: T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
   const results = new Array<R>(items.length);
   let next = 0;
   const worker = async () => {

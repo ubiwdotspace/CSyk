@@ -3,11 +3,19 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  CallHierarchyIncomingCallsRequest,
+  CallHierarchyOutgoingCallsRequest,
+  CallHierarchyPrepareRequest,
   createProtocolConnection,
   DefinitionRequest,
+  DidChangeTextDocumentNotification,
+  DidChangeWatchedFilesNotification,
+  DidCloseTextDocumentNotification,
   DidOpenTextDocumentNotification,
+  FileChangeType,
   DocumentSymbolRequest,
   ExitNotification,
+  ImplementationRequest,
   InitializedNotification,
   InitializeRequest,
   ReferencesRequest,
@@ -19,6 +27,7 @@ import {
   type Location,
   type LocationLink,
   type ProtocolConnection,
+  type ServerCapabilities,
   type SymbolInformation,
 } from 'vscode-languageserver-protocol/node';
 
@@ -53,14 +62,17 @@ const languageIds: Record<string, string> = {
 export class LspClient {
   // Each file's didOpen, so concurrent requests all wait until it is sent.
   private readonly opened = new Map<string, Promise<void>>();
+  private readonly versions = new Map<string, number>();
   private readonly root: string;
   private readonly process: ChildProcess;
   private readonly connection: ProtocolConnection;
+  private readonly capabilities: ServerCapabilities;
 
-  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection) {
+  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, capabilities: ServerCapabilities) {
     this.root = root;
     this.process = process;
     this.connection = connection;
+    this.capabilities = capabilities;
   }
 
   /** Starts [command] in [root] and completes the initialize handshake. */
@@ -73,7 +85,7 @@ export class LspClient {
     );
     connection.listen();
     const rootUri = pathToFileURL(root).href;
-    await connection.sendRequest(InitializeRequest.type, {
+    const { capabilities } = await connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,
       rootUri,
       workspaceFolders: [{ uri: rootUri, name: 'root' }],
@@ -82,11 +94,40 @@ export class LspClient {
           documentSymbol: { hierarchicalDocumentSymbolSupport: true },
           references: {},
           definition: { linkSupport: true },
+          callHierarchy: {},
+          implementation: { linkSupport: true },
         },
       },
     });
     await connection.sendNotification(InitializedNotification.type, {});
-    return new LspClient(root, child, connection);
+    return new LspClient(root, child, connection, capabilities);
+  }
+
+  /**
+   * Tells the server [file] changed on disk (or is gone, when it cannot be
+   * read): an open document gets its new text, and the server hears of the
+   * file either way.
+   */
+  async changed(file: string): Promise<void> {
+    const uri = this.uri(file);
+    const text = await readFile(join(this.root, file), 'utf8').catch(() => undefined);
+    const opening = this.opened.get(file);
+    if (opening) {
+      await opening;
+      if (text === undefined) {
+        this.opened.delete(file);
+        await this.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+      } else {
+        const version = (this.versions.get(file) ?? 1) + 1;
+        this.versions.set(file, version);
+        await this.connection.sendNotification(DidChangeTextDocumentNotification.type, {
+          textDocument: { uri, version },
+          contentChanges: [{ text }],
+        });
+      }
+    }
+    const type = text === undefined ? FileChangeType.Deleted : FileChangeType.Changed;
+    await this.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [{ uri, type }] });
   }
 
   /** Opens [file] in the server unless it already is. */
@@ -144,11 +185,67 @@ export class LspClient {
     return list.flatMap((loc) => this.span(loc));
   }
 
+  /** The declarations that implement or override the one at [at]; none when the server cannot tell. */
+  async implementations(at: Position): Promise<Span[]> {
+    if (!this.capabilities.implementationProvider) return [];
+    await this.open(at.file);
+    const result = await answerOrNone(
+      this.connection.sendRequest(ImplementationRequest.type, {
+        textDocument: { uri: this.uri(at.file) },
+        position: { line: at.line, character: at.character },
+      }),
+    );
+    const list: (Location | LocationLink)[] = Array.isArray(result) ? result : result ? [result] : [];
+    return list.flatMap((loc) => this.span(loc));
+  }
+
+  /**
+   * The functions that call the symbol at [at] (`in`), or that it calls
+   * (`out`), as the server's call hierarchy gives them: each caller's or
+   * callee's declaration, and the places the calls are written.
+   */
+  async calls(at: Position, direction: 'in' | 'out'): Promise<(Span & { sites: Position[] })[]> {
+    await this.open(at.file);
+    const position = { line: at.line, character: at.character };
+    const items = await answerOrNone(
+      this.connection.sendRequest(CallHierarchyPrepareRequest.type, { textDocument: { uri: this.uri(at.file) }, position }),
+    );
+    const found: (Span & { sites: Position[] })[] = [];
+    for (const item of items ?? []) {
+      const others =
+        direction === 'in'
+          ? (await answerOrNone(this.connection.sendRequest(CallHierarchyIncomingCallsRequest.type, { item })))?.map(
+              (c) => ({ other: c.from, ranges: c.fromRanges }),
+            )
+          : (await answerOrNone(this.connection.sendRequest(CallHierarchyOutgoingCallsRequest.type, { item })))?.map(
+              (c) => ({ other: c.to, ranges: c.fromRanges }),
+            );
+      for (const { other, ranges } of others ?? []) {
+        const [span] = this.span({ targetUri: other.uri, targetRange: other.range, targetSelectionRange: other.selectionRange });
+        // Calls in come from the caller's file; calls out sit in the asked-about file.
+        const siteFile = direction === 'in' ? span?.file : at.file;
+        if (span && siteFile) {
+          found.push({ ...span, sites: ranges.map((r) => ({ file: siteFile, line: r.start.line, character: r.start.character })) });
+        }
+      }
+    }
+    return found;
+  }
+
   async stop(): Promise<void> {
-    try {
+    const polite = (async () => {
       await this.connection.sendRequest(ShutdownRequest.type);
       await this.connection.sendNotification(ExitNotification.type);
+    })();
+    // A server that never answers the shutdown is killed after two seconds.
+    let timer: NodeJS.Timeout | undefined;
+    const patience = new Promise<void>((done) => {
+      timer = setTimeout(done, 2000);
+    });
+    try {
+      await Promise.race([polite.catch(() => {}), patience]);
     } finally {
+      clearTimeout(timer);
       this.connection.dispose();
       this.process.kill();
     }

@@ -1,3 +1,5 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -11,6 +13,8 @@ let client: Client;
 let close: () => Promise<void>;
 
 beforeAll(async () => {
+  // The server saves its index; keep that out of the user's cache.
+  process.env.XDG_CACHE_HOME = mkdtempSync(join(tmpdir(), 'csyk-cache-'));
   const created = createServer(miniTs);
   close = created.close;
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
@@ -30,9 +34,20 @@ const call = async (name: string, args: Record<string, unknown>) => {
 };
 
 describe('the MCP server', () => {
-  it('offers seven tools whose list stays small', async () => {
+  it('offers ten tools whose list stays small', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(['batch', 'def', 'find', 'grep', 'outline', 'read', 'refs']);
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      'batch',
+      'calls',
+      'def',
+      'find',
+      'grep',
+      'impact',
+      'outline',
+      'read',
+      'refs',
+      'status',
+    ]);
     expect(countTokens(JSON.stringify(tools))).toBeLessThan(1000);
   });
 

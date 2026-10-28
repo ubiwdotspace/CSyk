@@ -1,6 +1,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import type { Adapter, Category, Corpus, Hit } from '../harness/types.ts';
+import type { Adapter, Corpus, Hit } from '../harness/types.ts';
 
 // The server Claude Code runs for CodeSift; override with CODESIFT_MCP.
 const command = process.env.CODESIFT_MCP ?? 'codesift-mcp';
@@ -8,8 +8,9 @@ const command = process.env.CODESIFT_MCP ?? 'codesift-mcp';
 /**
  * B1: an agent using CodeSift (BSL-1.1, evaluated here, never shipped) over
  * MCP, the way CodeSift's own rules tell it to: `search_symbols` with source
- * for a definition, `find_references` for references, `search_text` for a
- * string. Its tokens are the text those tools return.
+ * for a definition, `find_references` for references, `trace_call_chain`
+ * for callers and callees, `search_text` for a string. Its tokens are the
+ * text those tools return.
  *
  * The harness never indexes for CodeSift: a corpus names its CodeSift repo
  * in `codesift`, indexed beforehand with `codesift index <path> --no-watch`.
@@ -28,7 +29,7 @@ export function b1CodeSift(): Adapter {
 
   return {
     name: 'b1-codesift',
-    supports: (category: Category) => ['A', 'B', 'C', 'E'].includes(category),
+    supports: (c) => ['A', 'B', 'C', 'D', 'E'].includes(c.category),
     async run(c, corpus) {
       const repo = corpus.codesift;
       if (!repo) {
@@ -40,14 +41,16 @@ export function b1CodeSift(): Adapter {
       const [name, args] =
         c.category === 'C'
           ? ['find_references', { repo, symbol_name: c.query }]
-          : c.category === 'E'
+          : c.category === 'D'
+            ? ['trace_call_chain', { repo, symbol_name: c.query, direction: c.direction === 'out' ? 'callees' : 'callers', include_tests: true }]
+            : c.category === 'E'
             ? ['search_text', { repo, query: c.query }]
             : ['search_symbols', { repo, query: c.query, include_source: true }];
       const result = await (await connect(corpus)).callTool({ name, arguments: args });
       const output = (result.content as { type: string; text?: string }[])
         .map((part) => part.text ?? '')
         .join('\n');
-      return { hits: parseCodeSiftHits(output), output, calls: 1 };
+      return { hits: c.category === 'D' ? parseCallChain(output) : parseCodeSiftHits(output), output, calls: 1 };
     },
     async close() {
       await client?.close();
@@ -86,4 +89,12 @@ export function parseCodeSiftHits(text: string): Hit[] {
     if (under?.[1] && heading) add(heading, Number(under[1]));
   }
   return hits;
+}
+
+/** The callers or callees in a `trace_call_chain` answer: its indented `path:line` lines. */
+export function parseCallChain(text: string): Hit[] {
+  return text.split('\n').flatMap((line) => {
+    const match = /^\s+([^\s:]+\.\w+):(\d+)\b/.exec(line);
+    return match?.[1] && match[2] ? [{ file: match[1], line: Number(match[2]) }] : [];
+  });
 }

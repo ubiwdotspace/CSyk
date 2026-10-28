@@ -81,7 +81,7 @@ async function runCases(
   const scores: CaseScore[] = [];
   let skipped = 0;
   for (const c of cases) {
-    if (!adapter.supports(c.category)) {
+    if (!adapter.supports(c)) {
       skipped++;
       continue;
     }

@@ -45,13 +45,16 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
   const cases = doc.cases.map((raw: unknown, i: number): Case => {
     const where = `${path}: case ${i + 1}`;
     if (!isRecord(raw)) throw new Error(`${where} is not a mapping`);
-    const { id, query, kind, expect } = raw;
+    const { id, query, kind, direction, expect } = raw;
     if (typeof id !== 'string' || !id) throw new Error(`${where} needs an id`);
     if (ids.has(id)) throw new Error(`${where} repeats id ${id}`);
     ids.add(id);
     if (typeof query !== 'string' || !query) throw new Error(`${where} (${id}) needs a query`);
     if (kind !== undefined && typeof kind !== 'string') {
       throw new Error(`${where} (${id}): kind must be text`);
+    }
+    if (direction !== undefined && direction !== 'in' && direction !== 'out') {
+      throw new Error(`${where} (${id}): direction must be in or out`);
     }
     if (!Array.isArray(expect) || expect.length === 0) {
       throw new Error(`${where} (${id}) needs at least one expected location`);
@@ -61,6 +64,7 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
       category,
       query,
       ...(kind === undefined ? {} : { kind }),
+      ...(direction === undefined ? {} : { direction }),
       expect: expect.map((loc: unknown) => parseLocation(loc, `${where} (${id})`)),
     };
   });
