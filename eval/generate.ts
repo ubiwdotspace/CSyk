@@ -6,17 +6,18 @@ import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
 import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
+import { callCases, impactCases } from './oracle/call-cases.ts';
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|E> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
 language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
 to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
 Review the cases before trusting them.`;
 
-type Generated = { query: string; expect: { file: string; lines: [number, number] }[] };
+type Generated = { query: string; direction?: 'in' | 'out'; expect: { file: string; lines: [number, number] }[] };
 
 // Code a case should be about: not tests, end-to-end suites, stories, or
 // generated and vendored code such as WebAssembly glue or protobuf stubs.
@@ -44,8 +45,8 @@ async function main(): Promise<void> {
     console.log(usage);
     return;
   }
-  if (!['A', 'B', 'C', 'E'].includes(category)) {
-    throw new Error('Only A, B, C and E cases can be generated; write D, F and G by hand.');
+  if (!['A', 'B', 'C', 'D', 'E', 'G'].includes(category)) {
+    throw new Error('F cases (concept questions) are written by hand.');
   }
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const corpus = (await loadCorpora(root)).get(values.corpus);
@@ -61,10 +62,15 @@ async function main(): Promise<void> {
   if (!oracleServers[values.lang]) throw new Error(`--lang must be one of ${Object.keys(oracleServers).join(', ')}`);
   const oracle = await LspOracle.start(corpus.root, values.lang);
   try {
+    const sources = oracle.files.filter(isSource);
     const cases =
       category === 'E'
         ? await stringCases(oracle, count, random)
-        : await symbolCases(oracle, category, count, random);
+        : category === 'D'
+          ? await callCases(oracle, sources, count, random)
+          : category === 'G'
+            ? await impactCases(oracle, sources, count, random)
+            : await symbolCases(oracle, category, count, random);
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, render(corpus, oracleServers[values.lang] ?? values.lang, category, Number(values.seed), cases));
     console.log(`${cases.length} case(s) written to ${out.slice(root.length + 1)}`);
@@ -183,6 +189,7 @@ function render(corpus: Corpus, server: string, category: string, seed: number, 
   cases.forEach((c, i) => {
     lines.push(`  - id: ${category}${String(i + 1).padStart(2, '0')}`);
     lines.push(`    query: ${JSON.stringify(c.query)}`);
+    if (c.direction) lines.push(`    direction: ${c.direction}`);
     lines.push('    expect:');
     for (const loc of c.expect) {
       lines.push(`      - { file: ${JSON.stringify(loc.file)}, lines: [${loc.lines[0]}, ${loc.lines[1]}] }`);

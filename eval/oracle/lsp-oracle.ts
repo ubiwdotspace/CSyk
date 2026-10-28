@@ -102,6 +102,33 @@ export class LspOracle {
     return (await this.lsp.definition(at))[0];
   }
 
+  /**
+   * The server's own callers (`in`) or callees (`out`) of the symbol at
+   * [at], each spanning its whole declaration as the outline gives it
+   * (pyright and gopls give only the name).
+   */
+  async calls(at: Position, direction: 'in' | 'out'): Promise<Span[]> {
+    const spans: Span[] = [];
+    for (const { sites, ...span } of await this.lsp.calls(at, direction)) {
+      // `super.m()` runs the parent's m, never a sibling's override, though
+      // the Dart server counts it for every override.
+      if (direction === 'in' && (await this.allSuperCalls(sites))) continue;
+      const symbol = find(await this.lsp.documentSymbols(span.file), span);
+      spans.push(symbol ? { ...span, startLine: symbol.range.start.line, endLine: symbol.range.end.line } : span);
+    }
+    return spans;
+  }
+
+  // Whether every call at [sites] is written `super.name(…)`.
+  private async allSuperCalls(sites: Position[]): Promise<boolean> {
+    if (sites.length === 0) return false;
+    for (const site of sites) {
+      const line = (await this.text(site.file)).split('\n')[site.line] ?? '';
+      if (!/\bsuper\.$/.test(line.slice(0, site.character))) return false;
+    }
+    return true;
+  }
+
   /** Every place [name] is written as a whole word in a file of this language. */
   async mentions(name: string): Promise<Position[]> {
     const pathspecs = [...this.spec.extensions].map((e) => `*${e}`);
@@ -146,8 +173,9 @@ export class LspOracle {
     for (const mention of await this.mentions(name)) {
       const own = mention.file === declaration.file && mention.line === declaration.nameLine;
       if (own) continue;
-      const span = await this.resolve(mention);
-      if (span && resolvesTo(span, declared, lines)) refs.push(mention);
+      // An overloaded function resolves to all its signatures.
+      const spans = await this.lsp.definition(mention);
+      if (spans.some((span) => resolvesTo(span, declared, lines))) refs.push(mention);
     }
     return refs;
   }
@@ -236,3 +264,15 @@ async function git(cwd: string, args: string[]): Promise<string[]> {
 function escape(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+// The outline symbol, at any depth, whose name starts where [span]'s does.
+function find(symbols: DocumentSymbol[], span: Span): DocumentSymbol | undefined {
+  for (const symbol of symbols) {
+    const name = symbol.selectionRange.start;
+    if (name.line === span.nameLine && name.character === span.nameColumn) return symbol;
+    const inner = find(symbol.children ?? [], span);
+    if (inner) return inner;
+  }
+  return undefined;
+}
+

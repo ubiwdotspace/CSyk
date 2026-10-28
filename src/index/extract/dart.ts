@@ -26,7 +26,8 @@ export function extractDart(root: Node, sink: SymbolSink): void {
   const declareMembers = (body: Node | null, owner: CodeSymbol) => {
     const members = body?.namedChildren.filter((c): c is Node => c !== null) ?? [];
     members.forEach((member, at) => {
-      if (member.type !== 'method_signature') return;
+      // A `declaration` holds an abstract method or getter, without a body.
+      if (member.type !== 'method_signature' && member.type !== 'declaration') return;
       const signature = member.namedChildren.find((c) => c !== null && signatureTypes.has(c.type));
       const name = signature?.childForFieldName('name');
       if (name) sink.add(name, 'method', withBody(member, members, at), exported(name.text), owner);

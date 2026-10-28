@@ -21,6 +21,8 @@ export type Case = {
   query: string;
   /** Optional narrowing a tool may use, such as a symbol kind. */
   kind?: string;
+  /** For D: callers of the symbol (`in`) or what it calls (`out`). */
+  direction?: 'in' | 'out';
   expect: Location[];
 };
 
@@ -53,7 +55,7 @@ export type AdapterResult = {
 /** A way of answering cases: a baseline, another tool, or CSyk itself. */
 export interface Adapter {
   name: string;
-  supports(category: Category): boolean;
+  supports(c: Case): boolean;
   run(c: Case, corpus: Corpus): Promise<AdapterResult>;
   /** Releases what the adapter started, such as a server. */
   close?(): Promise<void>;

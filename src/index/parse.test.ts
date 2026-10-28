@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractSymbols, inDocLink, isCodeAt, parseFile } from './parse.ts';
+import { extractSymbols, inDocLink, isCallAt, isCodeAt, parseFile } from './parse.ts';
 
 const names = async (file: string, text: string) =>
   (await extractSymbols(file, text)).map((s) => `${s.kind} ${s.name}${s.exported ? '' : ' (local)'}`);
@@ -11,7 +11,7 @@ describe('extractSymbols for TypeScript', () => {
       '  const subtotal = 1;',
       '  return subtotal;',
       '}',
-      'export class TokenStore { save() {} private clear() {} }',
+      'export class TokenStore { save() {} private clear() {} reset = () => 1; count = 0 }',
       'export interface Item { id: string; load(): void }',
       'type Id = string;',
       "export enum Mode { A, B = 'b' }",
@@ -24,6 +24,8 @@ describe('extractSymbols for TypeScript', () => {
       'class TokenStore',
       'method save',
       'method clear',
+      'method reset',
+      'field count',
       'interface Item',
       'field id',
       'method load',
@@ -144,7 +146,7 @@ describe('extractSymbols for Dart', () => {
       '  int get count => 1;',
       '}',
       'class _HomeState extends State<Home> {}',
-      'class Store { void save() {} }',
+      'abstract class Store { void save() {} String get label; }',
       'int add(int a) => a;',
       'final maxItems = 3;',
       'enum Mode { a, b }',
@@ -157,6 +159,7 @@ describe('extractSymbols for Dart', () => {
       'widget _HomeState (private)',
       'class Store',
       'method Store.save',
+      'method Store.label',
       'function add',
       'const maxItems',
       'enum Mode',
@@ -185,5 +188,31 @@ describe('extractSymbols for NestJS', () => {
       'method CatsController.helper',
       'provider CatsService',
     ]);
+  });
+});
+
+describe('isCallAt', () => {
+  // Every `target` in [text] that is called, by its 0-based line.
+  const calledLines = async (file: string, text: string) => {
+    const tree = (await parseFile(file, text))!;
+    try {
+      return text.split('\n').flatMap((line, i) => {
+        const at = line.indexOf('target');
+        return at >= 0 && isCallAt(tree, i, at) ? [i] : [];
+      });
+    } finally {
+      tree.delete();
+    }
+  };
+
+  it('finds calls, constructions, decorators and JSX in TypeScript, not mentions', async () => {
+    const text = ['target();', 'a.target(1);', 'new target();', '@target class A {}', 'const x = <target />;', 'const f = target;', 'a.target;'].join('\n');
+    expect(await calledLines('a.tsx', text)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('finds calls in Python, Go and Dart', async () => {
+    expect(await calledLines('a.py', ['target()', 'self.target(1)', '@target', 'def f(): pass', 'x = target'].join('\n'))).toEqual([0, 1, 2]);
+    expect(await calledLines('a.go', ['package a', 'func f() {', '\ttarget()', '\tpkg.target(1)', '\tx := target', '}'].join('\n'))).toEqual([2, 3]);
+    expect(await calledLines('a.dart', ['void f() {', '  target(1);', '  a.target(2);', '  final x = target;', '}'].join('\n'))).toEqual([1, 2]);
   });
 });

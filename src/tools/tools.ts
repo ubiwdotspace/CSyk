@@ -6,7 +6,8 @@ import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
 import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
-import { codeMentions, serverFor } from '../precision/lsp-service.ts';
+import type { Position } from '../precision/lsp-client.ts';
+import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
@@ -19,7 +20,7 @@ export type Location = { file: string; line: number };
 /** What a tool returns: the text the agent reads and the places it names. */
 export type ToolResult = { text: string; locations: Location[] };
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const row = (s: CodeSymbol) => `${s.id}  ${s.kind} ${s.line}  ${s.signature}`;
 
 /** `find`: symbols whose name matches [query], best first. */
@@ -118,14 +119,7 @@ export async function refs(
 ): Promise<ToolResult> {
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
-  const service = await ws.precision(symbol.file);
-  // Without a language server, the mentions in code are the best there is.
-  const found = service
-    ? await service.references(symbol)
-    : (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]))).filter(
-        (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
-      );
-  const precision = service ? 'lsp' : 'text (no language server)';
+  const { found, precision } = await references(ws, symbol);
   const limit = options.limit ?? 50;
   const byFile = new Map<string, number[]>();
   for (const p of found.slice(0, limit)) {
@@ -242,9 +236,33 @@ export async function grep(
   return { text: fitted.text, locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })) };
 }
 
-// A symbol by id, or by name: an exact name with several declarations takes
-// the best ranked and names the others.
-function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; note: string } {
+/**
+ * Every reference to [symbol] from its language server (see
+ * LspService.references), or without one the mentions of its name in code,
+ * which are the best there is.
+ */
+export async function references(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  options: Omit<ReferenceOptions, 'overloads'> = {},
+): Promise<{ found: Position[]; precision: string }> {
+  const service = await ws.precision(symbol.file);
+  const overloads = ws.index
+    .symbolsIn(symbol.file)
+    .filter((s) => s !== symbol && s.name === symbol.name && s.parent === symbol.parent);
+  if (service) return { found: await service.references(symbol, { ...options, overloads }), precision: 'lsp' };
+  const extensions = serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]);
+  const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(
+    (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
+  );
+  return { found, precision: 'text (no language server)' };
+}
+
+/**
+ * A symbol by id, or by name: an exact name with several declarations takes
+ * the best ranked and names the others.
+ */
+export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; note: string } {
   if (target.includes('#')) {
     const symbol = ws.index.get(target);
     return symbol ? { symbol, note: '' } : { note: `no symbol with id ${target}` };

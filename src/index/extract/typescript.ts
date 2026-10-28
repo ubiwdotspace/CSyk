@@ -3,6 +3,7 @@ import type { SymbolSink } from '../sink.ts';
 import type { SymbolKind } from '../symbols.ts';
 
 const functionValues = new Set(['arrow_function', 'function_expression', 'function', 'generator_function']);
+const fieldTypes = new Set(['public_field_definition', 'field_definition']);
 const httpDecorator = /^@(Get|Post|Put|Patch|Delete|Options|Head|All|Sse)\b/;
 
 /**
@@ -93,12 +94,17 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         pending.push(member.text);
         continue;
       }
-      const memberName = member.childForFieldName('name');
+      const memberName = member.childForFieldName('name') ?? member.childForFieldName('property');
       const isMethod = ['method_definition', 'method_signature', 'abstract_method_signature'].includes(member.type);
       if (memberName && isMethod) {
         const own = [...pending, ...member.namedChildren.filter((c) => c?.type === 'decorator').map((c) => c?.text ?? '')];
         const route = controller && own.some((d) => httpDecorator.test(d));
         sink.add(memberName, route ? 'route' : 'method', member, exported, owner);
+      }
+      // `handle = () => {…}` is a method written as a field.
+      if (memberName?.type === 'property_identifier' && fieldTypes.has(member.type)) {
+        const value = member.childForFieldName('value');
+        sink.add(memberName, value && functionValues.has(value.type) ? 'method' : 'field', member, exported, owner);
       }
       pending = [];
     }

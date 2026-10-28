@@ -11,7 +11,7 @@ import { Workspace } from '../workspace/workspace.ts';
  * gave until a hook touches the reset marker.
  */
 export function createServer(root: string): { server: McpServer; close: () => Promise<void> } {
-  const workspace = Workspace.open(root);
+  const workspace = Workspace.open(root, { watch: true, persist: true });
   // A failed build surfaces on the first tool call, not as an unhandled rejection.
   workspace.catch(() => {});
   const session = new Session({ marker: resetMarker(root) });
