@@ -55,38 +55,82 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [1559, 1559] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [5335, 5335] }
   - id: C06
+    query: "Spinner"
+    expect:
+      - { file: "excalidraw-app/share/QRCode.tsx", lines: [2, 2] }
+      - { file: "excalidraw-app/share/QRCode.tsx", lines: [43, 43] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [409, 409] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2075, 2075] }
+      - { file: "packages/excalidraw/components/DialogActionButton.tsx", lines: [3, 3] }
+      - { file: "packages/excalidraw/components/DialogActionButton.tsx", lines: [42, 42] }
+      - { file: "packages/excalidraw/components/FilledButton.tsx", lines: [8, 8] }
+      - { file: "packages/excalidraw/components/FilledButton.tsx", lines: [103, 103] }
+      - { file: "packages/excalidraw/components/IconButton.tsx", lines: [12, 12] }
+      - { file: "packages/excalidraw/components/IconButton.tsx", lines: [148, 148] }
+      - { file: "packages/excalidraw/components/IconButton.tsx", lines: [153, 153] }
+      - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [45, 45] }
+      - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [136, 136] }
+      - { file: "packages/excalidraw/components/LibraryMenuItems.tsx", lines: [33, 33] }
+      - { file: "packages/excalidraw/components/LibraryMenuItems.tsx", lines: [443, 443] }
+      - { file: "packages/excalidraw/components/LoadingMessage.tsx", lines: [10, 10] }
+      - { file: "packages/excalidraw/components/LoadingMessage.tsx", lines: [39, 39] }
+      - { file: "packages/excalidraw/components/Spinner.tsx", lines: [43, 43] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogInput.tsx", lines: [5, 5] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogInput.tsx", lines: [131, 131] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogOutput.tsx", lines: [5, 5] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogOutput.tsx", lines: [166, 166] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogPanel.tsx", lines: [6, 6] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogPanel.tsx", lines: [79, 79] }
+  - id: C07
+    query: "useOutsideClick"
+    expect:
+      - { file: "packages/excalidraw/components/EyeDropper.tsx", lines: [19, 19] }
+      - { file: "packages/excalidraw/components/EyeDropper.tsx", lines: [258, 258] }
+      - { file: "packages/excalidraw/components/Sidebar/Sidebar.tsx", lines: [22, 22] }
+      - { file: "packages/excalidraw/components/Sidebar/Sidebar.tsx", lines: [111, 111] }
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuContent.tsx", lines: [9, 9] }
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuContent.tsx", lines: [45, 45] }
+  - id: C08
     query: "DefaultSidebarTrigger"
     expect:
       - { file: "packages/excalidraw/components/DefaultSidebar.tsx", lines: [44, 44] }
       - { file: "packages/excalidraw/components/DefaultSidebar.tsx", lines: [124, 124] }
-  - id: C07
+  - id: C09
     query: "FileVersion"
     expect:
       - { file: "excalidraw-app/data/FileManager.ts", lines: [32, 32] }
       - { file: "excalidraw-app/data/FileManager.ts", lines: [35, 35] }
       - { file: "excalidraw-app/data/FileManager.ts", lines: [38, 38] }
-  - id: C08
+  - id: C10
     query: "SentryEnvHostnameMap"
     expect:
       - { file: "excalidraw-app/sentry.ts", lines: [16, 16] }
       - { file: "excalidraw-app/sentry.ts", lines: [24, 24] }
-  - id: C09
+  - id: C11
     query: "TPromisePool"
     expect:
       - { file: "packages/common/src/promise-pool.ts", lines: [17, 17] }
       - { file: "packages/common/src/promise-pool.ts", lines: [27, 27] }
-  - id: C10
+  - id: C12
     query: "decryptElements"
     expect:
       - { file: "excalidraw-app/data/firebase.ts", lines: [222, 222] }
       - { file: "excalidraw-app/data/firebase.ts", lines: [244, 244] }
       - { file: "excalidraw-app/data/firebase.ts", lines: [265, 265] }
-  - id: C11
+  - id: C13
     query: "loadSavedDebugState"
     expect:
       - { file: "excalidraw-app/App.tsx", lines: [141, 141] }
       - { file: "excalidraw-app/App.tsx", lines: [457, 457] }
-  - id: C12
+  - id: C14
+    query: "actionLink"
+    expect:
+      - { file: "packages/excalidraw/actions/index.ts", lines: [90, 90] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [273, 273] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [11315, 11315] }
+      - { file: "packages/excalidraw/components/CommandPalette/CommandPalette.tsx", lines: [20, 20] }
+      - { file: "packages/excalidraw/components/CommandPalette/CommandPalette.tsx", lines: [340, 340] }
+  - id: C15
     query: "toggleMenu"
     expect:
       - { file: "packages/excalidraw/tests/colorInput.test.tsx", lines: [5, 5] }
@@ -113,36 +157,43 @@ cases:
       - { file: "packages/excalidraw/tests/excalidraw.test.tsx", lines: [448, 448] }
       - { file: "packages/excalidraw/tests/excalidraw.test.tsx", lines: [471, 471] }
       - { file: "packages/excalidraw/tests/excalidraw.test.tsx", lines: [483, 483] }
-  - id: C13
+  - id: C16
+    query: "UnlockPopup"
+    expect:
+      - { file: "packages/excalidraw/components/App.tsx", lines: [423, 423] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2734, 2734] }
+      - { file: "packages/excalidraw/components/UnlockPopup.tsx", lines: [91, 91] }
+  - id: C17
     query: "advanceDuplicatedListMarkers"
     expect:
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [13, 13] }
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [114, 114] }
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [517, 517] }
-  - id: C14
-    query: "BASE_ALIGN_OFFSET"
+  - id: C18
+    query: "DropdownMenuSubContent"
     expect:
-      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [37, 37] }
-      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [38, 38] }
-      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [45, 45] }
-  - id: C15
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSub.tsx", lines: [3, 3] }
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSub.tsx", lines: [22, 22] }
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [70, 70] }
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [71, 71] }
+  - id: C19
     query: "PolarCoords"
     expect:
       - { file: "packages/math/src/angle.ts", lines: [7, 7] }
       - { file: "packages/math/src/angle.ts", lines: [24, 24] }
-  - id: C16
+  - id: C20
     query: "debugDrawLine"
     expect:
       - { file: "packages/element/src/visualdebug.ts", lines: [167, 167] }
       - { file: "packages/element/src/visualdebug.ts", lines: [177, 177] }
       - { file: "packages/element/src/visualdebug.ts", lines: [197, 197] }
-  - id: C17
+  - id: C21
     query: "AVATAR_SLOT_WIDTH"
     expect:
       - { file: "packages/excalidraw/components/UserList.tsx", lines: [184, 184] }
       - { file: "packages/excalidraw/components/UserList.tsx", lines: [199, 199] }
       - { file: "packages/excalidraw/components/UserList.tsx", lines: [321, 321] }
-  - id: C18
+  - id: C22
     query: "activeConfirmDialogAtom"
     expect:
       - { file: "packages/excalidraw/components/ActiveConfirmDialog.tsx", lines: [12, 12] }
@@ -152,7 +203,7 @@ cases:
       - { file: "packages/excalidraw/components/CommandPalette/CommandPalette.tsx", lines: [400, 400] }
       - { file: "packages/excalidraw/components/main-menu/DefaultItems.tsx", lines: [30, 30] }
       - { file: "packages/excalidraw/components/main-menu/DefaultItems.tsx", lines: [216, 216] }
-  - id: C19
+  - id: C23
     query: "getUncroppedWidthAndHeight"
     expect:
       - { file: "packages/element/src/cropElement.ts", lines: [47, 47] }
@@ -171,35 +222,48 @@ cases:
       - { file: "packages/excalidraw/renderer/staticSvgScene.ts", lines: [21, 21] }
       - { file: "packages/excalidraw/renderer/staticSvgScene.ts", lines: [594, 594] }
       - { file: "packages/excalidraw/renderer/staticSvgScene.ts", lines: [635, 635] }
-  - id: C20
+  - id: C24
+    query: "actionTextAutoResize"
+    expect:
+      - { file: "packages/excalidraw/components/App.text.ts", lines: [55, 55] }
+      - { file: "packages/excalidraw/components/App.text.ts", lines: [515, 515] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [291, 291] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [11301, 11301] }
+      - { file: "packages/excalidraw/tests/arrowEndpointTextBinding.test.tsx", lines: [14, 14] }
+      - { file: "packages/excalidraw/tests/arrowEndpointTextBinding.test.tsx", lines: [563, 563] }
+      - { file: "packages/excalidraw/tests/arrowEndpointTextBinding.test.tsx", lines: [604, 604] }
+      - { file: "packages/excalidraw/wysiwyg/textWysiwyg.test.tsx", lines: [51, 51] }
+      - { file: "packages/excalidraw/wysiwyg/textWysiwyg.test.tsx", lines: [3489, 3489] }
+      - { file: "packages/excalidraw/wysiwyg/textWysiwyg.test.tsx", lines: [3519, 3519] }
+  - id: C25
     query: "ColorPickerProps"
     expect:
       - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [85, 85] }
       - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [362, 362] }
       - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [518, 518] }
       - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [519, 519] }
-  - id: C21
+  - id: C26
     query: "AppFlowchart"
     expect:
       - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [125, 125] }
       - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [143, 143] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [389, 389] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [680, 680] }
-  - id: C22
+  - id: C27
     query: "Alignment"
     expect:
       - { file: "packages/element/src/align.ts", lines: [22, 22] }
       - { file: "packages/element/src/align.ts", lines: [61, 61] }
       - { file: "packages/excalidraw/actions/actionAlign.tsx", lines: [17, 17] }
       - { file: "packages/excalidraw/actions/actionAlign.tsx", lines: [59, 59] }
-  - id: C23
+  - id: C28
     query: "getInitializedImageElements"
     expect:
       - { file: "packages/excalidraw/components/App.tsx", lines: [147, 147] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [10636, 10636] }
       - { file: "packages/excalidraw/scene/export.ts", lines: [23, 23] }
       - { file: "packages/excalidraw/scene/export.ts", lines: [882, 882] }
-  - id: C24
+  - id: C29
     query: "FrameNameBounds"
     expect:
       - { file: "packages/element/src/collision.ts", lines: [30, 30] }
@@ -209,7 +273,7 @@ cases:
       - { file: "packages/element/src/collision.ts", lines: [127, 127] }
       - { file: "packages/excalidraw/types.ts", lines: [1509, 1509] }
       - { file: "packages/excalidraw/types.ts", lines: [1512, 1512] }
-  - id: C25
+  - id: C30
     query: "renderSpreadsheet"
     expect:
       - { file: "packages/excalidraw/charts.test.ts", lines: [15, 15] }
@@ -241,41 +305,3 @@ cases:
       - { file: "packages/excalidraw/components/PasteChartDialog.tsx", lines: [8, 8] }
       - { file: "packages/excalidraw/components/PasteChartDialog.tsx", lines: [59, 59] }
       - { file: "packages/excalidraw/index.tsx", lines: [525, 525] }
-  - id: C26
-    query: "distance2d"
-    expect:
-      - { file: "examples/with-script-in-browser/components/ExampleApp.tsx", lines: [30, 30] }
-      - { file: "examples/with-script-in-browser/components/ExampleApp.tsx", lines: [472, 472] }
-  - id: C27
-    query: "getEllipseShape"
-    expect:
-      - { file: "packages/element/src/shape.ts", lines: [9, 9] }
-      - { file: "packages/element/src/shape.ts", lines: [1204, 1204] }
-  - id: C28
-    query: "uaString"
-    expect:
-      - { file: "packages/common/src/editorInterface.ts", lines: [47, 47] }
-      - { file: "packages/common/src/editorInterface.ts", lines: [51, 51] }
-      - { file: "packages/common/src/editorInterface.ts", lines: [52, 52] }
-      - { file: "packages/common/src/editorInterface.ts", lines: [53, 53] }
-      - { file: "packages/common/src/editorInterface.ts", lines: [54, 54] }
-      - { file: "packages/common/src/editorInterface.ts", lines: [58, 58] }
-  - id: C29
-    query: "sinkDown"
-    expect:
-      - { file: "packages/common/src/binary-heap.ts", lines: [65, 65] }
-      - { file: "packages/common/src/binary-heap.ts", lines: [96, 96] }
-      - { file: "packages/common/src/binary-heap.ts", lines: [108, 108] }
-  - id: C30
-    query: "doubleClick"
-    expect:
-      - { file: "packages/element/tests/align.test.tsx", lines: [613, 613] }
-      - { file: "packages/element/tests/align.test.tsx", lines: [726, 726] }
-      - { file: "packages/element/tests/elbowArrow.test.tsx", lines: [85, 85] }
-      - { file: "packages/element/tests/elbowArrow.test.tsx", lines: [124, 124] }
-      - { file: "packages/element/tests/linearElementEditor.test.tsx", lines: [394, 394] }
-      - { file: "packages/element/tests/linearElementEditor.test.tsx", lines: [405, 405] }
-      - { file: "packages/element/tests/linearElementEditor.test.tsx", lines: [415, 415] }
-      - { file: "packages/element/tests/linearElementEditor.test.tsx", lines: [506, 506] }
-      - { file: "packages/excalidraw/tests/helpers/ui.ts", lines: [334, 334] }
-      - { file: "packages/excalidraw/tests/regressionTests.test.tsx", lines: [572, 572] }

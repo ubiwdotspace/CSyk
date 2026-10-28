@@ -26,13 +26,10 @@ cases:
     query: "Spinner"
     expect:
       - { file: "packages/excalidraw/components/Spinner.tsx", lines: [5, 41] }
-      - { file: "packages/excalidraw/components/Spinner.tsx", lines: [1, 1] }
-      - { file: "packages/excalidraw/components/Spinner.scss", lines: [1, 1] }
   - id: A07
     query: "useOutsideClick"
     expect:
       - { file: "packages/excalidraw/hooks/useOutsideClick.ts", lines: [5, 93] }
-      - { file: "packages/excalidraw/hooks/useOutsideClick.ts", lines: [1, 1] }
   - id: A08
     query: "DefaultSidebarTrigger"
     expect:
@@ -61,7 +58,6 @@ cases:
     query: "actionLink"
     expect:
       - { file: "packages/excalidraw/actions/actionLink.tsx", lines: [19, 65] }
-      - { file: "packages/excalidraw/actions/actionLink.tsx", lines: [1, 66] }
   - id: A15
     query: "mockBoundingClientRect"
     expect:
@@ -70,8 +66,6 @@ cases:
     query: "UnlockPopup"
     expect:
       - { file: "packages/excalidraw/components/UnlockPopup.tsx", lines: [24, 89] }
-      - { file: "packages/excalidraw/components/UnlockPopup.tsx", lines: [1, 1] }
-      - { file: "packages/excalidraw/components/UnlockPopup.scss", lines: [1, 1] }
   - id: A17
     query: "advanceDuplicatedListMarkers"
     expect:
@@ -79,14 +73,11 @@ cases:
   - id: A18
     query: "MainMenu"
     expect:
-      - { file: "examples/with-script-in-browser/components/ExampleApp.tsx", lines: [82, 100] }
       - { file: "packages/excalidraw/components/main-menu/MainMenu.tsx", lines: [21, 93] }
-      - { file: "packages/excalidraw/components/main-menu/MainMenu.tsx", lines: [1, 1] }
   - id: A19
     query: "DropdownMenuSubContent"
     expect:
       - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [14, 68] }
-      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [1, 1] }
   - id: A20
     query: "PolarCoords"
     expect:
@@ -111,7 +102,6 @@ cases:
     query: "actionTextAutoResize"
     expect:
       - { file: "packages/excalidraw/actions/actionTextAutoResize.ts", lines: [22, 89] }
-      - { file: "packages/excalidraw/actions/actionTextAutoResize.ts", lines: [1, 1] }
   - id: A26
     query: "ColorPickerTrigger"
     expect:
