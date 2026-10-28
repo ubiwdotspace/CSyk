@@ -7,6 +7,31 @@ with `npm run eval -- --adapter <b0|b1>`; tokens are o200k_base counts of what t
 - **B1:** CodeSift over MCP, as its own rules direct (`search_symbols` with source,
   `find_references`, `search_text`).
 
+## excalidraw
+
+[excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) at `14bb42ede` (MIT): a React +
+TypeScript monorepo with workspace packages, ~690 TS/TSX files. Cases are committed
+(`eval/cases/excalidraw.*.yaml`): generated from `tsc --lsp`, 30 per category, seed 1, leaving
+out tests, generated code and function locals. Recorded 2026-10-28.
+
+| cat | metric | B0 | B1 | CSyk target |
+|---|---|---|---|---|
+| A exact name → definition | P@1 / R@5 | 50.0% / 77.8% | 76.7% / 83.9% | ≥ 99% |
+| B fuzzy name → definition | P@1 / R@5 | 13.3% / 26.7% | 66.7% / 86.7% | ≥ 95% / ≥ 99% |
+| C all references | recall / precision | 100.0% / 75.4% | 99.3% / 75.5% | ≥ 98% / ≥ 98% |
+| E text → containing symbol | P@1 / R@5 | 100.0% / 100.0% | 100.0% / 100.0% | ≥ 95% R@5 |
+
+| cat | tokens mean (B0 → B1) | tool calls (B0 → B1) |
+|---|---|---|
+| A | 4,280 → 678 | 2.0 → 1.0 |
+| B | 3,615 → 695 | 1.3 → 1.0 |
+| C | 244 → 180 | 1.0 → 1.0 |
+| E | 12,072 → 25 | 2.0 → 1.0 |
+
+The same picture as the private corpus below: a quarter of grep's and CodeSift's references are
+noise, grep cannot rank or match a fuzzy name, and reading whole files makes grep's answers to E
+cost thousands of tokens.
+
 ## private-ts
 
 An employer React + Node monorepo (npm workspaces, ~2.3k TS/TSX files), pinned to one commit. Its
