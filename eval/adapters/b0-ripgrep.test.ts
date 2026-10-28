@@ -5,6 +5,7 @@ import { b0Ripgrep, parseHits } from './b0-ripgrep.ts';
 
 const corpus = {
   name: 'mini-ts',
+  private: false,
   root: join(dirname(fileURLToPath(import.meta.url)), '../fixtures/mini-ts'),
 };
 

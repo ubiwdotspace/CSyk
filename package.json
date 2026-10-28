@@ -11,7 +11,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "eval": "node eval/run.ts"
+    "eval": "node eval/run.ts",
+    "generate": "node eval/generate.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
@@ -20,5 +21,9 @@
     "typescript": "^7.0.2",
     "vitest": "^5.0.5",
     "yaml": "^2.9.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "vscode-languageserver-protocol": "^3.18.5"
   }
 }
