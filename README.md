@@ -6,7 +6,7 @@ CSyk aims to let an agent find the right code on the first call and read only th
 for TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go and Dart (Flutter).
 Accuracy and token savings are measured by an evaluation suite, not claimed.
 
-**Status:** P2 of [the plan](docs/PLAN.md): TypeScript and JavaScript, six tools, scored in
+**Status:** P3 of [the plan](docs/PLAN.md): TypeScript and JavaScript, seven tools, scored in
 [docs/BASELINES.md](docs/BASELINES.md).
 
 - Runs locally; code never leaves the machine.
@@ -30,9 +30,16 @@ when the server starts; the TypeScript compiler (`tsc --lsp`) starts on the firs
 | `find` | symbols whose name matches, best first: id, kind, line, signature |
 | `outline` | a file's symbols with line ranges, or each file's symbols under a folder |
 | `read` | one symbol's exact source, or its signature |
-| `refs` | every reference the compiler resolves to the symbol, grouped by file |
+| `refs` | every reference the compiler resolves to the symbol: per file, each line and the symbol it sits in (`code` adds the text) |
 | `def` | where a name, or the name at a file position, is declared |
 | `grep` | text or regex matches, each with the symbol that contains it, at most two per symbol |
+| `batch` | up to eight of the other calls in one round trip |
+
+Every answer stays within a token budget (2,000 by default, `budget` to change it): long lists
+shrink step by step, and anything left out is counted with the parameter that narrows the call.
+`read` of a body this session already saw, unchanged, returns `[unchanged: <id>, shown at call
+#n]`; that memory lasts 30 minutes, or until a hook touches the reset marker. Hints show once per
+session.
 
 ## Evaluation
 

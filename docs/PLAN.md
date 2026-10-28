@@ -3,9 +3,9 @@
 A code-search MCP server for AI agents: compiler-grade precision, minimal tokens.
 Languages: TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go, Dart (Flutter).
 
-Status: P0 (evaluation harness), P1 (TS/JS index, compiler references, MCP server) and P2 (fuzzy
-names, `grep`, zero-hit suggestions) are done; scores are in [BASELINES.md](BASELINES.md). P3 is
-next. BM25F over signatures and bodies is deferred: name matching already meets the P2 bar, and
+Status: P0 (evaluation harness), P1 (TS/JS index, compiler references, MCP server), P2 (fuzzy
+names, `grep`, zero-hit suggestions) and P3 (token layer) are done; scores are in
+[BASELINES.md](BASELINES.md). P4 (Python, Go, Dart) is next. BM25F over signatures and bodies is deferred: name matching already meets the P2 bar, and
 BM25F is for concept questions (F).
 
 ---

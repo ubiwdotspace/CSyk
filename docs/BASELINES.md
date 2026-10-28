@@ -30,10 +30,10 @@ TypeScript monorepo with workspace packages, ~690 TS/TSX files. Its cases are co
 
 | cat | tokens mean: B0 · B1 · CSyk | tool calls: B0 · B1 · CSyk |
 |---|---|---|
-| A | 4,280 · 678 · **69** | 2.0 · 1.0 · 1.0 |
-| B | 5,124 · 715 · **61** | 1.3 · 1.0 · 1.0 |
-| C | 230 · 164 · **178** | 1.0 · 1.0 · 1.0 |
-| E | 12,072 · 25 · **53** | 2.0 · 1.0 · 1.0 |
+| A | 4,280 · 678 · **42** | 2.0 · 1.0 · 1.0 |
+| B | 5,124 · 715 · **34** | 1.3 · 1.0 · 1.0 |
+| C | 230 · 164 · **88** | 1.0 · 1.0 · 1.0 |
+| E | 12,072 · 25 · **39** | 2.0 · 1.0 · 1.0 |
 
 CSyk's `refs` takes 40 ms at p50 and 121 ms at p95 with the compiler running; starting it adds a
 few seconds to the first call.
@@ -58,10 +58,10 @@ cases stay on the machine; only these aggregate numbers are recorded.
 
 | cat | tokens mean: B0 · B1 · CSyk |
 |---|---|
-| A | 2,868 · 673 · **91** |
-| B | 561 · 680 · **64** |
-| C | 569 · 363 · **249** |
-| E | 3,232 · 31 · **56** |
+| A | 2,868 · 673 · **63** |
+| B | 561 · 680 · **37** |
+| C | 569 · 363 · **121** |
+| E | 3,232 · 31 · **42** |
 
 ## What the numbers say
 
@@ -70,9 +70,12 @@ cases stay on the machine; only these aggregate numbers are recorded.
   based and scores the same. Resolving each mention through the compiler removes all of it.
 - Grep cannot rank, so an exact-name search often opens an importing file first; it cannot match
   a fuzzy name at all. CSyk ranks the declaration first every time.
-- CSyk's answers to A and B cost a tenth of CodeSift's tokens: one line per symbol, no source
-  until `read` asks for it. For E, CodeSift's single bare line still beats CSyk's, which adds a
-  heading and the enclosing symbol's name; trimming that is P3's job.
+- Token layer (P3): across A, B, C and E together CSyk reads 99% fewer tokens than B0 on
+  excalidraw and 96% fewer on private-ts, and at least 62% fewer in every single category, at the
+  same or a higher pass rate. Its A and B answers cost a twentieth of CodeSift's: one line per
+  symbol, no source until `read` asks for it. CodeSift's single bare line still beats CSyk's on E,
+  where CSyk also names the enclosing symbol, which is the answer E asks for.
+- Tool-level tokens are not agent-level tokens: the headless agent benchmark (P6) measures those.
 - CSyk reaches these scores with name matching alone (exact, squashed, prefix, substring, word
   prefix). BM25F over signatures and bodies waits for concept questions (F), where names alone
   fall short.
