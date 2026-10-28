@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { b0Ripgrep, parseHits } from './b0-ripgrep.js';
+import { b0Ripgrep, parseHits } from './b0-ripgrep.ts';
 
 const corpus = {
   name: 'mini-ts',

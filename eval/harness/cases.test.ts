@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { loadCaseFiles, parseCaseFile } from './cases.js';
-import { loadCorpora } from './corpora.js';
+import { loadCaseFiles, parseCaseFile } from './cases.ts';
+import { loadCorpora } from './corpora.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 

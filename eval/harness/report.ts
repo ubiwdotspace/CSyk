@@ -1,4 +1,4 @@
-import type { CategorySummary } from './metrics.js';
+import type { CategorySummary } from './metrics.ts';
 
 const percent = (value?: number) =>
   value === undefined ? '–' : `${(value * 100).toFixed(1)}%`;

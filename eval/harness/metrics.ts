@@ -1,4 +1,4 @@
-import { rankedCategories, type Category, type Hit, type Location } from './types.js';
+import { rankedCategories, type Category, type Hit, type Location } from './types.ts';
 
 /** Whether [hit] lands on [loc]: the same file, inside its line range if any. */
 export function matches(hit: Hit, loc: Location): boolean {
