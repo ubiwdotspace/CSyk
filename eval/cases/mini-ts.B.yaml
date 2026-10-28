@@ -1,0 +1,22 @@
+# B: the definition of a symbol from a partial or loosely spelled name.
+cases:
+  - id: B01
+    query: calcTotal
+    expect:
+      - { file: src/cart/total.ts, lines: [4, 6] }
+  - id: B02
+    query: token store
+    expect:
+      - { file: src/auth/token-store.ts, lines: [2, 23] }
+  - id: B03
+    query: kebab case
+    expect:
+      - { file: src/utils/strings.ts, lines: [2, 8] }
+  - id: B04
+    query: refreshAccess
+    expect:
+      - { file: src/auth/token-store.ts, lines: [25, 37] }
+  - id: B05
+    query: titlecase
+    expect:
+      - { file: src/utils/strings.ts, lines: [11, 13] }
