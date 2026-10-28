@@ -7,9 +7,9 @@ cases:
     expect:
       - { file: "packages/common/src/colors.ts", lines: [275, 281] }
   - id: B02
-    query: "mermaid config"
+    query: "mermaid to excalidraw lib props"
     expect:
-      - { file: "packages/excalidraw/components/TTDDialog/types.ts", lines: [5, 5] }
+      - { file: "packages/excalidraw/components/TTDDialog/types.ts", lines: [80, 95] }
   - id: B03
     query: "AtomWithInitialValue"
     expect:
@@ -19,106 +19,106 @@ cases:
     expect:
       - { file: "excalidraw-app/data/tabSync.ts", lines: [12, 15] }
   - id: B05
-    query: "ToObject"
+    query: "ReadonlyArray"
     expect:
-      - { file: "packages/common/src/utils.ts", lines: [609, 616] }
+      - { file: "packages/common/src/utils.ts", lines: [1170, 1172] }
   - id: B06
     query: "use outside click"
     expect:
       - { file: "packages/excalidraw/hooks/useOutsideClick.ts", lines: [5, 93] }
   - id: B07
-    query: "TabTriggers"
+    query: "DefaTabTriggers"
     expect:
       - { file: "packages/excalidraw/components/DefaultSidebar.tsx", lines: [46, 53] }
   - id: B08
-    query: "encoFilesForUpload"
+    query: "FilesForUpload"
     expect:
       - { file: "excalidraw-app/data/FileManager.ts", lines: [228, 270] }
   - id: B09
-    query: "flags integration"
+    query: "sentry env hostname map"
     expect:
-      - { file: "excalidraw-app/sentry.ts", lines: [85, 88] }
+      - { file: "excalidraw-app/sentry.ts", lines: [5, 9] }
   - id: B10
-    query: "t promise pool"
+    query: "load firestore"
     expect:
-      - { file: "packages/common/src/promise-pool.ts", lines: [5, 14] }
+      - { file: "excalidraw-app/data/firebase.ts", lines: [63, 67] }
   - id: B11
-    query: "FilesToFirebase"
+    query: "VisualDebuggerEnabled"
     expect:
-      - { file: "excalidraw-app/data/firebase.ts", lines: [144, 174] }
+      - { file: "excalidraw-app/components/DebugCanvas.tsx", lines: [435, 436] }
   - id: B12
-    query: "debug renderer"
+    query: "CloneByOrigId"
     expect:
-      - { file: "excalidraw-app/components/DebugCanvas.tsx", lines: [408, 417] }
+      - { file: "packages/excalidraw/tests/test-utils.ts", lines: [287, 301] }
   - id: B13
-    query: "action link"
-    expect:
-      - { file: "packages/excalidraw/actions/actionLink.tsx", lines: [19, 65] }
-  - id: B14
-    query: "asseElements"
-    expect:
-      - { file: "packages/excalidraw/tests/test-utils.ts", lines: [314, 428] }
-  - id: B15
     query: "unlock popup"
     expect:
       - { file: "packages/excalidraw/components/UnlockPopup.tsx", lines: [24, 89] }
+  - id: B14
+    query: "apply list marker advances"
+    expect:
+      - { file: "packages/element/src/listMarker.ts", lines: [342, 373] }
+  - id: B15
+    query: "base align offset"
+    expect:
+      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [11, 11] }
   - id: B16
-    query: "list marker regex"
+    query: "local coord"
     expect:
-      - { file: "packages/element/src/listMarker.ts", lines: [22, 23] }
+      - { file: "packages/math/src/types.ts", lines: [62, 64] }
   - id: B17
-    query: "main menu"
+    query: "debug element"
     expect:
-      - { file: "packages/excalidraw/components/main-menu/MainMenu.tsx", lines: [21, 93] }
+      - { file: "packages/element/src/visualdebug.ts", lines: [32, 36] }
   - id: B18
-    query: "base side offset"
+    query: "go to collaborator component props"
     expect:
-      - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuSubContent.tsx", lines: [12, 12] }
+      - { file: "packages/excalidraw/components/UserList.tsx", lines: [21, 26] }
   - id: B19
-    query: "InclRange"
+    query: "active confirm dialog atom"
     expect:
-      - { file: "packages/math/src/types.ts", lines: [24, 24] }
+      - { file: "packages/excalidraw/components/ActiveConfirmDialog.tsx", lines: [8, 8] }
   - id: B20
-    query: "DrawPoint"
+    query: "FlipAdjustedCropPosition"
     expect:
-      - { file: "packages/element/src/visualdebug.ts", lines: [156, 187] }
+      - { file: "packages/element/src/cropElement.ts", lines: [323, 359] }
   - id: B21
-    query: "user list props"
-    expect:
-      - { file: "packages/excalidraw/components/UserList.tsx", lines: [100, 108] }
-  - id: B22
-    query: "ConfirmDialog"
-    expect:
-      - { file: "packages/excalidraw/components/ActiveConfirmDialog.tsx", lines: [10, 36] }
-  - id: B23
-    query: "UncroppedWidthAndHeight"
-    expect:
-      - { file: "packages/element/src/cropElement.ts", lines: [280, 297] }
-  - id: B24
-    query: "action text auto resize"
+    query: "actiTextAutoResize"
     expect:
       - { file: "packages/excalidraw/actions/actionTextAutoResize.ts", lines: [22, 89] }
+  - id: B22
+    query: "are color picker props equal"
+    expect:
+      - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [517, 545] }
+  - id: B23
+    query: "flowchart operation"
+    expect:
+      - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [22, 28] }
+  - id: B24
+    query: "calculate translation"
+    expect:
+      - { file: "packages/element/src/align.ts", lines: [58, 86] }
   - id: B25
-    query: "color picker popup content"
+    query: "normalize svg"
     expect:
-      - { file: "packages/excalidraw/components/ColorPicker/ColorPicker.tsx", lines: [72, 258] }
+      - { file: "packages/element/src/image.ts", lines: [116, 165] }
   - id: B26
-    query: "capture update"
+    query: "ViewUIDock"
     expect:
-      - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [178, 182] }
+      - { file: "packages/excalidraw/types.ts", lines: [1590, 1590] }
   - id: B27
-    query: "align elements"
-    expect:
-      - { file: "packages/element/src/align.ts", lines: [20, 56] }
-  - id: B28
-    query: "get initialized image elements"
-    expect:
-      - { file: "packages/element/src/image.ts", lines: [103, 108] }
-  - id: B29
-    query: "PendExcalidrawElements"
-    expect:
-      - { file: "packages/excalidraw/types.ts", lines: [1544, 1544] }
-  - id: B30
-    query: "rendSpreadsheet"
+    query: "render spreadsheet"
     expect:
       - { file: "packages/excalidraw/charts/index.ts", lines: [26, 41] }
+  - id: B28
+    query: "PickHeading"
+    expect:
+      - { file: "packages/excalidraw/components/ColorPicker/PickerHeading.tsx", lines: [3, 5] }
+  - id: B29
+    query: "point in ellipse"
+    expect:
+      - { file: "packages/utils/src/shape.ts", lines: [469, 489] }
+  - id: B30
+    query: "mq max width landscape"
+    expect:
+      - { file: "packages/common/src/editorInterface.ts", lines: [21, 21] }

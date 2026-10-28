@@ -51,3 +51,21 @@ export function fuzzyQuery(name: string, random: () => number): string | undefin
   const query = styles[Math.floor(random() * styles.length)]?.();
   return query && query !== name && query.length >= 8 ? query : undefined;
 }
+
+/**
+ * Whether [name] answers [query] at all: the same letters once case and
+ * separators are dropped, or each query word starting a name word, in
+ * order. A fuzzy case is fair only when one name in the repo answers it.
+ */
+export function answers(query: string, name: string): boolean {
+  const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (squash(query) === squash(name)) return true;
+  const nameWords = splitWords(name).map((w) => w.toLowerCase());
+  let at = 0;
+  for (const word of splitWords(query).map((w) => w.toLowerCase())) {
+    while (at < nameWords.length && !nameWords[at]?.startsWith(word)) at++;
+    if (at === nameWords.length) return false;
+    at++;
+  }
+  return true;
+}

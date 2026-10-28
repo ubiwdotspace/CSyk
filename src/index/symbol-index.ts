@@ -82,6 +82,10 @@ export class SymbolIndex {
     return count;
   }
 
+  has(file: string): boolean {
+    return this.byFile.has(file);
+  }
+
   symbolsIn(file: string): CodeSymbol[] {
     return this.byFile.get(file) ?? [];
   }
@@ -117,7 +121,12 @@ export class SymbolIndex {
         if (options.path && !symbol.file.startsWith(options.path)) continue;
         const match = nameScore(symbol.name, query, squashed, queryWords);
         if (match === 0) continue;
-        const weight = kindWeight[symbol.kind] * (symbol.isTest ? 0.3 : 1) * (symbol.exported ? 1 : 0.95);
+        const weight =
+          kindWeight[symbol.kind] *
+          (symbol.isTest ? 0.3 : 1) *
+          (symbol.exported ? 1 : 0.95) *
+          // A leading underscore marks a private helper.
+          (symbol.name.startsWith('_') ? 0.9 : 1);
         scored.push({ symbol, score: match * weight });
       }
     }
@@ -129,6 +138,21 @@ export class SymbolIndex {
         a.symbol.line - b.symbol.line,
     );
     return scored.slice(0, options.limit ?? 10).map((entry) => entry.symbol);
+  }
+
+  /**
+   * Up to three names closest to [query] for a search that found nothing:
+   * within two edits of it, ignoring case and separators.
+   */
+  nearest(query: string): string[] {
+    const target = squash(query);
+    const scored: { name: string; distance: number }[] = [];
+    for (const name of this.byName.keys()) {
+      const distance = editDistance(target, squash(name), 2);
+      if (distance <= 2) scored.push({ name, distance });
+    }
+    scored.sort((a, b) => a.distance - b.distance || a.name.localeCompare(b.name));
+    return scored.slice(0, 3).map((s) => s.name);
   }
 
   private remove(file: string): void {
@@ -158,3 +182,23 @@ function nameScore(name: string, query: string, squashed: string, queryWords: st
   }
   return 45;
 }
+
+// Levenshtein distance between [a] and [b], cut off just above [max].
+function editDistance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const value = Math.min((previous[j] ?? 0) + 1, (current[j - 1] ?? 0) + 1, (previous[j - 1] ?? 0) + cost);
+      current.push(value);
+      best = Math.min(best, value);
+    }
+    if (best > max) return max + 1;
+    previous = current;
+  }
+  return previous[b.length] ?? max + 1;
+}
+

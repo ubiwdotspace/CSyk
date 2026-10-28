@@ -30,9 +30,9 @@ const call = async (name: string, args: Record<string, unknown>) => {
 };
 
 describe('the MCP server', () => {
-  it('offers five tools whose list stays small', async () => {
+  it('offers six tools whose list stays small', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(['def', 'find', 'outline', 'read', 'refs']);
+    expect(tools.map((t) => t.name).sort()).toEqual(['def', 'find', 'grep', 'outline', 'read', 'refs']);
     expect(countTokens(JSON.stringify(tools))).toBeLessThan(1000);
   });
 
@@ -55,6 +55,16 @@ describe('the MCP server', () => {
       'src/cart/total.ts:4',
     );
   }, 30_000);
+
+  it('greps text and names the symbol around each hit', async () => {
+    const answer = await call('grep', { pattern: 'Session expired' });
+    expect(answer).toContain('src/auth/token-store.ts:32  refreshAccessToken');
+    expect(await call('grep', { pattern: 'nothing like this' })).toContain('no match');
+  });
+
+  it('suggests near names when find has no hit', async () => {
+    expect(await call('find', { query: 'calculateTotl' })).toContain('nearest: calculateTotal');
+  });
 
   it('says what is wrong instead of failing', async () => {
     expect(await call('read', { target: 'noSuchThing' })).toContain('no symbol named noSuchThing');

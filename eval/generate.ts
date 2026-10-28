@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
 import type { Corpus } from './harness/types.ts';
-import { fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
+import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, TsOracle } from './oracle/ts-oracle.ts';
 
 const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|E> [--count 30] [--seed 1] [--force]
@@ -78,6 +78,8 @@ async function symbolCases(
 ): Promise<Generated[]> {
   const cases: Generated[] = [];
   const seen = new Set<string>();
+  // Every name in the repo, to keep only fuzzy queries one name answers.
+  const names = category === 'B' ? await oracle.names(oracle.files) : new Set<string>();
   for (const file of shuffle(oracle.files.filter(isSource), random)) {
     if (cases.length >= count) break;
     const symbols = shuffle(await oracle.symbols(file), random);
@@ -92,8 +94,9 @@ async function symbolCases(
         character: symbol.selectionRange.start.character,
       });
       if (self?.file !== file || self.nameLine !== symbol.selectionRange.start.line) continue;
+      if (await oracle.isImport(file, symbol.selectionRange.start)) continue;
       const declarations = await oracle.declarations(name);
-      const made = await makeCase(oracle, category, name, declarations, random);
+      const made = await makeCase(oracle, category, name, declarations, random, names);
       if (made) {
         cases.push(made);
         break;
@@ -109,6 +112,7 @@ async function makeCase(
   name: string,
   declarations: Awaited<ReturnType<TsOracle['declarations']>>,
   random: () => number,
+  names: ReadonlySet<string>,
 ): Promise<Generated | undefined> {
   const lines = (d: (typeof declarations)[number]): [number, number] => [d.startLine + 1, d.endLine + 1];
   if (category === 'A') {
@@ -120,7 +124,9 @@ async function makeCase(
   if (!only || declarations.length !== 1) return undefined;
   if (category === 'B') {
     const query = fuzzyQuery(name, random);
-    return query ? { query, expect: [{ file: only.file, lines: lines(only) }] } : undefined;
+    // A query that another name answers too is ambiguous, not fuzzy.
+    const unique = query !== undefined && [...names].every((other) => other === name || !answers(query, other));
+    return unique ? { query, expect: [{ file: only.file, lines: lines(only) }] } : undefined;
   }
   const refs = await oracle.references(name, only);
   const unique = new Map(refs.map((ref) => [`${ref.file}:${ref.line}`, ref]));
