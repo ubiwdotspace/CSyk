@@ -11,3 +11,24 @@ excalidraw:
   commit: 14bb42edee3d6fee6be264e3ee78670b3b9cee79
   path: eval/corpora/excalidraw
   codesift: local/excalidraw
+
+# FastAPI application, archived (Apache-2.0).
+dispatch:
+  git: https://github.com/Netflix/dispatch.git
+  commit: dd2837e82a0bf5565b1b4b4b91ea30b7262d4061
+  path: eval/corpora/dispatch
+  codesift: local/dispatch
+
+# Go service with HTTP routers (MIT).
+pocketbase:
+  git: https://github.com/pocketbase/pocketbase.git
+  commit: 7f2773ec234b62d0b80ca47c508397cb3d0da3ea
+  path: eval/corpora/pocketbase
+  codesift: local/pocketbase
+
+# Flutter app (MIT).
+wonderous:
+  git: https://github.com/gskinnerTeam/flutter-wonderous-app.git
+  commit: 747b945a7e5239356bf2664261aa2f3b020b8898
+  path: eval/corpora/wonderous
+  codesift: local/flutter-wonderous-app

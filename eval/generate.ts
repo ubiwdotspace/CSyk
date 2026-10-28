@@ -4,23 +4,25 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
+import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
-import { caseKinds, TsOracle } from './oracle/ts-oracle.ts';
+import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|E> [--count 30] [--seed 1] [--force]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|E> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
-TypeScript compiler (tsc --lsp), to eval/cases/, or eval/cases/private/ for
-a corpus from corpora.local.yaml. Review the cases before trusting them.`;
+language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
+to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
+Review the cases before trusting them.`;
 
 type Generated = { query: string; expect: { file: string; lines: [number, number] }[] };
 
 // Code a case should be about: not tests, end-to-end suites, stories, or
-// generated and vendored code such as WebAssembly glue.
-const notSource =
-  /(__tests__|\.test\.|\.spec\.|\.stories\.|(^|\/)e2e\/|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.)/;
-const isSource = (file: string) => !notSource.test(file);
+// generated and vendored code such as WebAssembly glue or protobuf stubs.
+const generated =
+  /(\.stories\.|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.|\.pb\.go$|_gen\.go$|\.g\.dart$|\.freezed\.dart$)/;
+const isSource = (file: string) => !isTestFile(file) && !generated.test(file);
 
 // Names worth searching for: identifiers of five characters or more.
 const isSearchable = (name: string) => /^[A-Za-z_$][\w$]{4,}$/.test(name);
@@ -33,6 +35,7 @@ async function main(): Promise<void> {
       count: { type: 'string', default: '30' },
       seed: { type: 'string', default: '1' },
       force: { type: 'boolean', default: false },
+      lang: { type: 'string', default: 'ts' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -55,7 +58,8 @@ async function main(): Promise<void> {
 
   const count = Number(values.count);
   const random = seeded(Number(values.seed));
-  const oracle = await TsOracle.start(corpus.root);
+  if (!oracleServers[values.lang]) throw new Error(`--lang must be one of ${Object.keys(oracleServers).join(', ')}`);
+  const oracle = await LspOracle.start(corpus.root, values.lang);
   try {
     const cases =
       category === 'E'
@@ -71,7 +75,7 @@ async function main(): Promise<void> {
 
 /** A, B and C cases: one symbol per file, from files in random order. */
 async function symbolCases(
-  oracle: TsOracle,
+  oracle: LspOracle,
   category: string,
   count: number,
   random: () => number,
@@ -107,10 +111,10 @@ async function symbolCases(
 }
 
 async function makeCase(
-  oracle: TsOracle,
+  oracle: LspOracle,
   category: string,
   name: string,
-  declarations: Awaited<ReturnType<TsOracle['declarations']>>,
+  declarations: Awaited<ReturnType<LspOracle['declarations']>>,
   random: () => number,
   names: ReadonlySet<string>,
 ): Promise<Generated | undefined> {
@@ -142,8 +146,8 @@ async function makeCase(
 const sentencePattern = String.raw`["'\x60][A-Z][a-z]+ [^"'\x60$]{12,}["'\x60]`;
 
 /** E cases: sentences written once in the repo, answered by their enclosing symbol. */
-async function stringCases(oracle: TsOracle, count: number, random: () => number): Promise<Generated[]> {
-  const found = gitGrep(oracle.root, ['-n', '-E', '-e', sentencePattern, '--', '*.ts', '*.tsx', ':!*.d.ts']);
+async function stringCases(oracle: LspOracle, count: number, random: () => number): Promise<Generated[]> {
+  const found = gitGrep(oracle.root, ['-n', '-E', '-e', sentencePattern, '--', ...oracle.files.filter(isSource)]);
   const cases: Generated[] = [];
   for (const entry of shuffle(found, random)) {
     if (cases.length >= count) break;

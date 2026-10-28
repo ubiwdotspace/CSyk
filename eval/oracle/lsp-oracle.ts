@@ -1,20 +1,23 @@
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
-import { isCodeAt, parseTs } from '../../src/index/ts-parser.ts';
+import { isCodeAt, isImportAt, parseFile } from '../../src/index/parse.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
+import { servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
 
 const run = promisify(execFile);
 
-const tsc = join(dirname(fileURLToPath(import.meta.url)), '../../node_modules/.bin/tsc');
+/** The languages cases can be generated for, by the server that answers them. */
+export const oracleServers: Record<string, string> = { ts: 'tsc', py: 'pyright', go: 'gopls', dart: 'dart' };
 
 /** Symbol kinds that a case can be about: code you would search for. */
 export const caseKinds: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Function,
   SymbolKind.Class,
+  SymbolKind.Struct,
   SymbolKind.Interface,
   SymbolKind.Enum,
   SymbolKind.Variable,
@@ -26,6 +29,7 @@ export const caseKinds: ReadonlySet<SymbolKind> = new Set([
 // Kinds whose children are members rather than locals.
 const memberParents: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Class,
+  SymbolKind.Struct,
   SymbolKind.Interface,
   SymbolKind.Enum,
 ]);
@@ -36,57 +40,60 @@ const containerKinds: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Method,
   SymbolKind.Constructor,
   SymbolKind.Class,
+  SymbolKind.Struct,
   SymbolKind.Variable,
   SymbolKind.Constant,
   SymbolKind.Property,
 ]);
 
 /**
- * Answers for TypeScript cases from the compiler itself (`tsc --lsp`), with
- * every tsconfig project loaded and no time limit.
+ * Answers for cases from a language server itself (`tsc --lsp`, pyright,
+ * gopls, the Dart analysis server), with no time limit.
  *
  * References are found by resolving each textual mention of a name to its
- * declaration: each file is resolved by its own project, so this crosses
- * package boundaries (re-exports, workspace packages) that a single
- * project's reference search misses, and it tells apart same-named symbols.
+ * declaration: each file is resolved in its own project, so this crosses
+ * package boundaries (re-exports, workspace packages) that one project's
+ * reference search can miss, and it tells same-named symbols apart.
  * Mentions under another name (`import { a as b }`) are not followed.
  */
-export class TsOracle {
+export class LspOracle {
   readonly root: string;
   readonly files: readonly string[];
   private readonly lsp: LspClient;
+  private readonly spec: ServerSpec;
 
-  private constructor(root: string, files: string[], lsp: LspClient) {
+  private constructor(root: string, files: string[], lsp: LspClient, spec: ServerSpec) {
     this.root = root;
     this.files = files;
     this.lsp = lsp;
+    this.spec = spec;
   }
 
-  static async start(root: string): Promise<TsOracle> {
-    const files = (await git(root, ['ls-files', '*.ts', '*.tsx', '*.mts', '*.cts']))
-      .filter((file) => !file.endsWith('.d.ts'));
-    const lsp = await LspClient.start(tsc, ['--lsp', '--stdio'], root);
-    const oracle = new TsOracle(root, files, lsp);
-    // A symbol request in one file of each project makes the server load it.
-    for (const config of await git(root, ['ls-files', '*tsconfig.json'])) {
-      const dir = dirname(config);
-      const file = files.find((f) => dir === '.' || f.startsWith(`${dir}/`));
-      if (file) await lsp.documentSymbols(file);
+  /** Starts the server for [lang] (`ts`, `py`, `go` or `dart`) in [root]. */
+  static async start(root: string, lang = 'ts'): Promise<LspOracle> {
+    const spec = servers.find((s) => s.name === oracleServers[lang]);
+    const launch = spec?.command();
+    if (!spec || !launch || !existsSync(launch.command)) {
+      throw new Error(`No language server for ${lang}: install ${oracleServers[lang] ?? lang}`);
     }
-    return oracle;
+    const files = (await git(root, ['ls-files', ...[...spec.extensions].map((e) => `*${e}`)])).filter(
+      (file) => !file.endsWith('.d.ts'),
+    );
+    const lsp = await LspClient.start(launch.command, launch.args, root);
+    await spec.warmup?.(lsp, root);
+    return new LspOracle(root, files, lsp, spec);
   }
 
   /**
-   * The top-level symbols of [file] and the members of its classes,
-   * interfaces and enums. A function's children are its locals, which
-   * nobody searches for by name, so they are left out.
+   * The top-level symbols of [file] and the members of its types. A
+   * function's children are its locals, which nobody searches for by name,
+   * so they are left out. Go methods named `(*T).M` are named `M`.
    */
   async symbols(file: string): Promise<DocumentSymbol[]> {
     const top = await this.lsp.documentSymbols(file);
-    return top.flatMap((symbol) => [
-      symbol,
-      ...(memberParents.has(symbol.kind) ? (symbol.children ?? []) : []),
-    ]);
+    return top
+      .flatMap((symbol) => [symbol, ...(memberParents.has(symbol.kind) ? (symbol.children ?? []) : [])])
+      .map((symbol) => ({ ...symbol, name: symbol.name.replace(/^\(\*?[\w[\], ]+\)\./, '') }));
   }
 
   /** Where the name at [at] is declared, when that is inside the repo. */
@@ -94,9 +101,10 @@ export class TsOracle {
     return (await this.lsp.definition(at))[0];
   }
 
-  /** Every place [name] is written as a whole word in a TS file. */
+  /** Every place [name] is written as a whole word in a file of this language. */
   async mentions(name: string): Promise<Position[]> {
-    const lines = await git(this.root, ['grep', '-n', '-w', '-F', name, '--', ...tsPathspecs]);
+    const pathspecs = [...this.spec.extensions].map((e) => `*${e}`);
+    const lines = await git(this.root, ['grep', '-n', '-w', '-F', name, '--', ...pathspecs, ':!*.d.ts']);
     const word = new RegExp(`(?<![\\w$])${escape(name)}(?![\\w$])`, 'g');
     const positions: Position[] = [];
     for (const entry of lines) {
@@ -112,8 +120,9 @@ export class TsOracle {
   /**
    * The distinct declarations of [name] that a search for it means: those
    * that mentions in code resolve to and that are top-level symbols or
-   * members, not function locals. Mentions inside strings and comments are
-   * skipped; an import path resolves to its module, which is no declaration.
+   * members, not function locals or imports. Mentions inside strings and
+   * comments are skipped; an import path resolves to its module, which is
+   * no declaration.
    */
   async declarations(name: string): Promise<Span[]> {
     const found = new Map<string, Span>();
@@ -122,50 +131,6 @@ export class TsOracle {
       if (span && (await this.isSymbol(name, span))) found.set(`${span.file}:${span.nameLine}`, span);
     }
     return [...found.values()];
-  }
-
-  // Whether [span] declares a symbol of its file's outline called [name],
-  // not a name it only imports.
-  private async isSymbol(name: string, span: Span): Promise<boolean> {
-    const symbols = await this.symbols(span.file);
-    const symbol = symbols.find((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
-    return symbol !== undefined && !(await this.isImport(span.file, symbol.selectionRange.start));
-  }
-
-  /** Whether the name at [at] in [file] is bound by an import. */
-  async isImport(file: string, at: { line: number; character: number }): Promise<boolean> {
-    const tree = await parseTs(file, await this.text(file));
-    try {
-      let node = tree?.rootNode.descendantForPosition({ row: at.line, column: at.character }) ?? null;
-      for (; node; node = node.parent) if (node.type === 'import_statement') return true;
-      return false;
-    } finally {
-      tree?.delete();
-    }
-  }
-
-  /** Every symbol name in the outlines of [files]. */
-  async names(files: readonly string[]): Promise<Set<string>> {
-    const names = new Set<string>();
-    for (const file of files) for (const symbol of await this.symbols(file)) names.add(symbol.name);
-    return names;
-  }
-
-  // Mentions of [name] outside strings and comments.
-  private async codeMentions(name: string): Promise<Position[]> {
-    const mentions = await this.mentions(name);
-    const code: Position[] = [];
-    for (const file of new Set(mentions.map((m) => m.file))) {
-      const tree = await parseTs(file, await this.text(file));
-      try {
-        for (const m of mentions) {
-          if (m.file === file && (!tree || isCodeAt(tree, m.line, m.character))) code.push(m);
-        }
-      } finally {
-        tree?.delete();
-      }
-    }
-    return code;
   }
 
   /**
@@ -178,9 +143,7 @@ export class TsOracle {
       const own = mention.file === declaration.file && mention.line === declaration.nameLine;
       if (own) continue;
       const span = await this.resolve(mention);
-      if (span?.file === declaration.file && span.nameLine === declaration.nameLine) {
-        refs.push(mention);
-      }
+      if (span?.file === declaration.file && span.nameLine === declaration.nameLine) refs.push(mention);
     }
     return refs;
   }
@@ -199,6 +162,23 @@ export class TsOracle {
     return best;
   }
 
+  /** Whether the name at [at] in [file] is bound by an import. */
+  async isImport(file: string, at: { line: number; character: number }): Promise<boolean> {
+    const tree = await parseFile(file, await this.text(file));
+    try {
+      return tree ? isImportAt(tree, at.line, at.character) : false;
+    } finally {
+      tree?.delete();
+    }
+  }
+
+  /** Every symbol name in the outlines of [files]. */
+  async names(files: readonly string[]): Promise<Set<string>> {
+    const names = new Set<string>();
+    for (const file of files) for (const symbol of await this.symbols(file)) names.add(symbol.name);
+    return names;
+  }
+
   async text(file: string): Promise<string> {
     return readFile(join(this.root, file), 'utf8');
   }
@@ -206,9 +186,32 @@ export class TsOracle {
   async stop(): Promise<void> {
     await this.lsp.stop();
   }
-}
 
-const tsPathspecs = ['*.ts', '*.tsx', '*.mts', '*.cts', ':!*.d.ts'];
+  // Whether [span] declares a symbol of its file's outline called [name],
+  // not a name it only imports.
+  private async isSymbol(name: string, span: Span): Promise<boolean> {
+    const symbols = await this.symbols(span.file);
+    const symbol = symbols.find((s) => s.name === name && s.selectionRange.start.line === span.nameLine);
+    return symbol !== undefined && !(await this.isImport(span.file, symbol.selectionRange.start));
+  }
+
+  // Mentions of [name] outside strings and comments.
+  private async codeMentions(name: string): Promise<Position[]> {
+    const mentions = await this.mentions(name);
+    const code: Position[] = [];
+    for (const file of new Set(mentions.map((m) => m.file))) {
+      const tree = await parseFile(file, await this.text(file));
+      try {
+        for (const m of mentions) {
+          if (m.file === file && (!tree || isCodeAt(tree, m.line, m.character))) code.push(m);
+        }
+      } finally {
+        tree?.delete();
+      }
+    }
+    return code;
+  }
+}
 
 async function git(cwd: string, args: string[]): Promise<string[]> {
   try {

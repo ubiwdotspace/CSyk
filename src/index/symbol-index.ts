@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { listFiles } from '../workspace/files.ts';
 import type { CodeSymbol, SymbolKind } from './symbols.ts';
-import { extractTsSymbols, tsExtensions } from './ts-parser.ts';
+import { extractSymbols, sourceExtensions } from './parse.ts';
 
 export type SearchOptions = { kind?: SymbolKind; path?: string; limit?: number };
 
@@ -10,7 +10,10 @@ export type SearchOptions = { kind?: SymbolKind; path?: string; limit?: number }
 const kindWeight: Record<SymbolKind, number> = {
   function: 1,
   component: 1,
+  widget: 1,
+  route: 0.95,
   hook: 0.95,
+  provider: 0.9,
   class: 0.9,
   method: 0.85,
   interface: 0.8,
@@ -48,7 +51,7 @@ export class SymbolIndex {
 
   static async build(root: string): Promise<SymbolIndex> {
     const index = new SymbolIndex(root);
-    const files = await listFiles(root, tsExtensions);
+    const files = await listFiles(root, sourceExtensions);
     // Parsing is quick; reading files a batch at a time keeps it from waiting on disk.
     for (let i = 0; i < files.length; i += 64) {
       await Promise.all(files.slice(i, i + 64).map((file) => index.update(file)));
@@ -65,7 +68,7 @@ export class SymbolIndex {
     } catch {
       return;
     }
-    const symbols = await extractTsSymbols(file, text);
+    const symbols = await extractSymbols(file, text);
     this.byFile.set(file, symbols);
     for (const symbol of symbols) {
       this.byName.set(symbol.name, [...(this.byName.get(symbol.name) ?? []), symbol]);
