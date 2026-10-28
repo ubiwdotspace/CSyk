@@ -6,7 +6,7 @@ CSyk aims to let an agent find the right code on the first call and read only th
 for TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go and Dart (Flutter).
 Accuracy and token savings are measured by an evaluation suite, not claimed.
 
-**Status:** P1 of [the plan](docs/PLAN.md): TypeScript and JavaScript, five tools, scored in
+**Status:** P2 of [the plan](docs/PLAN.md): TypeScript and JavaScript, six tools, scored in
 [docs/BASELINES.md](docs/BASELINES.md).
 
 - Runs locally; code never leaves the machine.
@@ -32,6 +32,7 @@ when the server starts; the TypeScript compiler (`tsc --lsp`) starts on the firs
 | `read` | one symbol's exact source, or its signature |
 | `refs` | every reference the compiler resolves to the symbol, grouped by file |
 | `def` | where a name, or the name at a file position, is declared |
+| `grep` | text or regex matches, each with the symbol that contains it, at most two per symbol |
 
 ## Evaluation
 
