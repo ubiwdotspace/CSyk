@@ -13,6 +13,11 @@ import { plural, references, resolve, type Location, type ToolResult } from './t
 
 const run = promisify(execFile);
 
+// More callers than this at one level are listed, not followed further.
+const maxFanOut = 40;
+// How long `calls` and `impact` resolve mentions in all before answering with what they have.
+const toolMs = 6000;
+
 // Kinds a member access calls when it reaches them.
 const callableKinds: ReadonlySet<SymbolKind> = new Set(['function', 'method', 'hook', 'component', 'route']);
 
@@ -49,18 +54,21 @@ export async function calls(
   const rows: { text: string; locations: Location[] }[] = [];
   const seen = new Set([symbol.id]);
   let precision = 'lsp';
+  const deadline = Date.now() + toolMs;
 
   const visit = async (from: CodeSymbol, level: number): Promise<void> => {
     const indent = '  '.repeat(level - 1);
     if (direction === 'in') {
-      const found = await callersOf(ws, from);
+      const found = await callersOf(ws, from, deadline);
       if (found.precision !== 'lsp') precision = found.precision;
+      // Following every caller of a much-used symbol takes long and shows little.
+      const deeper = level < depth && found.callers.length <= maxFanOut;
       for (const caller of found.callers.slice(0, limit)) {
         rows.push({
           text: `${indent}${caller.home?.id ?? `${caller.file} (top level)`}  ${caller.lines.join(', ')}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
-        if (level < depth && caller.home && !seen.has(caller.home.id)) {
+        if (deeper && caller.home && !caller.home.isTest && !seen.has(caller.home.id)) {
           seen.add(caller.home.id);
           await visit(caller.home, level + 1);
         }
@@ -113,10 +121,15 @@ export async function impact(
   const seen = new Set(changed.keys());
   let level = [...changed.values()];
   let precision = 'lsp';
+  const deadline = Date.now() + toolMs;
+  let stoppedAt = 0;
   for (let step = 1; step <= depth && level.length > 0; step++) {
     const next: CodeSymbol[] = [];
-    for (const symbol of level) {
-      const found = await callersOf(ws, symbol);
+    // A level's searches run a few at a time; their answers are read in order.
+    const searches = (await pool(level, 4, async (symbol) => ({ symbol, found: await callersOf(ws, symbol, deadline) }))).filter(
+      (s) => s !== undefined,
+    );
+    for (const { symbol, found } of searches) {
       if (found.precision !== 'lsp') precision = found.precision;
       for (const caller of found.callers) {
         if (isTestFile(caller.file)) tests.add(caller.file);
@@ -127,15 +140,21 @@ export async function impact(
           text: `caller ${step}  ${id}  ${caller.lines.join(', ')}  ← ${symbol.name}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
-        if (caller.home) next.push(caller.home);
+        // Tests have no callers worth following.
+        if (caller.home && !caller.home.isTest) next.push(caller.home);
       }
+    }
+    if (step < depth && next.length > maxFanOut) {
+      stoppedAt = step;
+      break;
     }
     level = next;
   }
   rows.push(...[...tests].sort().map((file) => ({ text: `test  ${file}`, locations: [] })));
+  const stopped = stoppedAt ? ` · stopped at caller level ${stoppedAt}: ${maxFanOut}+ callers to follow; run calls on one` : '';
   const header =
     `impact · since ${since} · ${plural(changed.size, 'symbol')} changed in ${plural(files.size, 'file')}` +
-    ` · ${plural(tests.size, 'test file')} · ${precision}`;
+    ` · ${plural(tests.size, 'test file')} · ${precision}${stopped}`;
   return shown(header, rows, budget);
 }
 
@@ -146,10 +165,14 @@ function shown(header: string, rows: { text: string; locations: Location[] }[], 
 }
 
 // The callers of [symbol]: its references in call position, by enclosing symbol.
-async function callersOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callers: Caller[]; precision: string }> {
+async function callersOf(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  deadline: number,
+): Promise<{ callers: Caller[]; precision: string }> {
   // Dispatch matters here: a call through an interface reaches its implementations.
   // Only uses as a value are resolved, which spares imports, exports and types.
-  const { found, precision } = await references(ws, symbol, { viaSupertypes: true, where: isValueUseAt });
+  const { found, precision } = await references(ws, symbol, { viaSupertypes: true, where: isValueUseAt, deadline });
   const byHome = new Map<string, Caller>();
   for (const site of found) {
     const home = ws.index.containing(site.file, site.line + 1);
@@ -201,7 +224,7 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
       }
       return { line: name.row + 1, declared };
     });
-    for (const { line, declared } of resolved) {
+    for (const { line, declared } of resolved.filter((r) => r !== undefined)) {
       for (const callee of declared) {
         // The signatures of an overloaded function are one callee: the first.
         const key = callee.symbol ? `${callee.file}#${callee.symbol.parent ?? ''}.${callee.symbol.name}` : callee.label;

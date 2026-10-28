@@ -34,6 +34,12 @@ describe('calls', () => {
     expect(result.text.split('\n').slice(1)).toEqual(['checkout.ts#checkout  4', '  checkout.test.ts (top level)  3']);
   }, 30_000);
 
+  it('finds a name even when a closer-ranked name looks the same squashed', async () => {
+    writeFileSync(join(root, 'signal.ts'), 'export function update_signal() { return _update_signal(); }\nfunction _update_signal() {}\n');
+    await ws.index.update('signal.ts');
+    expect((await calls(ws, '_update_signal')).text.split('\n').slice(1)).toEqual(['signal.ts#update_signal  1']);
+  }, 30_000);
+
   it('lists callees', async () => {
     const result = await calls(ws, 'checkout', { direction: 'out' });
     expect(result.text.split('\n').slice(1)).toEqual(['total.ts#total  1']);

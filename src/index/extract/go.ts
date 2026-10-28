@@ -42,7 +42,8 @@ export function extractGo(root: Node, sink: SymbolSink): void {
         break;
       case 'const_declaration':
       case 'var_declaration':
-        for (const spec of node.namedChildren) {
+        // `var ( … )` wraps its specs in a list.
+        for (const spec of node.namedChildren.flatMap((c) => (c?.type === 'var_spec_list' ? c.namedChildren : [c]))) {
           if (spec?.type !== 'const_spec' && spec?.type !== 'var_spec') continue;
           for (const name of spec.childrenForFieldName('name')) {
             if (name?.type === 'identifier') sink.add(name, 'const', spec, exported(name.text));

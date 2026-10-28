@@ -4,10 +4,12 @@ A code-search MCP server for AI agents: compiler-grade precision, minimal tokens
 Languages: TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go, Dart (Flutter).
 
 Status: P0 (evaluation harness), P1 (TS/JS index, compiler references, MCP server), P2 (fuzzy
-names, `grep`, zero-hit suggestions), P3 (token layer) and P4 (Python, Go, Dart through pyright,
-gopls and the Dart analysis server; framework labels) are done; scores are in
-[BASELINES.md](BASELINES.md). P5 is next. BM25F over signatures and bodies is deferred: name
-matching already meets the P2 bar, and BM25F is for concept questions (F).
+names, `grep`, zero-hit suggestions), P3 (token layer), P4 (Python, Go, Dart through pyright,
+gopls and the Dart analysis server; framework labels) and P5 (`calls`, `impact`, `status`,
+watcher, saved index, deadlines) are done, with P6's hooks, `csyk setup`, the npm build and the
+agent benchmark runner; scores are in [BASELINES.md](BASELINES.md). Left: running the agent
+benchmark (P6) and P7. BM25F over signatures and bodies is deferred: name matching already meets
+the P2 bar, and BM25F is for concept questions (F).
 
 ---
 
@@ -228,14 +230,18 @@ hint: read <id> for the body · refs <id> for usages
 
 ### 7.1 Corpora (pinned commits)
 
-| Language / stack | Corpus |
-|---|---|
-| TS + React + Node | a private employer monorepo. **Private: cases stay local, never committed to the public repo** |
-| TS + React (public) | one mid-size OSS React app |
-| NestJS | one OSS NestJS app |
-| Python + FastAPI | `fastapi/full-stack-fastapi-template` |
-| Go | one mid-size OSS Go service (gin or chi) |
-| Dart + Flutter | `flutter/samples` (a few apps) |
+Three public corpora per language, from small to large, all MIT, Apache-2.0 or BSD
+(`eval/corpora.yaml` pins each commit):
+
+| Language | Small | Medium | Large |
+|---|---|---|---|
+| TS / JS | `pmndrs/zustand` (React state) | `excalidraw/excalidraw` (React monorepo) | `nestjs/nest` (NestJS) |
+| Python | `fastapi/full-stack-fastapi-template` | `Netflix/dispatch` (FastAPI app) | `django/django` |
+| Go | `go-chi/chi` (router) | `pocketbase/pocketbase` | `prometheus/prometheus` |
+| Dart | `rrousselGit/provider` | `gskinnerTeam/flutter-wonderous-app` | `flame-engine/flame` |
+
+A private employer monorepo was measured through P4 and has since been removed; its cases were
+never committed.
 
 ### 7.2 Case categories and targets
 
@@ -358,12 +364,21 @@ CSyk/
 3. Distribution: npm (`npm i -g csyk` or `npx csyk`).
 4. Platforms: macOS and Linux first; Windows joins CI in P6.
 
-5. Runtime: Node ≥ 22.12, which runs the TypeScript sources directly (type stripping) and is
-   what Vitest 5 needs.
+5. Runtime: Node ≥ 22.18, which runs the TypeScript sources directly (type stripping, on by
+   default from 22.18) and is what Vitest 5 needs. The npm package ships JavaScript built by
+   `npm run build`, since Node does not strip types under `node_modules`.
 6. TypeScript 7 (the native Go port). Its npm package no longer exposes the in-process
    LanguageService; its public API is under `typescript/unstable/*`. It does ship an LSP server
    (`tsc --lsp --stdio`), so TS/JS precision goes through the same LSP manager as Python, Go and
    Dart.
+
+7. Persistence (P5): a JSON snapshot of the index under `~/.cache/csyk`, keyed by file size and
+   modification time and invalidated by a hash of the index code, instead of SQLite. Cold
+   indexing runs at about 0.8 ms a file, so the snapshot only has to spare the parse; the standard
+   library does that without a native dependency (`better-sqlite3`) or an experimental one
+   (`node:sqlite`).
+8. Watching (P5): `fs.watch` with `recursive`, built into Node on macOS and Linux, instead of
+   chokidar. Tool calls flush pending changes first, so a PostToolUse ping is not needed.
 
 **Open**
 

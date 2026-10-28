@@ -250,13 +250,85 @@ export async function references(
   const overloads = ws.index
     .symbolsIn(symbol.file)
     .filter((s) => s !== symbol && s.name === symbol.name && s.parent === symbol.parent);
-  if (service) return { found: await service.references(symbol, { ...options, overloads }), precision: 'lsp' };
+  // A call through a supertype's method may reach this one: those methods count as it.
+  const { methods: related, closed } = options.viaSupertypes ? await supertypeMethods(ws, symbol) : { methods: [], closed: true };
+  // Go: its server says which interfaces fit. TS and Dart: the server's own
+  // search spans implementations and overrides; Dart's is asked only when
+  // the hierarchy stays in the workspace, since a framework one is huge.
+  const viaSupertypes =
+    options.viaSupertypes === true && (symbol.lang === 'go' || (related.length > 0 && (symbol.lang !== 'dart' || closed)));
+  if (service) {
+    const group = [...overloads, ...related];
+    const { found, partial } = await service.references(symbol, { ...options, viaSupertypes, overloads: group });
+    // A much-used name has more mentions than one search resolves in time; say so.
+    const cut = partial ? `, partial: ${partial.resolved} of ${partial.total} mentions resolved in time` : '';
+    return { found, precision: `lsp${cut}` };
+  }
   const extensions = serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]);
   const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(
     (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
   );
   return { found, precision: 'text (no language server)' };
 }
+
+// The same-named methods of the types [symbol]'s type extends, implements
+// or mixes in, up to three levels, as declared in the workspace: a call
+// through one of those types may reach [symbol]. A framework base such as
+// Flutter's State is not in the workspace and adds nothing.
+async function supertypeMethods(ws: Workspace, symbol: CodeSymbol): Promise<{ methods: CodeSymbol[]; closed: boolean }> {
+  const owner = symbol.parent ? ws.index.get(symbol.parent) : undefined;
+  if (!owner) return { methods: [], closed: true };
+  const methods: CodeSymbol[] = [];
+  // Whether every supertype is declared in the workspace, framework bases none.
+  let closed = true;
+  const seen = new Set([owner.id]);
+  let types = [owner];
+  for (let depth = 0; depth < 3 && types.length > 0; depth++) {
+    const next: CodeSymbol[] = [];
+    for (const type of types) {
+      for (const name of await heritageOf(ws, type)) {
+        if (!ws.index.named(name).some((s) => supertypeKinds.has(s.kind))) closed = false;
+        for (const base of ws.index.named(name)) {
+          if (seen.has(base.id) || !supertypeKinds.has(base.kind)) continue;
+          seen.add(base.id);
+          next.push(base);
+          const method = ws.index.symbolsIn(base.file).find((s) => s.parent === base.id && s.name === symbol.name);
+          if (method) methods.push(method);
+        }
+      }
+    }
+    types = next;
+  }
+  return { methods, closed };
+}
+
+// The type names a declaration extends, implements or mixes in, read from
+// its header, which may span lines.
+async function heritageOf(ws: Workspace, type: CodeSymbol): Promise<string[]> {
+  const lines = (await readFile(join(ws.root, type.file), 'utf8')).split('\n').slice(type.range[0] - 1, type.range[0] + 5);
+  const text = lines.join(' ');
+  if (type.lang === 'py') return names(/\bclass\s+\w+\s*\(([^)]*)\)/.exec(text)?.[1] ?? '');
+  // The header ends at the body's brace, not one inside a Dart primary constructor's parameters.
+  let depth = 0;
+  let end = text.length;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '(') depth++;
+    else if (text[i] === ')') depth--;
+    else if (text[i] === '{' && depth === 0) {
+      end = i;
+      break;
+    }
+  }
+  const header = text.slice(0, end).replace(/\([^()]*(?:\([^()]*\)[^()]*)*\)/g, '');
+  return names(/\b(?:extends|implements|with|on)\b(.*)$/.exec(header)?.[1] ?? '');
+}
+
+// The type names in a heritage clause, generic arguments left out.
+function names(heritage: string): string[] {
+  return heritage.replace(/<[^>]*>/g, '').match(/[A-Za-z_]\w*/g) ?? [];
+}
+
+const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widget', 'provider', 'type']);
 
 /**
  * A symbol by id, or by name: an exact name with several declarations takes
@@ -272,7 +344,8 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);
     return { note: `no symbol named ${target}${near.length ? `; nearest: ${near.join(', ')}` : ''}` };
   }
-  const [best, ...others] = ws.index.search(target, { limit: named.length }).filter((s) => s.name === target);
+  // Ranked among the symbols of exactly this name, not cut first: a close name can rank higher.
+  const [best, ...others] = ws.index.search(target, { limit: Number.MAX_SAFE_INTEGER }).filter((s) => s.name === target);
   if (!best) return { note: `no symbol named ${target}` };
   return { symbol: best, note: others.length ? `also named so: ${others.map((s) => s.id).join(', ')}` : '' };
 }

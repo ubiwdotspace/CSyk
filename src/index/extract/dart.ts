@@ -8,10 +8,10 @@ const widgetBase = /^(Stateless|Stateful|Consumer|ConsumerStateful|Hook|HookCons
 const signatureTypes = new Set(['function_signature', 'getter_signature', 'setter_signature']);
 
 /**
- * Dart declarations: classes (widgets labelled), mixins, extensions, enums,
- * type aliases, top-level functions and variables, and class methods,
- * getters and setters. A name starting with an underscore is library
- * private; everything else is exported.
+ * Dart declarations: classes (widgets labelled), mixins, extensions and
+ * extension types, enums, type aliases, top-level functions and variables,
+ * and class methods, getters and setters. A name starting with an
+ * underscore is library private; everything else is exported.
  */
 export function extractDart(root: Node, sink: SymbolSink): void {
   const exported = (name: string) => !name.startsWith('_');
@@ -35,7 +35,9 @@ export function extractDart(root: Node, sink: SymbolSink): void {
   };
 
   children.forEach((node, at) => {
-    const name = node.childForFieldName('name');
+    // A mixin's name is a plain child, not a field.
+    const name =
+      node.childForFieldName('name') ?? (node.type === 'mixin_declaration' ? (node.namedChildren.find((c) => c?.type === 'identifier') ?? null) : null);
     switch (node.type) {
       case 'class_definition': {
         if (!name) return;
@@ -45,7 +47,8 @@ export function extractDart(root: Node, sink: SymbolSink): void {
         return;
       }
       case 'mixin_declaration':
-      case 'extension_declaration': {
+      case 'extension_declaration':
+      case 'extension_type_declaration': {
         if (!name) return;
         const owner = sink.add(name, 'class', node, exported(name.text));
         declareMembers(node.childForFieldName('body') ?? node.namedChildren.find((c) => c?.type.endsWith('body')) ?? null, owner);

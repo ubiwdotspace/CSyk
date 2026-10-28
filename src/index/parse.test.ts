@@ -64,8 +64,8 @@ describe('extractSymbols for TypeScript', () => {
 });
 
 describe('isCodeAt and inDocLink', () => {
-  it('tells code from comments and strings, and keeps JSDoc links', async () => {
-    const lines = ['run(total); // total', 'log("total", `${total}`);', '/** See {@link total}. */'];
+  it('tells code from comments and strings, and keeps JSDoc links and element keys', async () => {
+    const lines = ['run(total); // total', 'log("total", `${total}`);', '/** See {@link total}. */', "client['total'](1);"];
     const tree = (await parseFile('a.ts', lines.join('\n')))!;
     expect(isCodeAt(tree, 0, 4)).toBe(true);
     expect(isCodeAt(tree, 0, 15)).toBe(false);
@@ -73,6 +73,8 @@ describe('isCodeAt and inDocLink', () => {
     expect(isCodeAt(tree, 1, 16)).toBe(true);
     expect(inDocLink(lines[2]!, 17)).toBe(true);
     expect(inDocLink(lines[0]!, 15)).toBe(false);
+    // A string keying an element access names a member.
+    expect(isCodeAt(tree, 3, 8)).toBe(true);
     tree.delete();
   });
 });
@@ -90,22 +92,30 @@ describe('extractSymbols for Python', () => {
       'class Item(BaseModel):',
       '    name: str',
       '    price: float = 0',
+      '    def __init__(self):',
+      '        self.name = "x"',
+      '        self._cache = {}',
       '    @property',
       '    def total(self):',
       '        return 1',
       '    def _check(self): pass',
       'MAX_ITEMS = 10',
       'def _helper(): pass',
+      'for path in paths:',
+      '    lf_data = path.read()',
     ].join('\n');
     expect(await kinds('app/api.py', text)).toEqual([
       'route read_items',
       'class Item',
       'field Item.name',
       'field Item.price',
+      'method Item.__init__',
       'method Item.total',
       'method Item._check (private)',
+      'field Item._cache (private)',
       'const MAX_ITEMS',
       'function _helper (private)',
+      'const lf_data',
     ]);
   });
 });
@@ -121,6 +131,9 @@ describe('extractSymbols for Go', () => {
       'type ID = string',
       'const Max, min = 3, 1',
       'var Default = New()',
+      'var (',
+      '\tLogger func()',
+      ')',
     ].join('\n');
     expect(await kinds('store/store.go', text)).toEqual([
       'function New',
@@ -131,6 +144,7 @@ describe('extractSymbols for Go', () => {
       'const Max',
       'const min (private)',
       'const Default',
+      'const Logger',
       'method Store.Save',
     ]);
   });
@@ -149,6 +163,8 @@ describe('extractSymbols for Dart', () => {
       'abstract class Store { void save() {} String get label; }',
       'int add(int a) => a;',
       'final maxItems = 3;',
+      'mixin HasPaint on Component { void paint() {} }',
+      'sealed class Shape {}',
       'enum Mode { a, b }',
       'typedef Callback = void Function();',
     ].join('\n');
@@ -162,6 +178,9 @@ describe('extractSymbols for Dart', () => {
       'method Store.label',
       'function add',
       'const maxItems',
+      'class HasPaint',
+      'method HasPaint.paint',
+      'class Shape',
       'enum Mode',
       'field Mode.a',
       'field Mode.b',

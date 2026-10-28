@@ -114,7 +114,13 @@ export class LspOracle {
       // the Dart server counts it for every override.
       if (direction === 'in' && (await this.allSuperCalls(sites))) continue;
       const symbol = find(await this.lsp.documentSymbols(span.file), span);
-      spans.push(symbol ? { ...span, startLine: symbol.range.start.line, endLine: symbol.range.end.line } : span);
+      // A caller with no outline symbol is the module itself: any line of the file.
+      const lastLine = (await this.text(span.file)).split('\n').length - 1;
+      spans.push(
+        symbol
+          ? { ...span, startLine: symbol.range.start.line, endLine: symbol.range.end.line }
+          : { ...span, startLine: 0, endLine: lastLine },
+      );
     }
     return spans;
   }
