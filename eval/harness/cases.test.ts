@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,6 +41,8 @@ describe('the committed cases', () => {
     for (const file of files) {
       const corpus = corpora.get(file.corpus);
       expect(corpus, `corpus ${file.corpus}`).toBeDefined();
+      // A fetched corpus is checked once `npm run corpora` has brought it in.
+      if (!existsSync(corpus!.root)) continue;
       for (const c of file.cases) {
         for (const loc of c.expect) {
           const text = await readFile(join(corpus!.root, loc.file), 'utf8');

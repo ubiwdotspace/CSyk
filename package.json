@@ -11,8 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "eval": "node eval/run.ts",
-    "generate": "node eval/generate.ts"
+    "corpora": "node eval/fetch.ts",
+    "generate": "node eval/generate.ts",
+    "eval": "node eval/run.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

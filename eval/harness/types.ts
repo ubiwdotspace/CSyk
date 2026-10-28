@@ -34,6 +34,8 @@ export type Corpus = {
   commit?: string;
   /** Its repo id in CodeSift, for the B1 baseline. */
   codesift?: string;
+  /** Where `npm run corpora` fetches it from, at `commit`. */
+  git?: string;
 };
 
 /** One answer an adapter gives: a file and the line it points at. */
