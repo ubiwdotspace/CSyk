@@ -16,8 +16,11 @@ a corpus from corpora.local.yaml. Review the cases before trusting them.`;
 
 type Generated = { query: string; expect: { file: string; lines: [number, number] }[] };
 
-// Code a case should be about: not tests, end-to-end suites or stories.
-const isSource = (file: string) => !/(__tests__|\.test\.|\.spec\.|\.stories\.|(^|\/)e2e\/)/.test(file);
+// Code a case should be about: not tests, end-to-end suites, stories, or
+// generated and vendored code such as WebAssembly glue.
+const notSource =
+  /(__tests__|\.test\.|\.spec\.|\.stories\.|(^|\/)e2e\/|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.)/;
+const isSource = (file: string) => !notSource.test(file);
 
 // Names worth searching for: identifiers of five characters or more.
 const isSearchable = (name: string) => /^[A-Za-z_$][\w$]{4,}$/.test(name);
@@ -141,7 +144,8 @@ async function stringCases(oracle: TsOracle, count: number, random: () => number
     const match = /^(.+?):(\d+):(.*)$/.exec(entry);
     if (!match?.[1] || !match[2] || !match[3] || !isSource(match[1])) continue;
     const literal = /(["'`])([A-Z][a-z]+ [^"'`$]{12,}?)\1/.exec(match[3])?.[2];
-    if (!literal) continue;
+    // A sentence has lower-case words after its first; a class list does not.
+    if (!literal || !/\s[a-z]{2,}\b/.test(literal)) continue;
     const query = literal.slice(0, 80);
     const total = gitGrep(oracle.root, ['-c', '-F', '-e', query]).reduce(
       (sum, line) => sum + Number(line.split(':').pop()),

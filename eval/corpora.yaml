@@ -1,5 +1,13 @@
-# Corpora the cases run against: <name>: { path: <dir> }, relative to the
-# repo root or absolute. Private corpora go in corpora.local.yaml, which is
-# git-ignored, with their cases under cases/private/.
+# Corpora the cases run against: <name>: { path, commit?, git?, codesift? }.
+# With git and commit, `npm run corpora` fetches that commit into path.
+# Private corpora go in corpora.local.yaml, which is git-ignored, with their
+# cases under cases/private/.
 mini-ts:
   path: eval/fixtures/mini-ts
+
+# React + TypeScript monorepo with workspace packages (MIT).
+excalidraw:
+  git: https://github.com/excalidraw/excalidraw.git
+  commit: 14bb42edee3d6fee6be264e3ee78670b3b9cee79
+  path: eval/corpora/excalidraw
+  codesift: local/excalidraw
