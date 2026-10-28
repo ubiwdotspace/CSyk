@@ -7,8 +7,9 @@ const routeDecorator = /^@[\w.]+\.(get|post|put|patch|delete|options|head|trace|
 
 /**
  * Python declarations: top-level functions, classes and assignments, and
- * class methods. A function decorated as an HTTP route is a route. A name
- * starting with an underscore is private; everything else is exported.
+ * class methods and attributes (model fields, enum members). A function
+ * decorated as an HTTP route is a route. A name starting with an underscore
+ * is private; everything else is exported.
  */
 export function extractPython(root: Node, sink: SymbolSink): void {
   const define = (node: Node, decorators: string[], parent?: CodeSymbol) => {
@@ -39,10 +40,12 @@ export function extractPython(root: Node, sink: SymbolSink): void {
       define(node, [], parent);
       return;
     }
-    if (!parent && node.type === 'expression_statement') {
+    if (node.type === 'expression_statement') {
+      // `NAME = …`, or `name: type = …` and `name: type` in a class body.
       const assignment = node.namedChildren[0];
       const left = assignment?.type === 'assignment' ? assignment.childForFieldName('left') : null;
-      if (left?.type === 'identifier') sink.add(left, 'const', node, !left.text.startsWith('_'));
+      if (left?.type !== 'identifier') return;
+      sink.add(left, parent ? 'field' : 'const', node, !left.text.startsWith('_'), parent);
     }
   };
 

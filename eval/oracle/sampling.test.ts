@@ -17,6 +17,12 @@ describe('fuzzyQuery', () => {
     expect(styles).toEqual(new Set(['calculate shipping cost', 'calcShippingCost', 'ShippingCost']));
   });
 
+  it('keeps the separator of a snake_case name', () => {
+    const random = seeded(7);
+    const styles = new Set(Array.from({ length: 30 }, () => fuzzyQuery('remove_case_user', random)));
+    expect(styles).toEqual(new Set(['remove case user', 'remo_case_user', 'case_user']));
+  });
+
   it('only lowers SCREAMING_CASE into words', () => {
     expect(fuzzyQuery('AUTOSAVE_RESET_MS', seeded(2))).toBe('autosave reset ms');
   });

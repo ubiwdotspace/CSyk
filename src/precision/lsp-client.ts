@@ -11,6 +11,7 @@ import {
   InitializedNotification,
   InitializeRequest,
   ReferencesRequest,
+  ResponseError,
   ShutdownRequest,
   StreamMessageReader,
   StreamMessageWriter,
@@ -25,10 +26,11 @@ import {
 export type Position = { file: string; line: number; character: number };
 
 /**
- * A span in a repo, 0-based and end-inclusive on lines. `nameLine` is the
- * line of the declared name when the server tells it apart from the span.
+ * A span in a repo, 0-based and end-inclusive on lines. `nameLine` and
+ * `nameColumn` place the declared name when the server tells it apart from
+ * the span.
  */
-export type Span = { file: string; startLine: number; endLine: number; nameLine: number };
+export type Span = { file: string; startLine: number; endLine: number; nameLine: number; nameColumn: number };
 
 const languageIds: Record<string, string> = {
   '.ts': 'typescript',
@@ -49,7 +51,8 @@ const languageIds: Record<string, string> = {
  * opened on first use, since servers answer for open documents.
  */
 export class LspClient {
-  private readonly opened = new Set<string>();
+  // Each file's didOpen, so concurrent requests all wait until it is sent.
+  private readonly opened = new Map<string, Promise<void>>();
   private readonly root: string;
   private readonly process: ChildProcess;
   private readonly connection: ProtocolConnection;
@@ -87,25 +90,30 @@ export class LspClient {
   }
 
   /** Opens [file] in the server unless it already is. */
-  async open(file: string): Promise<void> {
-    if (this.opened.has(file)) return;
-    this.opened.add(file);
-    await this.connection.sendNotification(DidOpenTextDocumentNotification.type, {
-      textDocument: {
-        uri: this.uri(file),
-        languageId: languageIds[extname(file)] ?? 'plaintext',
-        version: 1,
-        text: await readFile(join(this.root, file), 'utf8'),
-      },
-    });
+  open(file: string): Promise<void> {
+    let opening = this.opened.get(file);
+    if (!opening) {
+      opening = (async () => {
+        await this.connection.sendNotification(DidOpenTextDocumentNotification.type, {
+          textDocument: {
+            uri: this.uri(file),
+            languageId: languageIds[extname(file)] ?? 'plaintext',
+            version: 1,
+            text: await readFile(join(this.root, file), 'utf8'),
+          },
+        });
+      })();
+      this.opened.set(file, opening);
+    }
+    return opening;
   }
 
   /** The symbols declared in [file], nested as the server reports them. */
   async documentSymbols(file: string): Promise<DocumentSymbol[]> {
     await this.open(file);
-    const symbols = await this.connection.sendRequest(DocumentSymbolRequest.type, {
-      textDocument: { uri: this.uri(file) },
-    });
+    const symbols = await answerOrNone(
+      this.connection.sendRequest(DocumentSymbolRequest.type, { textDocument: { uri: this.uri(file) } }),
+    );
     // A server without hierarchy support answers flat; nothing here needs that.
     return (symbols ?? []).filter((s): s is DocumentSymbol => !isFlat(s));
   }
@@ -113,21 +121,25 @@ export class LspClient {
   /** Every reference to the symbol at [at], without its declaration. */
   async references(at: Position): Promise<Span[]> {
     await this.open(at.file);
-    const locations = await this.connection.sendRequest(ReferencesRequest.type, {
-      textDocument: { uri: this.uri(at.file) },
-      position: { line: at.line, character: at.character },
-      context: { includeDeclaration: false },
-    });
+    const locations = await answerOrNone(
+      this.connection.sendRequest(ReferencesRequest.type, {
+        textDocument: { uri: this.uri(at.file) },
+        position: { line: at.line, character: at.character },
+        context: { includeDeclaration: false },
+      }),
+    );
     return (locations ?? []).flatMap((loc) => this.span(loc));
   }
 
   /** Where the symbol at [at] is declared. */
   async definition(at: Position): Promise<Span[]> {
     await this.open(at.file);
-    const result = await this.connection.sendRequest(DefinitionRequest.type, {
-      textDocument: { uri: this.uri(at.file) },
-      position: { line: at.line, character: at.character },
-    });
+    const result = await answerOrNone(
+      this.connection.sendRequest(DefinitionRequest.type, {
+        textDocument: { uri: this.uri(at.file) },
+        position: { line: at.line, character: at.character },
+      }),
+    );
     const list: (Location | LocationLink)[] = Array.isArray(result) ? result : result ? [result] : [];
     return list.flatMap((loc) => this.span(loc));
   }
@@ -156,7 +168,13 @@ export class LspClient {
     const file = relative(this.root, fileURLToPath(uri));
     if (file.startsWith('..') || file.split('/').includes('node_modules')) return [];
     return [
-      { file, startLine: range.start.line, endLine: range.end.line, nameLine: name.start.line },
+      {
+        file,
+        startLine: range.start.line,
+        endLine: range.end.line,
+        nameLine: name.start.line,
+        nameColumn: name.start.character,
+      },
     ];
   }
 }
@@ -164,3 +182,15 @@ export class LspClient {
 function isFlat(symbol: DocumentSymbol | SymbolInformation): symbol is SymbolInformation {
   return 'location' in symbol;
 }
+
+// A server can refuse one file (gopls for a file a build tag leaves out,
+// say); that file then has no answer. Lost connections still throw.
+async function answerOrNone<T>(request: Promise<T>): Promise<T | null> {
+  try {
+    return await request;
+  } catch (error) {
+    if (error instanceof ResponseError) return null;
+    throw error;
+  }
+}
+

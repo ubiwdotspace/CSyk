@@ -44,21 +44,39 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
       case 'class':
         if (name) declareClass(node, name, exported, outer);
         return;
-      case 'interface_declaration':
-        if (name) sink.add(name, 'interface', node, exported);
+      case 'interface_declaration': {
+        if (!name) return;
+        const owner = sink.add(name, 'interface', node, exported);
+        for (const member of node.childForFieldName('body')?.namedChildren ?? []) {
+          const memberName = member?.childForFieldName('name');
+          if (!member || memberName?.type !== 'property_identifier') continue;
+          const kind = member.type === 'method_signature' ? 'method' : member.type === 'property_signature' ? 'field' : undefined;
+          if (kind) sink.add(memberName, kind, member, exported, owner);
+        }
         return;
+      }
       case 'type_alias_declaration':
         if (name) sink.add(name, 'type', node, exported);
         return;
-      case 'enum_declaration':
-        if (name) sink.add(name, 'enum', node, exported);
+      case 'enum_declaration': {
+        if (!name) return;
+        const owner = sink.add(name, 'enum', node, exported);
+        for (const member of node.childForFieldName('body')?.namedChildren ?? []) {
+          const value = member?.type === 'enum_assignment' ? member.childForFieldName('name') : member;
+          if (member && value?.type === 'property_identifier') sink.add(value, 'field', member, exported, owner);
+        }
         return;
+      }
       case 'lexical_declaration':
       case 'variable_declaration':
         for (const declarator of node.namedChildren) {
           const binding = declarator?.childForFieldName('name');
-          if (declarator?.type !== 'variable_declarator' || binding?.type !== 'identifier') continue;
-          sink.add(binding, bindingKind(binding.text, declarator.childForFieldName('value'), jsx), declarator, exported);
+          if (declarator?.type !== 'variable_declarator' || !binding) continue;
+          if (binding.type === 'identifier') {
+            sink.add(binding, bindingKind(binding.text, declarator.childForFieldName('value'), jsx), declarator, exported);
+            continue;
+          }
+          for (const bound of boundNames(binding)) sink.add(bound, 'const', declarator, exported);
         }
         return;
     }
@@ -101,6 +119,28 @@ function bindingKind(name: string, value: Node | null, jsx: boolean): SymbolKind
   if (value && functionValues.has(value.type)) return functionKind(name, jsx);
   if (value?.type === 'call_expression' && jsx && /^[A-Z]/.test(name)) return 'component';
   return 'const';
+}
+
+// The names a destructuring pattern binds, nested ones included; not its
+// property keys or default values.
+function boundNames(pattern: Node): Node[] {
+  switch (pattern.type) {
+    case 'identifier':
+    case 'shorthand_property_identifier_pattern':
+      return [pattern];
+    case 'pair_pattern':
+    case 'assignment_pattern':
+    case 'object_assignment_pattern': {
+      const bound = pattern.childForFieldName(pattern.type === 'pair_pattern' ? 'value' : 'left');
+      return bound ? boundNames(bound) : [];
+    }
+    case 'array_pattern':
+    case 'object_pattern':
+    case 'rest_pattern':
+      return pattern.namedChildren.flatMap((c) => (c ? boundNames(c) : []));
+    default:
+      return [];
+  }
 }
 
 // A named function or class expression, as is or inside wrapping calls

@@ -41,12 +41,15 @@ export function fuzzyQuery(name: string, random: () => number): string | undefin
   // SCREAMING_CASE reads as words once lowered; cut up, it reads as noise.
   const shouting = words.every((word) => word === word.toUpperCase());
   const [first = '', ...rest] = words;
+  // snake_case and kebab-case keep their separator; camelCase joins.
+  const separator = /[_-]/.exec(name.replace(/^[_-]+/, ''))?.[0] ?? '';
+  const join = (parts: string[]) => parts.join(separator);
   const styles = shouting
     ? [() => lower]
     : [
         () => lower,
-        ...(first.length > 5 ? [() => first.slice(0, 4) + rest.join('')] : []),
-        ...(rest.length >= 2 ? [() => rest.join('')] : []),
+        ...(first.length > 5 ? [() => join([first.slice(0, 4), ...rest])] : []),
+        ...(rest.length >= 2 ? [() => join(rest)] : []),
       ];
   const query = styles[Math.floor(random() * styles.length)]?.();
   return query && query !== name && query.length >= 8 ? query : undefined;
