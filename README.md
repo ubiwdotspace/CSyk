@@ -19,24 +19,35 @@ Needs Node 22.12 or later (`.nvmrc` pins 22).
 
 ```sh
 npm install
-npm test                  # harness unit tests
+npm test                  # unit tests, and the oracle against the hand-written cases
 npm run eval              # every case through the B0 baseline
-npm run eval -- --corpus mini-ts --category A
+npm run eval -- --adapter b1 --corpus <name> --category A
+npm run generate -- --corpus <name> --category <A|B|C|E>
 ```
 
 - Cases live in `eval/cases/<corpus>.<category>.yaml`; categories A–G are defined in
   [PLAN.md §7](docs/PLAN.md). Each case has an `id`, a `query` and the `expect`ed locations
   (`file`, optional inclusive `lines`).
-- Corpora are listed in `eval/corpora.yaml`. `eval/fixtures/mini-ts` is a tiny corpus the
-  harness tests itself against.
-- Private corpora (employer code) go in `eval/corpora.local.yaml` with their cases under
-  `eval/cases/private/`; both are git-ignored and never committed.
+- Corpora are listed in `eval/corpora.yaml` as `<name>: { path, commit?, codesift? }`. A `commit`
+  pins the corpus: its cases refuse to run against any other. `eval/fixtures/mini-ts` is a tiny
+  corpus the harness tests itself against.
+- Private corpora (employer code) go in `eval/corpora.local.yaml`, checked out under
+  `eval/corpora/`, with their cases in `eval/cases/private/`; all three are git-ignored.
+- `npm run generate` writes A, B, C and E cases whose answers come from the TypeScript compiler
+  (`tsc --lsp`). References are every mention of a name that the compiler resolves to the
+  declaration, so they cross workspace packages and tell same-named symbols apart. Review
+  generated cases before trusting them.
 - Scores are written to `eval/results/` (git-ignored). Token counts use o200k_base as a stand-in
   for Claude's tokenizer, so they compare adapters rather than give exact numbers.
 
-**B0 baseline** (`eval/adapters/b0-ripgrep.ts`) is an agent with built-in tools only: it greps,
-then reads the first matching file whole, except for references, where the grep lines are the
-answer.
+**Baselines** ([docs/BASELINES.md](docs/BASELINES.md) has the numbers):
+
+- **B0** (`eval/adapters/b0-ripgrep.ts`): an agent with built-in tools only. It greps, then reads
+  the first matching file whole, except for references, where the grep lines are the answer.
+- **B1** (`eval/adapters/b1-codesift.ts`): CodeSift over MCP, evaluated only, never shipped. The
+  corpus names its CodeSift repo in `codesift`; index it first with
+  `codesift index <path> --no-watch`. CodeSift names a repo after its git remote, so a checkout
+  of a repo already indexed elsewhere needs its remote removed, or it replaces that index.
 
 ## Licence
 
