@@ -1,103 +1,275 @@
 # CSyk
 
-A code-search MCP server for AI agents: compiler-grade precision, minimal tokens.
+A code-search MCP server for AI coding agents: compiler-grade answers in a few dozen tokens.
 
-CSyk aims to let an agent find the right code on the first call and read only the part it needs,
-for TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go and Dart (Flutter).
-Accuracy and token savings are measured by an evaluation suite, not claimed.
+An agent that explores code with grep and whole-file reads spends most of its context on text it
+does not need, and still gets references wrong: comments, strings, imports and same-named symbols
+look alike to grep. CSyk answers the questions agents actually ask (where is this defined, who
+uses it, who calls it, what does my change touch) from a tree-sitter index and the language's own
+compiler, and returns one line per answer.
 
-**Status:** P4 of [the plan](docs/PLAN.md): TypeScript, JavaScript, Python, Go and Dart, seven tools,
-scored in
-[docs/BASELINES.md](docs/BASELINES.md).
+TypeScript and JavaScript (React, Node, NestJS), Python (FastAPI, Django), Go and Dart (Flutter).
+Every number below is measured by the evaluation suite in this repository, on twelve pinned public
+repositories, and can be reproduced with one command.
 
-- Runs locally; code never leaves the machine.
-- No telemetry.
-- macOS and Linux first; Windows later.
+| | grep + read (B0) | CodeSift MCP (B1) | **CSyk** |
+|---|---|---|---|
+| Definition by exact name, first answer right | 33.1% | 53.7% | **98.6%** |
+| Definition by partial name, first answer right | 7.6% | 53.6% | **99.5%** |
+| References: share of answers that are real references | 64.1% | 67.7% | **99.2%** |
+| Tokens read for the same questions (A, B, C, E) | 16,899 | 1,322 | **240 (−98.6%)** |
+| Time per answer, median, server warm | 75 ms | 10 ms | **8 ms** |
 
-## Using it
+Means over the twelve corpora (CodeSift indexes no Dart symbols, which pulls its A and B down);
+per-corpus tables are in [docs/BASELINES.md](docs/BASELINES.md).
 
-Needs Node 22.12 or later. CSyk runs the TypeScript sources directly; there is no build step yet.
+- Runs locally. Code never leaves the machine, and there is no telemetry.
+- macOS and Linux. Node 22.18 or later.
+- Apache-2.0.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Tools](#tools)
+- [How it works](#how-it-works)
+- [Languages and frameworks](#languages-and-frameworks)
+- [Hooks](#hooks)
+- [Results](#results)
+- [Limitations](#limitations)
+- [Evaluation](#evaluation)
+- [Development](#development)
+
+## Quick start
 
 ```sh
-npm install
-claude mcp add csyk -- node /path/to/CSyk/src/server/main.ts   # serves the folder Claude runs in
+npm install -g csyk          # or from a clone: npm install && npm run build && npm install -g .
+cd your-project
+csyk setup --write           # writes .mcp.json and the hooks into .claude/settings.json
 ```
 
-`node src/server/main.ts <workspace>` serves another folder. The symbol index (tree-sitter) is
-built in memory when the server starts; each language's server starts on the first `refs` or `def`
-that needs it:
+`csyk setup` without `--write` prints what it would write: the MCP server entry (equivalent to
+`claude mcp add csyk -- csyk serve`), the hooks, and a short note for `CLAUDE.md` that tells the
+agent when to use which tool. Start Claude Code in the project and the `csyk` tools are there.
 
-| Language | Index | References and definitions |
+For Go, install `gopls` (`go install golang.org/x/tools/gopls@latest`); for Dart, the Dart or
+Flutter SDK. TypeScript and Python support is bundled. `csyk status` (the `status` tool) shows what
+is indexed and which language servers run.
+
+Other MCP clients: run `csyk serve [workspace]` as a stdio server.
+
+## Tools
+
+Ten tools, listed in under 1,000 tokens. Every answer fits a token budget (2,000 by default,
+`budget` to change it) and says what it left out and how to narrow the call.
+
+| Tool | Question | Answer |
 |---|---|---|
-| TypeScript, JavaScript | tree-sitter | `tsc --lsp` (TypeScript 7, installed with CSyk) |
-| Python | tree-sitter | pyright (installed with CSyk) |
-| Go | tree-sitter | `gopls`: `go install golang.org/x/tools/gopls@latest` |
-| Dart, Flutter | tree-sitter | the Dart analysis server, from the Dart or Flutter SDK |
+| `find` | Where is a symbol, by name or part of one? | one line per symbol: id, kind, line, signature |
+| `outline` | What is in this file or folder? | symbols with line ranges |
+| `read` | Show me this one symbol | its exact source, or its signature |
+| `refs` | Who uses this symbol? | every reference the compiler resolves, per file, with the enclosing symbol |
+| `calls` | Who calls it, or what does it call? | callers (`in`) or callees (`out`), up to three levels |
+| `impact` | What does my change touch? | changed symbols, their callers two levels up, the test files among them |
+| `def` | Where is the name at this position declared? | the declaration |
+| `grep` | Where does this text appear? | matches, each with the symbol that contains it |
+| `status` | What does CSyk know? | index size, watcher, each language's server |
+| `batch` | Several of the above | up to eight calls in one round trip |
 
-Without a language's server, `refs` still lists the name's mentions in code (not comments or
-strings), labelled `text`. Framework roles are their own kinds: React components and hooks, NestJS
-routes and providers, FastAPI routes, Flutter widgets.
+What the agent sees, from the excalidraw repository:
 
-| Tool | Answers |
-|---|---|
-| `find` | symbols whose name matches, best first: id, kind, line, signature |
-| `outline` | a file's symbols with line ranges, or each file's symbols under a folder |
-| `read` | one symbol's exact source, or its signature |
-| `refs` | every reference the compiler resolves to the symbol: per file, each line and the symbol it sits in (`code` adds the text) |
-| `def` | where a name, or the name at a file position, is declared |
-| `grep` | text or regex matches, each with the symbol that contains it, at most two per symbol |
-| `batch` | up to eight of the other calls in one round trip |
+```text
+> find "restore elements"
+2 symbols · index
+packages/excalidraw/data/restore.ts#restoreElements  function 960  restoreElements = <T extends ExcalidrawElement>(
+packages/excalidraw/components/App.tsx#App.restoreReadyToEraseElements  method 10301  private restoreReadyToEraseElements = () => {
 
-Every answer stays within a token budget (2,000 by default, `budget` to change it): long lists
-shrink step by step, and anything left out is counted with the parameter that narrows the call.
-`read` of a body this session already saw, unchanged, returns `[unchanged: <id>, shown at call
-#n]`; that memory lasts 30 minutes, or until a hook touches the reset marker. Hints show once per
-session.
+> refs restoreElements
+packages/excalidraw/data/restore.ts#restoreElements · 75 refs in 9 files · lsp
+packages/excalidraw/components/App.tsx  305, 3621·initializeScene, 4625·addElementsFromPasteOrLibrary
+packages/excalidraw/data/blob.ts  26, 163·loadSceneOrLibraryFromBlob
+packages/excalidraw/scene/export.ts  61, 572·configExportDimension, 1325·exportToBlob, 1398·exportToClipboard
+…
+
+> calls getSceneVersion
+calls in · packages/element/src/index.ts#getSceneVersion · 7 callers · lsp
+excalidraw-app/collab/Collab.tsx#Collab.initializeRoom  752
+excalidraw-app/collab/Collab.tsx#Collab.broadcastElements  973, 977
+excalidraw-app/data/firebase.ts#isSavedToFirebase  135
+…
+```
+
+A `read` of a body the agent already saw, unchanged, returns `[unchanged: <id>, shown at call #n]`
+instead of the source again. Each hint appears once per session.
+
+## How it works
+
+**Index.** On start, CSyk parses every source file with tree-sitter (about 1 ms a file) and keeps
+the symbols in memory: functions, classes, methods, fields, constants, types, enum members, with
+their ranges and signatures, and framework roles as kinds. The index is saved under
+`~/.cache/csyk` and only changed files are parsed on the next start. A file watcher re-parses files
+whose content changed and tells the language servers; every tool call first applies pending
+changes, so answers never lag an edit.
+
+**Names.** `find` ranks exact, squashed (`token store` → `TokenStore`), prefix, substring and
+word-prefix matches, weighted by kind, with tests and private helpers lower. A name with no match
+gets the three nearest names.
+
+**References.** A language server's own "find references" is limited to one project at a time, so
+references across workspace packages go missing. CSyk instead finds every whole-word mention of the
+name with ripgrep, asks the language server where each one is declared, and keeps those that land
+on the symbol. That crosses packages, tells same-named symbols apart, and leaves out comments and
+strings, because the server resolves nothing there. Overloads count as one symbol.
+
+**Calls and impact.** Callers are the references used as values (calls, constructions,
+decorators, JSX, callbacks), grouped by the symbol around them. For a method, calls through an
+interface or base class declared in the workspace count too, since they may dispatch to it; for
+Go, `gopls` names the interfaces a method satisfies. Callees are the calls in a body, each resolved
+to its declaration. `impact` maps `git diff` to the symbols it changes and follows callers two
+levels up, stopping at tests and at symbols with more than 40 callers.
+
+**Speed.** Answers about the same names are cached until a file changes. A search resolves the
+nearest mentions first and stops after five seconds (six for `calls` and `impact`); if it had to
+stop, the answer says how many mentions it resolved. Language servers start on first use and stop
+after ten idle minutes.
+
+**Precision labels.** Every answer ends its header with where it came from: `index`, `lsp`, or
+`text` when a language's server is not installed and CSyk falls back to mentions in code.
+
+## Languages and frameworks
+
+| Language | Index | References, definitions, calls | Framework roles |
+|---|---|---|---|
+| TypeScript, JavaScript | tree-sitter | `tsc --lsp` (TypeScript 7, bundled) | React components and hooks, NestJS routes and providers |
+| Python | tree-sitter | pyright (bundled) | FastAPI routes |
+| Go | tree-sitter | `gopls` | |
+| Dart | tree-sitter (Dart 3.13 grammar) | the Dart analysis server | Flutter widgets |
+
+Install a project's dependencies (`npm install`, `go mod download`, `flutter pub get`) for the
+servers to resolve imports into them; CSyk's answers stay inside the workspace either way.
+
+## Hooks
+
+`csyk setup` wires three Claude Code hooks. Each acts only while a CSyk server serves the folder,
+and lets the call through on any error. A hook starts and answers in about 80 ms.
+
+- `pre-read` turns down a whole-file `Read` of a source file over 400 lines and points at
+  `outline` and `read`. A read with an offset or a limit always passes.
+- `pre-grep` turns down `Grep`, `rg` or recursive `grep` for a bare identifier and points at `find`
+  and `refs`. Phrases, regexes and searches outside the workspace pass; shell commands are lexed
+  (quotes, pipes, `cd`, redirections), and anything the lexer cannot follow passes.
+- `session-reset` (SessionStart, PreCompact) tells CSyk that the agent's context was reset, so
+  source it showed before is shown again.
+
+## Results
+
+Twelve public repositories, three per language from small to large, pinned to a commit. Cases are
+generated from each language's own server and scored against it; 30 per category unless a small
+repository has fewer.
+
+| corpus | A P@1 | B P@1 | C recall / precision | D recall / precision | E R@5 | G recall / precision |
+|---|---|---|---|---|---|---|
+| zustand (TS, small) | 100% | 100% | 100% / 100% | 100% / 87% | 100% | 96.7% / 91.8% |
+| excalidraw (TS, medium) | 100% | 100% | 100% / 100% | 100% / 85.3% | 100% | 98.3% / 96.8% |
+| nest (TS, large) | 100% | 100% | 99.2% / 100% | 96.7% / 84.1% | 100% | 95.8% / 96.9% |
+| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 93.2% | 100% | 70.9% / 89.2% |
+| wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 99.2% | 100% | 100% / 98.2% |
+| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.4% / 80.9% |
+| fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 91.5% |
+| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 92.7% | 100% | 98.8% / 83.7% |
+| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 92.7% | 100% | 99.3% / 47.2% |
+| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 97.8% / 98.7% |
+| pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96% | 100% | 94.9% / 93.4% |
+| prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 89.3% / 97.2% |
+
+A and B: the first answer is a declaration of the name. C: recall and precision of references
+against the compiler. D: callers and callees against the server's call hierarchy. E: a quoted
+message's enclosing function in the top five. G: the symbols an edit changes and their callers two
+levels up. Latency, per tool and corpus, and the comparison with grep and CodeSift are in
+[docs/BASELINES.md](docs/BASELINES.md).
+
+**Against grep and CodeSift** (A and B: first answer right; C: precision; D: recall of callers and
+callees, grep only finding callers; tokens: what the agent reads for one case of each of A to E):
+
+| corpus | A P@1: B0 · B1 · CSyk | B P@1: B0 · B1 · CSyk | C precision: B0 · B1 · CSyk | D recall: B0 · B1 · CSyk | tokens A+B+C+D+E: B0 · B1 · CSyk |
+|---|---|---|---|---|---|
+| zustand | 28.6% · 47.6% · **100%** | 14.3% · 57.1% · **100%** | 46.9% · 45.7% · **100%** | 97.1% · 57.1% · **100%** | 8,838 · 1,496 · **250** |
+| excalidraw | 60% · 83.3% · **100%** | 10% · 83.3% · **100%** | 78.3% · 78.3% · **100%** | 100% · 50.4% · **100%** | 17,289 · 1,554 · **325** |
+| nest | 36.7% · 90% · **100%** | 10% · 86.7% · **100%** | 69.4% · 71.2% · **100%** | 96.7% · 41.9% · **96.7%** | 9,193 · 1,333 · **285** |
+| provider | 24% · 0% · **100%** | 13.6% · 0% · **100%** | 62% · 64.7% · **100%** | 50% · 0% · **100%** | 8,746 · 1,914 · **326** |
+| wonderous | 36.7% · 0% · **100%** | 13.3% · 0% · **100%** | 71.8% · 73.1% · **100%** | 66.7% · 0% · **100%** | 27,368 · 408 · **311** |
+| flame | 16.7% · 0% · **96.7%** | 0% · 0% · **100%** | 62.9% · 64.1% · **100%** | 94.7% · 0% · **97.9%** | 17,527 · 1,568 · **340** |
+| fastapi-template | 57.9% · 36.8% · **100%** | 0% · 57.1% · **100%** | 66% · 73.2% · **100%** | 100% · 54.7% · **100%** | 4,269 · 1,186 · **363** |
+| dispatch | 50% · 76.7% · **100%** | 10% · 70% · **100%** | 70.9% · 70.8% · **100%** | 100% · 58.1% · **100%** | 20,938 · 1,550 · **324** |
+| django | 40% · 76.7% · **96.7%** | 3.3% · 70% · **100%** | 61.3% · 67% · **96.7%** | 80% · 38.3% · **100%** | 18,646 · 1,489 · **337** |
+| chi | 10% · 86.7% · **100%** | 3.6% · 85.7% · **100%** | 49.4% · 57.5% · **100%** | 71.4% · 39.3% · **100%** | 9,197 · 1,163 · **232** |
+| pocketbase | 13.3% · 73.3% · **100%** | 3.3% · 63.3% · **96.7%** | 64.5% · 75.9% · **100%** | 66.7% · 33.8% · **96.7%** | 16,039 · 1,320 · **358** |
+| prometheus | 23.3% · 73.3% · **90%** | 10% · 70% · **96.7%** | 65.3% · 70.6% · **93.3%** | 98.7% · 27.4% · **93.3%** | 46,703 · 1,512 · **357** |
+
+## Limitations
+
+- A name written under another name (`import { a as b }`, a default import named differently) is
+  not followed.
+- Dart's call hierarchy counts implicit `super(...)` constructor calls and calls through framework
+  base classes (Flutter's `State`, `Diagnosticable`); CSyk does not follow those, which is most of
+  the gap on provider and flame in G.
+- pyright's call hierarchy misses calls through module aliases and inferred receivers that CSyk
+  finds, so CSyk's precision against it on Python D and G understates.
+- A function declared twice under Go build tags resolves to the one `gopls` builds by default.
+- A name used thousands of times (Django's `Model.save`) gives a partial answer after the deadline,
+  and says so.
+- Tool-level tokens are not agent-level tokens; the agent benchmark (`npm run agent`) measures
+  those.
 
 ## Evaluation
 
-Needs Node 22.12 or later (`.nvmrc` pins 22).
+```sh
+npm install
+npm run corpora                              # fetch the twelve pinned corpora into eval/corpora/
+npm test                                     # unit tests
+npm run eval -- --adapter csyk --corpus excalidraw
+npm run eval -- --adapter b0                 # every case through the grep baseline
+npm run generate -- --corpus <name> --lang <ts|py|go|dart> --category <A|B|C|D|E|G>
+```
+
+- **Corpora** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`, `codesift`); a case file
+  refuses to run against any other commit. Run `go mod download` in the Go corpora and
+  `flutter pub get` in the Dart ones (`packages/*` for provider) so their servers resolve imports.
+  Private corpora go in a git-ignored `eval/corpora.local.yaml`, their cases in
+  `eval/cases/private/`.
+- **Cases** live in `eval/cases/<corpus>.<category>.yaml`: an `id`, a `query`, the `expect`ed
+  locations (`file`, optional inclusive `lines`) and, for D, a `direction`. `npm run generate`
+  writes them from the language's own server: references are every mention the server resolves to
+  the declaration; D and G come from its call hierarchy. Review generated cases before trusting
+  them.
+- **Baselines.** B0 (`eval/adapters/b0-ripgrep.ts`) is an agent with built-in tools: it greps,
+  then reads the first matching file whole; for references and callers the grep lines are its
+  answer. B1 (`eval/adapters/b1-codesift.ts`) is CodeSift over MCP, evaluated only; index each
+  corpus first with `codesift index <path> --no-watch` (CodeSift names a repository after its git
+  remote, so a second checkout of an indexed repository needs its remote removed).
+- **Scores** go to `eval/results/` (git-ignored). Token counts use o200k_base as a stand-in for
+  Claude's tokenizer.
+- **Agent benchmark** (PLAN.md §7.4): `npm run agent:tasks -- --corpus <name>` builds 20 tasks from
+  a corpus's cases, and `npm run agent -- --setup <b0|b1|csyk> --corpus <name>` runs them through
+  headless Claude Code (`claude -p`, billed to your account), recording tokens, tool calls, wall
+  time, cost and passes.
+- **Localization on SWE-PolyBench** (Amazon's multi-language benchmark of real GitHub issues):
+  `npm run loc -- --setup <b0|csyk> --language TypeScript --count 10` asks headless Claude Code
+  which files and functions each issue's fix must change, at the issue's base commit, and scores
+  file Acc@1, Acc@5 and function recall against the real fix, with time and tokens.
+
+## Development
 
 ```sh
 npm install
-npm run corpora           # fetch the pinned public corpora into eval/corpora/
-npm test                  # unit tests, and the oracle against the hand-written cases
-npm run eval              # every case through the B0 baseline
-npm run eval -- --adapter b1 --corpus <name> --category A
-npm run generate -- --corpus <name> --lang <ts|py|go|dart> --category <A|B|C|E>
+npm run typecheck
+npm test
+npm run build      # JavaScript into dist/, for the npm package
+node src/cli.ts serve <workspace>   # run from source (Node strips the types)
 ```
 
-- Cases live in `eval/cases/<corpus>.<category>.yaml`; categories A–G are defined in
-  [PLAN.md §7](docs/PLAN.md). Each case has an `id`, a `query` and the `expect`ed locations
-  (`file`, optional inclusive `lines`).
-- Corpora are listed in `eval/corpora.yaml` as `<name>: { path, commit?, git?, codesift? }`. A
-  `commit` pins the corpus: its cases refuse to run against any other, and with `git`,
-  `npm run corpora` fetches that commit without history. Public corpora so far:
-  [excalidraw](https://github.com/excalidraw/excalidraw) (React + TS monorepo, MIT),
-  [dispatch](https://github.com/Netflix/dispatch) (FastAPI, Apache-2.0),
-  [pocketbase](https://github.com/pocketbase/pocketbase) (Go, MIT) and
-  [wonderous](https://github.com/gskinnerTeam/flutter-wonderous-app) (Flutter, MIT). The Go and
-  Dart servers resolve imports only once dependencies are in place: run `go mod download` in
-  `eval/corpora/pocketbase` and `flutter pub get` in `eval/corpora/wonderous`.
-  `eval/fixtures/mini-ts` is a tiny corpus the harness tests itself against.
-- Private corpora (employer code) go in `eval/corpora.local.yaml`, checked out under
-  `eval/corpora/`, with their cases in `eval/cases/private/`; all three are git-ignored.
-- `npm run generate` writes A, B, C and E cases whose answers come from the language's own server
-  (`tsc --lsp`, pyright, gopls, the Dart analysis server). References are every mention of a name
-  that the server resolves to the declaration, so they cross workspace packages and tell
-  same-named symbols apart. Review generated cases before trusting them.
-- Scores are written to `eval/results/` (git-ignored). Token counts use o200k_base as a stand-in
-  for Claude's tokenizer, so they compare adapters rather than give exact numbers.
-
-**Baselines** ([docs/BASELINES.md](docs/BASELINES.md) has the numbers):
-
-- **B0** (`eval/adapters/b0-ripgrep.ts`): an agent with built-in tools only. It greps, then reads
-  the first matching file whole, except for references, where the grep lines are the answer.
-- **B1** (`eval/adapters/b1-codesift.ts`): CodeSift over MCP, evaluated only, never shipped. The
-  corpus names its CodeSift repo in `codesift`; index it first with
-  `codesift index <path> --no-watch`. CodeSift names a repo after its git remote, so a checkout
-  of a repo already indexed elsewhere needs its remote removed, or it replaces that index.
+The design, the phases and the decisions are in [docs/PLAN.md](docs/PLAN.md).
 
 ## Licence
 
-Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The Dart grammar is built from
+tree-sitter-dart (MIT); see [grammars/README.md](grammars/README.md).

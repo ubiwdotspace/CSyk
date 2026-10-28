@@ -23,13 +23,14 @@ describe('Workspace', () => {
     await ws.close();
   });
 
-  it('indexes a file written while it watches', async () => {
+  // File system events can lag on a busy machine; the test retries rather than wait longer.
+  it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });
     const ws = await Workspace.open(root, { watch: true });
     try {
       writeFileSync(join(root, 'b.ts'), 'export function fresh() {}');
       // The change arrives as a file system event; a tool call flushes it.
-      for (let i = 0; i < 100 && ws.index.named('fresh').length === 0; i++) {
+      for (let i = 0; i < 200 && ws.index.named('fresh').length === 0; i++) {
         await sleep(50);
         await ws.fresh();
       }

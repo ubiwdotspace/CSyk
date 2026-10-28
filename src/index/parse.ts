@@ -113,12 +113,19 @@ const inertTypes = new Set([
 // Nodes that make code again inside a string: `${…}` and f-string braces.
 const codeInStrings = new Set(['template_substitution', 'interpolation', 'template_string_substitution']);
 
-/** Whether the 0-based [line] and [column] of [tree] fall in code, not a comment or string. */
+/**
+ * Whether the 0-based [line] and [column] of [tree] fall in code, not a
+ * comment or string. A string that keys an element access, `obj['name']`,
+ * names a member as code would.
+ */
 export function isCodeAt(tree: Tree, line: number, column: number): boolean {
   let node: Node | null = tree.rootNode.descendantForPosition({ row: line, column });
   while (node) {
     if (codeInStrings.has(node.type)) return true;
-    if (inertTypes.has(node.type)) return false;
+    if (inertTypes.has(node.type)) {
+      const string = node.type === 'string' ? node : node.parent?.type === 'string' ? node.parent : null;
+      return string?.parent?.type === 'subscript_expression';
+    }
     node = node.parent;
   }
   return true;

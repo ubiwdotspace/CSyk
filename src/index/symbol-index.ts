@@ -54,6 +54,7 @@ export class SymbolIndex {
   private readonly byFile = new Map<string, CodeSymbol[]>();
   private readonly byName = new Map<string, CodeSymbol[]>();
   private readonly states = new Map<string, FileState>();
+  private readonly nameKeys = new Map<string, { squashed: string; words: string[] }>();
   /** Files taken from a snapshot as they were, when the index was built from one. */
   reused = 0;
 
@@ -165,12 +166,18 @@ export class SymbolIndex {
     const queryWords = words(query);
     if (!squashed) return [];
     const scored: { symbol: CodeSymbol; score: number }[] = [];
-    for (const symbols of this.byFile.values()) {
+    // Each distinct name is matched once, with its squashed form and words kept.
+    for (const [name, symbols] of this.byName) {
+      let key = this.nameKeys.get(name);
+      if (!key) {
+        key = { squashed: squash(name), words: words(name) };
+        this.nameKeys.set(name, key);
+      }
+      const match = nameScore(name, query, squashed, queryWords, key);
+      if (match === 0) continue;
       for (const symbol of symbols) {
         if (options.kind && symbol.kind !== options.kind) continue;
         if (options.path && !symbol.file.startsWith(options.path)) continue;
-        const match = nameScore(symbol.name, query, squashed, queryWords);
-        if (match === 0) continue;
         const weight =
           kindWeight[symbol.kind] *
           (symbol.isTest ? 0.3 : 1) *
@@ -226,14 +233,20 @@ export class SymbolIndex {
 }
 
 // How well a name answers a query, 0 for not at all.
-function nameScore(name: string, query: string, squashed: string, queryWords: string[]): number {
+function nameScore(
+  name: string,
+  query: string,
+  squashed: string,
+  queryWords: string[],
+  key: { squashed: string; words: string[] },
+): number {
   if (name === query) return 100;
-  const squashedName = squash(name);
+  const squashedName = key.squashed;
   if (squashedName === squashed) return 90;
   if (squashedName.startsWith(squashed)) return 70;
   if (squashedName.includes(squashed)) return 55;
   // Each query word starts a name word, in order: `calc total` → `calculateTotal`.
-  const nameWords = words(name);
+  const nameWords = key.words;
   let at = 0;
   for (const word of queryWords) {
     while (at < nameWords.length && !nameWords[at]?.startsWith(word)) at++;

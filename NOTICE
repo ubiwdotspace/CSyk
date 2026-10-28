@@ -7,7 +7,7 @@ Third-party components and their licences are listed here as they are added.
 
 Bundled
 - grammars/tree-sitter-dart.wasm is built from tree-sitter-dart
-  (https://github.com/UserNobody14/tree-sitter-dart), Copyright (c) 2020-2022
+  (https://github.com/UserNobody14/tree-sitter-dart), Copyright (c) 2020-2023
   UserNobody14 and others, MIT License.
 
 Evaluation data
@@ -22,3 +22,25 @@ Evaluation data
 - eval/cases/wonderous.*.yaml quote the same from Wonderous
   (https://github.com/gskinnerTeam/flutter-wonderous-app), Copyright (c) 2022
   gskinner.com, MIT License.
+- eval/cases/zustand.*.yaml quote the same from Zustand
+  (https://github.com/pmndrs/zustand), Copyright (c) 2019 Paul Henschel, MIT License.
+- eval/cases/nest.*.yaml quote the same from NestJS
+  (https://github.com/nestjs/nest), Copyright (c) 2017-present Kamil Mysliwiec,
+  MIT License.
+- eval/cases/fastapi-template.*.yaml quote the same from the Full Stack FastAPI
+  Template (https://github.com/fastapi/full-stack-fastapi-template),
+  Copyright (c) 2019 Sebastián Ramírez, MIT License.
+- eval/cases/django.*.yaml quote the same from Django
+  (https://github.com/django/django), Copyright (c) Django Software Foundation
+  and individual contributors, BSD 3-Clause License.
+- eval/cases/chi.*.yaml quote the same from chi (https://github.com/go-chi/chi),
+  Copyright (c) 2015-present Peter Kieltyka, Google Inc., MIT License.
+- eval/cases/prometheus.*.yaml quote the same from Prometheus
+  (https://github.com/prometheus/prometheus), Copyright The Prometheus Authors,
+  Apache License 2.0.
+- eval/cases/provider.*.yaml quote the same from provider
+  (https://github.com/rrousselGit/provider), Copyright (c) 2019 Remi Rousselet,
+  MIT License.
+- eval/cases/flame.*.yaml quote the same from Flame
+  (https://github.com/flame-engine/flame), Copyright (c) 2021 Blue Fire, MIT License.
+- eval/agent/tasks/*.yaml quote identifiers and file paths from the corpora above.

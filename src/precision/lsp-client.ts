@@ -6,6 +6,7 @@ import {
   CallHierarchyIncomingCallsRequest,
   CallHierarchyOutgoingCallsRequest,
   CallHierarchyPrepareRequest,
+  CancellationTokenSource,
   createProtocolConnection,
   DefinitionRequest,
   DidChangeTextDocumentNotification,
@@ -27,7 +28,6 @@ import {
   type Location,
   type LocationLink,
   type ProtocolConnection,
-  type ServerCapabilities,
   type SymbolInformation,
 } from 'vscode-languageserver-protocol/node';
 
@@ -62,17 +62,26 @@ const languageIds: Record<string, string> = {
 export class LspClient {
   // Each file's didOpen, so concurrent requests all wait until it is sent.
   private readonly opened = new Map<string, Promise<void>>();
+
   private readonly versions = new Map<string, number>();
   private readonly root: string;
   private readonly process: ChildProcess;
   private readonly connection: ProtocolConnection;
-  private readonly capabilities: ServerCapabilities;
+  private readonly status: { idle: boolean };
 
-  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, capabilities: ServerCapabilities) {
+  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, status: { idle: boolean }) {
     this.root = root;
     this.process = process;
     this.connection = connection;
-    this.capabilities = capabilities;
+    this.status = status;
+  }
+
+  /**
+   * Whether the server has said it finished analyzing the workspace
+   * (`$/analyzerStatus`, sent by the Dart server); false until then.
+   */
+  get idle(): boolean {
+    return this.status.idle;
   }
 
   /** Starts [command] in [root] and completes the initialize handshake. */
@@ -83,9 +92,14 @@ export class LspClient {
       new StreamMessageReader(child.stdout),
       new StreamMessageWriter(child.stdin),
     );
+    // Set up before the handshake, so no status is missed.
+    const status = { idle: false };
+    connection.onNotification('$/analyzerStatus', (params: { isAnalyzing?: boolean }) => {
+      if (params?.isAnalyzing === false) status.idle = true;
+    });
     connection.listen();
     const rootUri = pathToFileURL(root).href;
-    const { capabilities } = await connection.sendRequest(InitializeRequest.type, {
+    await connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,
       rootUri,
       workspaceFolders: [{ uri: rootUri, name: 'root' }],
@@ -94,13 +108,13 @@ export class LspClient {
           documentSymbol: { hierarchicalDocumentSymbolSupport: true },
           references: {},
           definition: { linkSupport: true },
-          callHierarchy: {},
           implementation: { linkSupport: true },
+          callHierarchy: {},
         },
       },
     });
     await connection.sendNotification(InitializedNotification.type, {});
-    return new LspClient(root, child, connection, capabilities);
+    return new LspClient(root, child, connection, status);
   }
 
   /**
@@ -159,17 +173,38 @@ export class LspClient {
     return (symbols ?? []).filter((s): s is DocumentSymbol => !isFlat(s));
   }
 
-  /** Every reference to the symbol at [at], without its declaration. */
-  async references(at: Position): Promise<Span[]> {
+  /**
+   * Every reference to the symbol at [at], without its declaration; or
+   * undefined when the server has not answered by [deadline] (a Date.now()
+   * time), and the request is cancelled.
+   */
+  async references(at: Position, deadline = Infinity): Promise<Span[] | undefined> {
     await this.open(at.file);
-    const locations = await answerOrNone(
-      this.connection.sendRequest(ReferencesRequest.type, {
-        textDocument: { uri: this.uri(at.file) },
-        position: { line: at.line, character: at.character },
-        context: { includeDeclaration: false },
-      }),
-    );
-    return (locations ?? []).flatMap((loc) => this.span(loc));
+    const cancel = new CancellationTokenSource();
+    let timer: NodeJS.Timeout | undefined;
+    // A server may ignore the cancellation; the answer is not waited for either way.
+    const late = new Promise<'late'>((done) => {
+      if (Number.isFinite(deadline)) timer = setTimeout(() => (cancel.cancel(), done('late')), Math.max(deadline - Date.now(), 0));
+    });
+    try {
+      const request = answerOrNone(
+        this.connection.sendRequest(
+          ReferencesRequest.type,
+          {
+            textDocument: { uri: this.uri(at.file) },
+            position: { line: at.line, character: at.character },
+            context: { includeDeclaration: false },
+          },
+          cancel.token,
+        ),
+      );
+      const locations = await Promise.race([request, late]);
+      if (locations === 'late' || cancel.token.isCancellationRequested) return undefined;
+      return (locations ?? []).flatMap((loc) => this.span(loc));
+    } finally {
+      clearTimeout(timer);
+      cancel.dispose();
+    }
   }
 
   /** Where the symbol at [at] is declared. */
@@ -185,9 +220,8 @@ export class LspClient {
     return list.flatMap((loc) => this.span(loc));
   }
 
-  /** The declarations that implement or override the one at [at]; none when the server cannot tell. */
+  /** What the server says implements the declaration at [at], or what it implements (gopls answers both ways). */
   async implementations(at: Position): Promise<Span[]> {
-    if (!this.capabilities.implementationProvider) return [];
     await this.open(at.file);
     const result = await answerOrNone(
       this.connection.sendRequest(ImplementationRequest.type, {
