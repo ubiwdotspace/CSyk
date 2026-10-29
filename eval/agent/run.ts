@@ -7,7 +7,7 @@ import { assertPinned, loadCorpora } from '../harness/corpora.ts';
 import { mean, percentile } from '../harness/metrics.ts';
 import { buildCsyk, runClaude, setups, type ClaudeRun } from './claude.ts';
 
-const usage = `Usage: npm run agent -- --setup <b0|b1|csyk> --corpus <name> [--model sonnet] [--task T01] [--max-turns 30]
+const usage = `Usage: npm run agent -- --setup <b0|csyk> --corpus <name> [--model sonnet] [--task T01] [--max-turns 30]
 
 Runs each task in eval/agent/tasks/<corpus>.yaml through headless Claude Code
 (claude -p) in the corpus folder, with the setup's tools only, and records
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
     },
   });
   const corpus = (await loadCorpora(root)).get(values.corpus ?? '');
-  const setup = corpus && setups(corpus.root, corpus.codesift)[values.setup ?? ''];
+  const setup = corpus && setups(corpus.root)[values.setup ?? ''];
   if (values.help || !corpus || !setup) {
     console.log(usage);
     return;

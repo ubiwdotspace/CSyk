@@ -1,23 +1,26 @@
+import { extname } from 'node:path';
 import { z } from 'zod';
+import { sourceExtensions } from '../index/parse.ts';
 import { symbolKinds, type SymbolKind } from '../index/symbols.ts';
 import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
-import { def, find, grep, outline, read, refs, type ToolResult } from './tools.ts';
+import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
 const budget = z.number().optional();
-const target = z.string().describe('Symbol id (file#Name) or name');
+const target = z.string().describe('Symbol id or name');
+
 
 /** Each tool's one-line description and arguments, as the MCP server lists them. */
 export const toolSchemas = {
   find: {
     description: 'Find symbols by name or part of one.',
     input: {
-      query: z.string().describe('Name or part of a name'),
+      query: z.string(),
       kind: z.enum(symbolKinds as [SymbolKind, ...SymbolKind[]]).optional(),
-      path: z.string().optional().describe('Only files under this path'),
+      path: z.string().optional().describe('Under this path'),
       limit: z.number().optional(),
       budget,
     },
@@ -29,7 +32,7 @@ export const toolSchemas = {
   read: {
     description: "One symbol's exact source, or only its signature.",
     input: {
-      target,
+      target: z.string().describe('Symbol id or name, or a file or folder path'),
       mode: z.enum(['body', 'signature']).optional(),
       context: z.number().optional().describe('Extra lines around it'),
       budget,
@@ -55,7 +58,7 @@ export const toolSchemas = {
     },
   },
   impact: {
-    description: 'What changes since a revision touch: changed symbols, their callers, tests.',
+    description: 'Changed symbols since a revision, their callers, tests.',
     input: {
       since: z.string().optional().describe('Git revision, default HEAD'),
       depth: z.number().optional().describe('Caller levels, 1-3, default 2'),
@@ -63,17 +66,18 @@ export const toolSchemas = {
     },
   },
   grep: {
-    description: 'Text or regex search; each hit names the symbol it is in.',
+    description: 'Regex search; each hit names its enclosing symbol.',
     input: {
       pattern: z.string(),
-      regex: z.boolean().optional(),
-      path: z.string().optional().describe('Only under this path'),
+      literal: z.boolean().optional().describe('Match as written'),
+      path: z.string().optional().describe('Under this path'),
+      glob: z.string().optional().describe('File glob, like *.ts'),
       limit: z.number().optional(),
       budget,
     },
   },
   status: {
-    description: 'Index size and which language servers run or are missing.',
+    description: 'Index and language server status.',
     input: {},
   },
   def: {
@@ -97,6 +101,29 @@ const bounds: Record<string, [number, number]> = {
   column: [1, 1e9],
 };
 
+/**
+ * The tools an agent sees, with only the arguments it needs: every tool and
+ * argument listed costs tokens on every turn of every session, more than a
+ * search saves when they go unused, and agents already call tools in
+ * parallel. The others (outline, def, status, and arguments such as budget
+ * or limit) stay callable for the eval and tests.
+ */
+export const listedTools = {
+  find: { description: 'Find symbols by name or part of one.', args: ['query', 'kind', 'path'] },
+  grep: { description: 'Regex search; each hit names its enclosing symbol.', args: ['pattern', 'literal', 'path', 'glob'] },
+  read: { description: "A symbol's source by id or name, or the symbols of a file or folder by path.", args: ['target'] },
+  refs: { description: 'Every reference to a symbol, resolved by the compiler.', args: ['target'] },
+  calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
+  impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
+} as const;
+
+/** A listed tool's description and its listed arguments' schemas. */
+export function listedSchema(name: keyof typeof listedTools): { description: string; input: Record<string, z.ZodType> } {
+  const { description, args } = listedTools[name];
+  const full = toolSchemas[name].input as Record<string, z.ZodType>;
+  return { description, input: Object.fromEntries(args.map((arg) => [arg, full[arg] as z.ZodType])) };
+}
+
 export type ToolName = keyof typeof toolSchemas;
 export const toolNames = Object.keys(toolSchemas) as ToolName[];
 
@@ -111,6 +138,11 @@ export async function runTool(
   args: unknown,
   session: Session,
 ): Promise<ToolResult> {
+  // Until the index is full, grep and a read of a file index only the files they touch.
+  const target = (args as { target?: unknown }).target;
+  const file = typeof target === 'string' ? target.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '') : '';
+  if (name === 'read' && sourceExtensions.has(extname(file))) await ws.indexNow([file]);
+  else if (name !== 'grep') await ws.ready;
   await ws.fresh();
   const raw = { ...(args as Record<string, unknown>) };
   for (const [key, [min, max]] of Object.entries(bounds)) {
@@ -128,6 +160,10 @@ export async function runTool(
     }
     case 'read': {
       const { target, ...options } = z.object(toolSchemas.read.input).parse(args);
+      // A path reads as the symbols of that file or folder.
+      const path = target.replace(/^\.\//, '').replace(/\/$/, '');
+      const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
+      if (isPath) return readPath(ws, path, options.budget);
       return read(ws, target, given(options), session);
     }
     case 'refs': {
@@ -144,7 +180,7 @@ export async function runTool(
       return status(ws);
     case 'grep': {
       const { pattern, ...options } = z.object(toolSchemas.grep.input).parse(args);
-      return grep(ws, pattern, given(options));
+      return grep(ws, pattern, given(options), session);
     }
     case 'def': {
       const { target, file, line, column } = z.object(toolSchemas.def.input).parse(args);
@@ -155,32 +191,4 @@ export async function runTool(
   }
 }
 
-export const batchSchema = {
-  description: 'Up to 8 calls of the other tools in one round trip.',
-  input: {
-    // Checked call by call in batch(), to keep the listed schema short.
-    calls: z.array(z.object({ tool: z.string(), args: z.object({}).passthrough() })),
-  },
-};
 
-/** `batch`: several tool calls in one round trip, each answer under its own heading. */
-export async function batch(
-  ws: Workspace,
-  calls: { tool: string; args: Record<string, unknown> }[],
-  session: Session,
-): Promise<ToolResult> {
-  if (calls.length === 0 || calls.length > 8) throw new Error('batch takes 1 to 8 calls');
-  const parts: string[] = [];
-  const locations: ToolResult['locations'] = [];
-  for (const [i, call] of calls.entries()) {
-    try {
-      if (!toolNames.includes(call.tool as ToolName)) throw new Error(`unknown tool ${call.tool}; known: ${toolNames.join(', ')}`);
-      const result = await runTool(ws, call.tool as ToolName, call.args, session);
-      parts.push(`## ${i + 1}. ${call.tool}\n${result.text}`);
-      locations.push(...result.locations);
-    } catch (error) {
-      parts.push(`## ${i + 1}. ${call.tool}\ncsyk: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  return { text: parts.join('\n'), locations };
-}

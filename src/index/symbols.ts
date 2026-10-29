@@ -15,7 +15,8 @@ export type SymbolKind =
   | 'widget'
   | 'route'
   | 'provider'
-  | 'field';
+  | 'field'
+  | 'namespace';
 
 export const symbolKinds: readonly SymbolKind[] = [
   'function',
@@ -31,6 +32,7 @@ export const symbolKinds: readonly SymbolKind[] = [
   'route',
   'provider',
   'field',
+  'namespace',
 ];
 
 /** A declaration found in the index. Lines are 1-based and inclusive. */
