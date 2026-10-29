@@ -3,7 +3,8 @@
 A code-search MCP server for AI agents: compiler-grade precision, minimal tokens.
 Languages: TypeScript/JavaScript (React, Node, NestJS), Python (FastAPI), Go, Dart (Flutter).
 
-Status: plan only, no code yet.
+Status: P0 (evaluation harness) and P1 (TS/JS index, compiler references, MCP server) are done;
+scores are in [BASELINES.md](BASELINES.md). P2 is next.
 
 ---
 
@@ -30,7 +31,7 @@ Status: plan only, no code yet.
 
 | Part | Source | How it is used |
 |---|---|---|
-| TS/JS precision (symbols, refs, defs, call hierarchy, rename) | `typescript` LanguageService (Apache-2.0) | npm dependency, in-process |
+| TS/JS precision (symbols, refs, defs, call hierarchy, rename) | `typescript` 7 native compiler, `tsc --lsp --stdio` (Apache-2.0) | npm dependency, run as an LSP server |
 | Python precision | `pyright` / `basedpyright` language server (MIT) | external binary over LSP |
 | Go precision | `gopls` (BSD-3) | external binary over LSP |
 | Dart/Flutter precision | `dart language-server` from the Dart SDK (BSD-3) | external binary over LSP |
@@ -62,8 +63,8 @@ Claude Code ──stdio──► MCP server (tool surface, ~10 tools)
                           ├─ Ranking ────── BM25F (MiniSearch) · fuzzy · kind bonus · centrality · test demotion
                           │                 · RRF with semantic (optional)
                           │
-                          ├─ Precision ──── TS LanguageService (in-process)
-                          │                 LSP manager: pyright · gopls · dart  (lazy start, idle stop)
+                          ├─ Precision ──── LSP manager: tsc --lsp · pyright · gopls · dart
+                          │                 (lazy start, idle stop)
                           │
                           ├─ Index ──────── tree-sitter symbols + ranges + imports → SQLite
                           │                 file hash per file · import graph · in-degree
@@ -79,7 +80,7 @@ Claude Code ──stdio──► MCP server (tool surface, ~10 tools)
   import graph.
 - **Precision layer (compiler / LSP):** type-aware. Used for references, definitions, call
   hierarchy, rename.
-- Every result carries `precision: compiler | lsp | index | text`, so the agent knows how far to
+- Every result carries `precision: lsp | index | text`, so the agent knows how far to
   trust it. When an LSP is missing (no Go toolchain, no Flutter SDK, no Python venv), tools fall
   back to the index and say so.
 
@@ -139,9 +140,9 @@ Rules for every tool:
 | `find` | `query`, `kind?`, `path?`, `lang?`, `limit=10` | table: id · kind · file:line · signature | index (+fuzzy) |
 | `outline` | `file` or `dir`, `depth=2` | indented symbol tree, no bodies | index |
 | `read` | `id` or `name`, `mode = body \| signature`, `context=0` | exact symbol body, or `[unchanged: <id>]` pointer | index (ranges) |
-| `refs` | `id` or `name`, `limit=50`, `include_text=false` | grouped by file: line · containing symbol | compiler / lsp, plus flagged text candidates |
-| `def` | `name` or `file:line:col` | location (+ body when `with_body`) | compiler / lsp |
-| `calls` | `id`, `direction = in \| out`, `depth=1..3` | tree of callers or callees | compiler / lsp, index fallback |
+| `refs` | `id` or `name`, `limit=50`, `include_text=false` | grouped by file: line · containing symbol | lsp, plus flagged text candidates |
+| `def` | `name` or `file:line:col` | location (+ body when `with_body`) | lsp |
+| `calls` | `id`, `direction = in \| out`, `depth=1..3` | tree of callers or callees | lsp, index fallback |
 | `grep` | `pattern`, `regex?`, `path?`, `limit=30` | hits mapped to containing symbol, at most 2 per symbol, ranked | text |
 | `impact` | `since="HEAD~1"` or `diff` | changed symbols → callers (depth 2) → affected tests | lsp + index |
 | `batch` | up to 8 sub-queries of the tools above | one combined response | — |
@@ -281,11 +282,11 @@ hint: read <id> for the body · refs <id> for usages
 | Phase | Scope | Exit criteria | Est. |
 |---|---|---|---|
 | P0 | Repo skeleton, eval harness, case format, TS corpus cases, baselines B0 / B1 | harness runs; baseline numbers recorded | 1 wk |
-| P1 | tree-sitter index (TS/JS) + SQLite; TS LanguageService; `find` `outline` `read` `refs` `def`; MCP stdio | TS: A ≥ 99%, C ≥ 98% | 1–2 wk |
+| P1 | tree-sitter index (TS/JS), in memory; TS precision via `tsc --lsp`; `find` `outline` `read` `refs` `def`; MCP stdio | TS: A ≥ 99%, C ≥ 98% | 1–2 wk |
 | P2 | BM25F + fuzzy + boosts + cutoff; `grep` with containing symbol; zero-hit | TS: B ≥ 95%, E ≥ 95% | 1 wk |
 | P3 | Token layer: tiers, tables / TOON, ledger, hints, `batch` | ≥ 60% fewer tokens than B0 at equal pass rate | 1 wk |
 | P4 | LSP manager (pyright, gopls, dart); Python / Go / Dart grammars; framework labels | per language: A ≥ 97%, C ≥ 95% | 2 wk |
-| P5 | `calls`, `impact`, watcher + incremental, perf | D ≥ 97%, G ≥ 90%; warm `find` p95 < 150 ms | 1–2 wk |
+| P5 | `calls`, `impact`, watcher + incremental, SQLite persistence, perf | D ≥ 97%, G ≥ 90%; warm `find` p95 < 150 ms | 1–2 wk |
 | P6 | Hooks, install script, Claude Code config snippet, agent benchmark | agent-level goal met on 2+ corpora | 1 wk |
 | P7 (opt) | Static embeddings + RRF + `semantic` | F R@5 ≥ 90% | 1 wk |
 
@@ -354,9 +355,13 @@ CSyk/
 3. Distribution: npm (`npm i -g csyk` or `npx csyk`).
 4. Platforms: macOS and Linux first; Windows joins CI in P6.
 
+5. Runtime: Node ≥ 22.12, which runs the TypeScript sources directly (type stripping) and is
+   what Vitest 5 needs.
+6. TypeScript 7 (the native Go port). Its npm package no longer exposes the in-process
+   LanguageService; its public API is under `typescript/unstable/*`. It does ship an LSP server
+   (`tsc --lsp --stdio`), so TS/JS precision goes through the same LSP manager as Python, Go and
+   Dart.
+
 **Open**
 
 1. Whether P7 (semantic) is needed at all. Decide after P3 numbers for category F.
-2. The TS precision layer needs the in-process LanguageService API. TypeScript 7 (the native
-   port) may not offer it, so the project stays on TypeScript 6.x until P1 confirms what 7
-   provides.
