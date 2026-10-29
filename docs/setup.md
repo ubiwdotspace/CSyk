@@ -1,10 +1,16 @@
 # Setup
 
 ```sh
-npm install -g csyk          # or from a clone: npm install && npm run build && npm install -g .
+npm install -g csyk          # or: pnpm add -g csyk
+                             # or from a clone: npm install && npm run build && npm install -g .
 cd your-project
 csyk setup
 ```
+
+With pnpm, CSyk's dependencies (the TypeScript compiler, pyright, ripgrep, the parsers) come
+from pnpm's shared store, so versions another project already installed are not downloaded or
+stored twice. pnpm reports the tree-sitter packages' build scripts as ignored: CSyk only uses
+their WebAssembly parsers, so nothing needs to be approved.
 
 `csyk setup` in a terminal asks three things: which agents should use CSyk (Claude Code, Codex,
 Antigravity; the ones installed are ticked), whether for this project or every project, and, once

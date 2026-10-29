@@ -34,7 +34,7 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 ## Install
 
 ```sh
-npm install -g csyk
+npm install -g csyk          # or: pnpm add -g csyk
 cd your-project
 csyk setup
 ```
