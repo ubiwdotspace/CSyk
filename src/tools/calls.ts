@@ -160,7 +160,7 @@ export async function impact(
 
 // Fits [rows] in the budget; the answer names only the places of rows shown.
 function shown(header: string, rows: { text: string; locations: Location[] }[], budget = defaultBudget): ToolResult {
-  const fitted = fit(header, rows.map((r) => r.text), { budget, narrow: 'lower depth or raise budget' });
+  const fitted = fit(header, rows.map((r) => r.text), { budget, narrow: 'lower depth' });
   return { text: fitted.text, locations: rows.slice(0, fitted.shown).flatMap((r) => r.locations) };
 }
 

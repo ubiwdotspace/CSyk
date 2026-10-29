@@ -40,7 +40,7 @@ export function csyk(): Adapter {
           : c.category === 'D'
             ? (['calls', { target: c.query, direction: c.direction ?? 'in', limit: 200 }] as const)
             : c.category === 'E'
-              ? (['grep', { pattern: c.query }] as const)
+              ? (['grep', { pattern: c.query, literal: true }] as const)
               : (['find', { query: c.query }] as const);
       const result = await runTool(ws, tool, args, session);
       return { hits: result.locations, output: result.text, calls: 1 };

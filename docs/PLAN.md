@@ -53,8 +53,7 @@ the P2 bar, and BM25F is for concept questions (F).
 
 **Reimplemented from ideas only (no code copied):** search hits mapped to the function that
 contains them, "source already shown" ledger, tiered response shortening, short hint codes,
-redirect hooks. CodeSift (BSL-1.1) and Serena (licence unclear, possibly GPL-3.0) are references
-for ideas, never for code.
+redirect hooks. Other code-search tools are references for ideas, never for code.
 
 ---
 
@@ -218,8 +217,8 @@ hint: read <id> for the body · refs <id> for usages
 - **`PreToolUse` Grep / Bash (`rg`, `grep -r`).** Redirect only when the pattern is a bare
   identifier (`^[A-Za-z_]\w{2,}$`), and point to `find` / `refs`. Regex and phrase searches pass
   through.
-  - Resolve the directory the command actually targets, not just the cwd (avoids CodeSift's false
-    deny outside the repo).
+  - Resolve the directory the command actually targets, not just the cwd, so a search outside the
+    repository is never refused.
   - Lex the shell command properly: quotes, heredocs, `$(...)`.
 - **All hooks.** Fail open: any error means allow. Never redirect when the server is not running.
 - **`SessionStart` / `PreCompact`.** Write the ledger reset marker.
@@ -255,8 +254,8 @@ never committed.
 | F | concept ("where are tokens refreshed") | R@5 | ≥ 85%, stretch 95% (needs P7) |
 | G | impact of a real diff (changed symbols + callers + tests) | recall | ≥ 90% |
 
-- **Overall score** = categories weighted by real usage frequency. Take the distribution from the
-  local CodeSift usage log while it is still installed; only aggregate counts are used.
+- **Overall score** = categories weighted by real usage frequency, from aggregate counts of how
+  often agents ask each kind of question.
 - **Oracle for C and D:** the same compiler / LSP in "oracle mode" (whole project loaded, no time
   limit), with 10% of cases checked by hand.
 - **Cases A, B, E, F, G:** hand-written; at least 30 per category per corpus.
@@ -271,9 +270,8 @@ never committed.
 ### 7.4 Agent-level benchmark
 
 - 20 realistic tasks per corpus, for example "find where X is validated and list the callers".
-- Run with `claude -p` (headless) under three setups:
+- Run with `claude -p` (headless) under two setups:
   - **B0:** built-in Grep/Read only.
-  - **B1:** CodeSift (non-production evaluation).
   - **CSyk.**
 - Record total tokens, tool calls, wall time and pass/fail (judged against the expected files and
   symbols).

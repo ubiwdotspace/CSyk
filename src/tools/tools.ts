@@ -1,5 +1,6 @@
 // size-ok: the six tools share their formatting, ranking and budget code.
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -24,12 +25,12 @@ export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' :
 const row = (s: CodeSymbol) => `${s.id}  ${s.kind} ${s.line}  ${s.signature}`;
 
 /** `find`: symbols whose name matches [query], best first. */
-export function find(
+export async function find(
   ws: Workspace,
   query: string,
   options: SearchOptions & { budget?: number } = {},
   session = new Session(),
-): ToolResult {
+): Promise<ToolResult> {
   const hits = ws.index.search(query, options);
   if (hits.length === 0) {
     const near = ws.index.nearest(query);
@@ -40,11 +41,68 @@ export function find(
     narrow: 'pass kind or path',
     compact: hits.map((s) => `${s.id}  ${s.kind} ${s.line}`),
   });
-  const hint = session.hint('find', 'hint: read <id> for the body, refs <id> for its uses');
+  // The one symbol of exactly this name, when small, comes with its source.
+  const only = hits[0]?.name === query && ws.index.named(query).length === 1 && !session.long ? hits[0] : undefined;
+  const body = only ? await bodies(ws, [only], session, 40, (options.budget ?? defaultBudget) - estimateTokens(fitted.text)) : [];
+  const hint = body.length ? [] : session.hint('find', 'hint: read <id> for the body, refs <id> for its uses');
   return {
-    text: [fitted.text, ...hint].join('\n'),
+    text: [fitted.text, ...body, ...hint].join('\n'),
     locations: hits.slice(0, fitted.shown).map((s) => ({ file: s.file, line: s.line })),
   };
+}
+
+// Tokens a grep may add for the source around its hits. Measured on public
+// benchmarks, an agent read a hit's file next after 43% of greps with no
+// source, 19% with up to 1,000 tokens of it, and 17% with more: past this,
+// source costs more on every later turn than the reads it saves.
+const sourceBudget = 1000;
+
+/** The lines around [hits], merged per file, as far as [budget] allows. */
+async function excerpts(ws: Workspace, hits: { file: string; line: number }[], budget: number): Promise<string[]> {
+  const parts: string[] = [];
+  for (const file of new Set(hits.map((h) => h.file))) {
+    const lines = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+    const windows: [number, number][] = [];
+    for (const { line } of hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line)) {
+      const [from, to] = [Math.max(1, line - 5), Math.min(lines.length, line + 10)];
+      const last = windows.at(-1);
+      if (last && from <= last[1] + 1) last[1] = Math.max(last[1], to);
+      else windows.push([from, to]);
+    }
+    for (const [from, to] of windows) {
+      const part = [`${file} · lines ${from}-${to}`, ...lines.slice(from - 1, to)];
+      if (estimateTokens([...parts, ...part].join('\n')) > budget) return parts;
+      parts.push(...part);
+    }
+  }
+  return parts;
+}
+
+/**
+ * The source of [symbols] when they come to at most [maxLines] lines and
+ * fit [budget]: reading them would cost the agent a whole turn of context,
+ * far more than the lines. A body the session already saw, unchanged, is a
+ * pointer instead; bodies shown are recorded, so a later `read` is one too.
+ */
+async function bodies(ws: Workspace, symbols: CodeSymbol[], session: Session, maxLines: number, budget: number): Promise<string[]> {
+  const total = symbols.reduce((n, s) => n + s.range[1] - s.range[0] + 1, 0);
+  if (symbols.length === 0 || total > maxLines) return [];
+  const parts: string[] = [];
+  const shown: { id: string; hash: string }[] = [];
+  for (const symbol of symbols) {
+    const lines = (await readFile(join(ws.root, symbol.file), 'utf8')).split('\n').slice(symbol.range[0] - 1, symbol.range[1]);
+    const hash = bodyHash(lines.join('\n'));
+    const at = session.shown(symbol.id, hash);
+    if (at !== undefined) {
+      parts.push(`[unchanged: ${symbol.id}, shown at call #${at}]`);
+      continue;
+    }
+    parts.push(`${symbol.id} · lines ${symbol.range[0]}-${symbol.range[1]}`, ...lines);
+    shown.push({ id: symbol.id, hash });
+  }
+  if (estimateTokens(parts.join('\n')) > budget) return [];
+  for (const { id, hash } of shown) session.record(id, hash);
+  return parts;
 }
 
 /** `outline`: the symbols of a file, or of every file under a folder. */
@@ -66,7 +124,7 @@ export function outline(ws: Workspace, path: string, options: { budget?: number 
   const names = (file: string) => ws.index.symbolsIn(file).filter((s) => !s.parent).map((s) => s.name);
   const fitted = fit(`${clean || '.'}/ · ${plural(files.length, 'file')}`, files.map((f) => `${f}  ${names(f).join(', ')}`), {
     budget,
-    narrow: 'outline a deeper folder',
+    narrow: 'read a deeper folder',
     compact: files,
   });
   return { text: fitted.text, locations: [] };
@@ -77,12 +135,40 @@ export function outline(ws: Workspace, path: string, options: { budget?: number 
  * this session already saw, unchanged, comes back as a pointer to the call
  * that showed it.
  */
+/** A file or folder: a short file whole, since its outline would only lead to reading it; else its symbols. */
+export async function readPath(ws: Workspace, path: string, budget = defaultBudget): Promise<ToolResult> {
+  if (ws.index.has(path)) {
+    const text = await readFile(join(ws.root, path), 'utf8');
+    const count = text.split('\n').length;
+    if (count <= 200 && estimateTokens(text) <= budget) return { text: `${path} · lines 1-${count}\n${text}`, locations: [{ file: path, line: 1 }] };
+  }
+  return outline(ws, path, { budget });
+}
+
+/**
+ * [file]'s lines [start] to [end], as grep and stack traces print them; one
+ * line alone is the small symbol around it, or the lines just after it.
+ */
+async function readLines(ws: Workspace, file: string, start: number, end: number | undefined, budget = defaultBudget, session: Session): Promise<ToolResult> {
+  const home = end === undefined ? ws.index.containing(file, start) : undefined;
+  if (home && home.range[1] - home.range[0] < 120) return read(ws, home.id, { budget }, session);
+  const all = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+  const from = Math.max(1, end === undefined ? start - 10 : start);
+  const to = Math.min(all.length, end ?? start + 40, from + 199);
+  const header = `${file} · lines ${from}-${to}`;
+  let kept = to - from + 1;
+  while (kept > 0 && estimateTokens([header, ...all.slice(from - 1, from - 1 + kept)].join('\n')) > budget) kept = Math.floor(kept * 0.8);
+  return { text: [`${file} · lines ${from}-${from + kept - 1}`, ...all.slice(from - 1, from - 1 + kept)].join('\n'), locations: [{ file, line: from }] };
+}
+
 export async function read(
   ws: Workspace,
   target: string,
   options: { mode?: 'body' | 'signature'; context?: number; budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
+  const at = /^(.+?):(\d+)(?:-(\d+))?$/.exec(target);
+  if (at?.[1] && ws.index.has(at[1])) return readLines(ws, at[1], Number(at[2]), at[3] ? Number(at[3]) : undefined, options.budget, session);
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
   const location = [{ file: symbol.file, line: symbol.line }];
@@ -104,7 +190,7 @@ export async function read(
     return { text: [header, ...body].join('\n'), locations: location };
   }
   // A cut body is not recorded: the agent has not seen all of it.
-  const rest = `… ${body.length - kept} more lines; raise budget or read a smaller symbol`;
+  const rest = `… ${body.length - kept} more lines; read ${symbol.file}:${start + kept}-${end} for them`;
   return { text: [header, ...body.slice(0, kept), rest].join('\n'), locations: location };
 }
 
@@ -141,7 +227,7 @@ export async function refs(
   }
   const fitted = fit(header, rows, {
     budget: options.budget ?? defaultBudget,
-    narrow: 'raise limit or budget',
+    narrow: 'grep the name with a path to see them',
     compact: files.map(([file, numbers]) => `${file}  ${numbers.join(', ')}`),
     total: options.code ? found.length : new Set(found.map((p) => p.file)).size,
   });
@@ -185,23 +271,42 @@ export async function def(
  * before tests and tests before other files; a lower-case pattern ignores
  * case.
  */
+// Hits spread over more files than this are summed up per file, not listed.
+const overviewFiles = 8;
+
 export async function grep(
   ws: Workspace,
   pattern: string,
-  options: { regex?: boolean; path?: string; limit?: number; budget?: number } = {},
+  options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number } = {},
+  session = new Session(),
 ): Promise<ToolResult> {
-  const args = ['--line-number', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
-  if (!options.regex) args.push('--fixed-strings');
-  let stdout = '';
-  try {
-    ({ stdout } = await run(rgPath, [...args, '-e', pattern, '--', options.path ?? '.'], {
+  // A long session gets a short list: on the public benchmarks, its context
+  // grew a thousand tokens a turn faster than with the built-in Grep.
+  const listBudget = options.budget ?? (session.long ? 600 : defaultBudget);
+  // --with-filename: a search of one file names it too, as every hit needs.
+  const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
+  if (options.glob) args.push('--glob', options.glob);
+  const search = async (literal: boolean) => {
+    const { stdout } = await run(rgPath, [...args, ...(literal ? ['--fixed-strings'] : []), '-e', pattern, '--', options.path ?? '.'], {
       cwd: ws.root,
       maxBuffer: 256 * 1024 * 1024,
-    }));
+    });
+    return stdout;
+  };
+  let stdout = '';
+  try {
+    // A missing path is searched as no match, not as ripgrep's error.
+    if (options.path && !existsSync(join(ws.root, options.path))) throw Object.assign(new Error(), { code: 1 });
+    stdout = await search(options.literal === true);
   } catch (error) {
-    // Exit code 1 is ripgrep's "no match".
-    if ((error as { code?: unknown }).code !== 1) throw error;
+    const code = (error as { code?: unknown }).code;
+    // Exit code 1 is ripgrep's "no match"; 2 here is a pattern that is no
+    // regex (`f(x`), which is then searched for as written.
+    if (code === 2 && !options.literal) stdout = await search(true).catch(() => '');
+    else if (code !== 1) throw error;
   }
+  // Files hit while the index still fills are indexed first, for their symbols.
+  await ws.indexNow([...new Set(stdout.split('\n').map((entry) => /^(?:\.\/)?(.+?):\d+:/.exec(entry)?.[1] ?? ''))].slice(0, 200));
   type Hit = { file: string; line: number; code: string; home?: CodeSymbol; rank: number };
   const hits: Hit[] = [];
   for (const entry of stdout.split('\n')) {
@@ -213,27 +318,72 @@ export async function grep(
     const rank = ws.index.has(file) ? (isTestFile(file) ? 1 : 0) : 2;
     hits.push({ file, line, code: match[3].trim().slice(0, 120), ...(home ? { home } : {}), rank });
   }
-  if (hits.length === 0) return { text: 'no match · text', locations: [] };
+  if (hits.length === 0) {
+    // A guessed folder that misses costs a turn: search everywhere instead.
+    if (!options.path || options.path === '.') return { text: 'no match · text', locations: [] };
+    const wider = await grep(ws, pattern, { ...options, path: undefined }, session);
+    return { ...wider, text: `no match in ${options.path}; everywhere: ${wider.text}` };
+  }
   hits.sort((a, b) => a.rank - b.rank);
+  // A few files' hits are all worth listing; the budget still caps them.
+  const limit = Math.max(options.limit ?? 30, 0);
   const perPlace = new Map<string, number>();
   const shown: Hit[] = [];
   for (const hit of hits) {
     const key = hit.home?.id ?? `${hit.file}:${hit.line}`;
     const count = perPlace.get(key) ?? 0;
     perPlace.set(key, count + 1);
-    if (count < 2 && shown.length < (options.limit ?? 30)) shown.push(hit);
+    if (count < 2 && shown.length < limit) shown.push(hit);
+  }
+  // Too many places in many files to list: the files with the most hits
+  // first, code before tests, each with the symbols its hits fall in, so one
+  // call shows where the text lives instead of the first lines in path order.
+  // Hits in a few files are listed line by line, which needs no second call.
+  const byFile = new Map<string, Hit[]>();
+  for (const hit of hits) byFile.set(hit.file, [...(byFile.get(hit.file) ?? []), hit]);
+  if (perPlace.size > limit && byFile.size > overviewFiles) {
+    const files = [...byFile.entries()].sort(
+      ([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b),
+    );
+    const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
+    const fitted = fit(
+      `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
+      files.map(([file, fileHits]) => {
+        const names = homes(fileHits);
+        return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
+      }),
+      { budget: listBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
+    );
+    return {
+      text: fitted.text,
+      locations: files.slice(0, fitted.shown).map(([file, fileHits]) => ({ file, line: fileHits[0]?.line ?? 1 })),
+    };
   }
   const fitted = fit(
     `${plural(hits.length, 'hit')} in ${plural(perPlace.size, 'place')} · text`,
     shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.code}`),
     {
-      budget: options.budget ?? defaultBudget,
+      budget: listBudget,
       narrow: 'pass path or a longer pattern',
       compact: shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`),
       total: hits.length,
     },
   );
-  return { text: fitted.text, locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })) };
+  // Hits in a few small symbols bring their source, hits in a few files the
+  // lines around them: after a grep without them, agents read the place next
+  // more often than not, and that turn re-reads the whole context.
+  const listed = shown.slice(0, fitted.shown);
+  const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
+  const room = session.long ? 0 : sourceBudget;
+  let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
+  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
+  // With the source alongside, the hit lines need not repeat the code.
+  const list = fitted.text.split('\n');
+  if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
+  return {
+    text: [...list, ...body].join('\n'),
+    locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),
+  };
 }
 
 /**
@@ -335,10 +485,25 @@ const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widg
  * the best ranked and names the others.
  */
 export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; note: string } {
-  if (target.includes('#')) {
-    const symbol = ws.index.get(target);
-    return symbol ? { symbol, note: '' } : { note: `no symbol with id ${target}` };
+  // Agents also write file:name or file::name for file#name.
+  const colon = /^(.+?\.\w+)::?([\w.$]+)$/.exec(target);
+  const id = !target.includes('#') && colon?.[1] && ws.index.has(colon[1]) ? `${colon[1]}#${colon[2]}` : target;
+  if (id.includes('#')) {
+    const symbol = ws.index.get(id);
+    if (symbol) return { symbol, note: '' };
+    // A method named without its class: the one symbol of that name in the file.
+    const [file = '', name = ''] = id.split('#');
+    const inFile = ws.index.symbolsIn(file).filter((s) => s.name === name.split('.').pop());
+    return inFile.length === 1 ? { symbol: inFile[0], note: '' } : { note: `no symbol with id ${id}` };
   }
+  if (target.includes('/')) {
+    const base = target.split('/').filter(Boolean).pop() ?? '';
+    const similar = ws.index.files.filter((f) => f.endsWith(`/${base}`) || f.includes(`/${base}/`)).slice(0, 5);
+    return { note: `no file or symbol ${target}${similar.length ? `; similar paths: ${similar.join(', ')}` : ''}` };
+  }
+  // Class.method without its file.
+  const qualified = target.includes('.') ? ws.index.named(target.split('.').pop() ?? '').filter((s) => s.id.endsWith(`#${target}`)) : [];
+  if (qualified.length) return { symbol: qualified[0], note: qualified.length > 1 ? `also: ${qualified.slice(1).map((s) => s.id).join(', ')}` : '' };
   const named = ws.index.named(target);
   if (named.length === 0) {
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);

@@ -34,21 +34,10 @@ const call = async (name: string, args: Record<string, unknown>) => {
 };
 
 describe('the MCP server', () => {
-  it('offers ten tools whose list stays small', async () => {
+  it('offers six tools whose list stays small', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual([
-      'batch',
-      'calls',
-      'def',
-      'find',
-      'grep',
-      'impact',
-      'outline',
-      'read',
-      'refs',
-      'status',
-    ]);
-    expect(countTokens(JSON.stringify(tools))).toBeLessThan(1000);
+    expect(tools.map((t) => t.name).sort()).toEqual(['calls', 'find', 'grep', 'impact', 'read', 'refs']);
+    expect(countTokens(JSON.stringify(tools))).toBeLessThan(600);
   });
 
   it('finds, reads and outlines symbols', async () => {
@@ -59,18 +48,37 @@ describe('the MCP server', () => {
       '  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);',
       '}',
     ]);
-    expect(await call('outline', { path: 'src/auth/token-store.ts' })).toContain('method save');
+    const file = await call('read', { target: 'src/auth/token-store.ts' });
+    expect(file).toContain('src/auth/token-store.ts · lines 1-');
+    expect(file).toContain("throw new Error('Session expired");
+    expect(await call('read', { target: 'src/cart/total.ts:calculateTotal' })).toContain('src/cart/total.ts#calculateTotal');
+    expect(await call('read', { target: 'src/auth/token-store.ts#save' })).toContain('save(');
+    expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  calculateTotal');
   });
 
-  it('answers references and definitions from the compiler', async () => {
+  it('answers references from the compiler', async () => {
     const answer = await call('refs', { target: 'calculateTotal' });
     expect(answer).toBe(
       ['src/cart/total.ts#calculateTotal · 4 refs in 2 files · lsp', 'src/cart/checkout.ts  1, 10·checkout', 'test/cart.test.ts  1, 5'].join('\n'),
     );
-    expect(await call('def', { file: 'src/cart/checkout.ts', line: 10, column: 20 })).toContain(
-      'src/cart/total.ts#calculateTotal  function 4',
-    );
   }, 30_000);
+
+  it('reads what agents write for a place: file:line, Class.method, a wrong path', async () => {
+    expect(await call('read', { target: 'src/auth/token-store.ts:30' })).toContain('src/auth/token-store.ts#refreshAccessToken · lines 25-37');
+    expect(await call('read', { target: 'src/auth/token-store.ts:2-4' })).toBe(
+      ['src/auth/token-store.ts · lines 2-4', 'export class TokenStore {', '  private access?: string;', '  private refresh?: string;'].join('\n'),
+    );
+    expect(await call('read', { target: 'TokenStore.clear' })).toContain('this.access = undefined;');
+    expect(await call('read', { target: 'src/nope/token-store.ts' })).toContain('similar paths: src/auth/token-store.ts');
+  });
+
+  it('searches everywhere when grep misses in the folder it was given', async () => {
+    for (const path of ['src/cart', 'src/missing']) {
+      const answer = await call('grep', { pattern: 'Session expired', path });
+      expect(answer).toContain(`no match in ${path}; everywhere: `);
+      expect(answer).toContain('src/auth/token-store.ts:32');
+    }
+  });
 
   it('greps text and names the symbol around each hit', async () => {
     const answer = await call('grep', { pattern: 'Session expired' });
@@ -96,21 +104,7 @@ describe('the MCP server', () => {
     expect(second).not.toContain(hint);
   });
 
-  it('runs several calls in one batch', async () => {
-    const answer = await call('batch', {
-      calls: [
-        { tool: 'find', args: { query: 'TokenStore' } },
-        { tool: 'read', args: { target: 'calculateTax', mode: 'signature' } },
-        { tool: 'read', args: {} },
-      ],
-    });
-    expect(answer).toContain('## 1. find\n');
-    expect(answer).toContain('## 2. read\nsrc/cart/total.ts#calculateTax  function calculateTax');
-    expect(answer).toContain('## 3. read\ncsyk:');
-  });
-
   it('says what is wrong instead of failing', async () => {
     expect(await call('read', { target: 'noSuchThing' })).toContain('no symbol named noSuchThing');
-    expect(await call('def', {})).toContain('pass a target');
   });
 });

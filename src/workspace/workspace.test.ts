@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { describe, expect, it } from 'vitest';
+import { Session } from '../token/session.ts';
+import { runTool } from '../tools/dispatch.ts';
 import { Workspace } from './workspace.ts';
 
 const folder = (files: Record<string, string>) => {
@@ -20,6 +22,31 @@ describe('Workspace', () => {
     const ws = await Workspace.open(root, { persist: true });
     expect(ws.index.reused).toBe(1);
     expect(ws.index.named('c')).toHaveLength(1);
+    await ws.close();
+  });
+
+  it('greps before the index is full, indexing the files it hits', async () => {
+    const files = Object.fromEntries(Array.from({ length: 3000 }, (_, i) => [`f${i}.ts`, `export function f${i}() {}`]));
+    const root = folder({ ...files, 'z.ts': 'export function needle() {\n  return "find me";\n}' });
+    const ws = Workspace.start(root);
+    const answer = await runTool(ws, 'grep', { pattern: 'find me' }, new Session());
+    expect(ws.complete).toBe(false);
+    expect(answer.text).toContain('z.ts:2  needle');
+    await ws.ready;
+    await ws.close();
+  });
+
+  it('greps with the lines around hits in a large function, unless the session is long', async () => {
+    const body = Array.from({ length: 150 }, (_, i) => (i === 99 ? '  const needle = 1;' : `  const x${i} = ${i};`));
+    const root = folder({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
+    const ws = await Workspace.open(root);
+    const answer = await runTool(ws, 'grep', { pattern: 'needle' }, new Session());
+    expect(answer.text).toContain('big.ts:101  big');
+    expect(answer.text).toContain('big.ts · lines 96-111\n  const x94 = 94;');
+    expect(answer.text.split('const needle = 1;')).toHaveLength(2);
+    const long = new Session();
+    long.spend(4000);
+    expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text\nbig.ts:101  big  const needle = 1;');
     await ws.close();
   });
 

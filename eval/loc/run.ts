@@ -9,7 +9,7 @@ import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--model sonnet] [--max-turns 40]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
@@ -64,13 +64,14 @@ async function main(): Promise<void> {
       dataset: { type: 'string', default: 'polybench' },
       count: { type: 'string', default: '10' },
       seed: { type: 'string', default: '1' },
+      run: { type: 'string' },
       model: { type: 'string', default: 'sonnet' },
       'max-turns': { type: 'string', default: '40' },
       help: { type: 'boolean', short: 'h' },
     },
   });
   const load = loaders[values.dataset];
-  if (values.help || !values.setup || !values.language || !load || !['b0', 'csyk'].includes(values.setup)) {
+  if (values.help || !values.setup || !values.language || !load || !(values.setup in setups('.'))) {
     console.log(usage);
     return;
   }
@@ -83,7 +84,8 @@ async function main(): Promise<void> {
   // One file per setup, dataset, language and seed, written after every issue:
   // a run that stops resumes where it was, without paying for an issue twice.
   const name = values.dataset === 'polybench' ? values.language : `${values.dataset}-${values.language}`;
-  const out = join(root, 'eval/results', `loc-${values.setup}-${name}-seed${values.seed}.json`);
+  // --run names a repeat of the same setup, so runs side by side keep their own results.
+  const out = join(root, 'eval/results', `loc-${values.setup}-${name}-seed${values.seed}${values.run ? `.${values.run}` : ''}.json`);
   const results: Result[] = existsSync(out) ? (JSON.parse(await readFile(out, 'utf8')) as { results: Result[] }).results : [];
   const save = () =>
     writeFile(
@@ -194,9 +196,10 @@ async function datasetRows(dataset: string, split: string): Promise<Instance[]> 
   return rows;
 }
 
-// The instance's repository at its base commit, fetched without history into eval/corpora/loc/.
+// The instance's repository at its base commit, fetched without history into eval/corpora/loc/,
+// or into CSYK_LOC_DIR: two setups run side by side need a checkout each.
 async function checkout(instance: Instance): Promise<string> {
-  const dir = join(root, 'eval/corpora/loc', instance.repo.replace('/', '__'));
+  const dir = join(process.env.CSYK_LOC_DIR ?? join(root, 'eval/corpora/loc'), instance.repo.replace('/', '__'));
   const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: ['ignore', 'pipe', 'inherit'] });
   if (!existsSync(join(dir, '.git'))) {
     await mkdir(dir, { recursive: true });

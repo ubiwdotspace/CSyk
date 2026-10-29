@@ -4,7 +4,6 @@ import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { b0Ripgrep } from './adapters/b0-ripgrep.ts';
-import { b1CodeSift } from './adapters/b1-codesift.ts';
 import { csyk } from './adapters/csyk.ts';
 import { loadCaseFiles } from './harness/cases.ts';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
@@ -13,9 +12,9 @@ import { renderTable } from './harness/report.ts';
 import { countTokens } from './harness/tokens.ts';
 import type { Adapter, Case, Corpus } from './harness/types.ts';
 
-const adapters: Record<string, () => Adapter> = { b0: () => b0Ripgrep, b1: b1CodeSift, csyk };
+const adapters: Record<string, () => Adapter> = { b0: () => b0Ripgrep, csyk };
 
-const usage = `Usage: npm run eval -- [--adapter b0|b1|csyk] [--corpus <name>] [--category <A-G>]
+const usage = `Usage: npm run eval -- [--adapter b0|csyk] [--corpus <name>] [--category <A-G>]
 
 Runs the cases in eval/cases/ (and eval/cases/private/) through an adapter,
 prints one table per corpus and writes every score to eval/results/.`;

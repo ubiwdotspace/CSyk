@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { estimateTokens } from '../token/budget.ts';
 import { resetMarker, Session } from '../token/session.ts';
-import { batch, batchSchema, runTool, toolNames, toolSchemas } from '../tools/dispatch.ts';
+import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
 import type { ToolResult } from '../tools/tools.ts';
 import { Workspace } from '../workspace/workspace.ts';
 
@@ -11,16 +12,17 @@ import { Workspace } from '../workspace/workspace.ts';
  * gave until a hook touches the reset marker.
  */
 export function createServer(root: string): { server: McpServer; close: () => Promise<void> } {
-  const workspace = Workspace.open(root, { watch: true, persist: true });
-  // A failed build surfaces on the first tool call, not as an unhandled rejection.
-  workspace.catch(() => {});
+  const workspace = Workspace.start(root, { watch: true, persist: true });
+  // A failed build surfaces on a tool call that waits for it, not as an unhandled rejection.
+  workspace.ready.catch(() => {});
   const session = new Session({ marker: resetMarker(root) });
   const server = new McpServer({ name: 'csyk', version: '0.0.0' });
 
   const answer = async (run: (ws: Workspace) => Promise<ToolResult>) => {
     session.nextCall();
     try {
-      const { text } = await run(await workspace);
+      const { text } = await run(workspace);
+      session.spend(estimateTokens(text));
       return { content: [{ type: 'text' as const, text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -28,21 +30,18 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
     }
   };
 
-  for (const name of toolNames) {
-    const { description, input } = toolSchemas[name];
+  for (const name of Object.keys(listedTools) as (keyof typeof listedTools)[]) {
+    const { description, input } = listedSchema(name);
     server.registerTool(name, { description, inputSchema: input }, (args: unknown) =>
       answer((ws) => runTool(ws, name, args, session)),
     );
   }
-  server.registerTool('batch', { description: batchSchema.description, inputSchema: batchSchema.input }, (args) =>
-    answer((ws) => batch(ws, args.calls, session)),
-  );
 
   return {
     server,
     close: async () => {
       await server.close();
-      await (await workspace.catch(() => undefined))?.close();
+      await workspace.close();
     },
   };
 }
