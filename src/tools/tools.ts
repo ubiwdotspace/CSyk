@@ -371,8 +371,11 @@ export async function grep(
   const room = (options.budget ?? defaultBudget) + sourceExtra - estimateTokens(fitted.text);
   let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
   if (body.length === 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
+  // With the source alongside, the hit lines need not repeat the code.
+  const list = fitted.text.split('\n');
+  if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
   return {
-    text: [fitted.text, ...body].join('\n'),
+    text: [...list, ...body].join('\n'),
     locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),
   };
 }
