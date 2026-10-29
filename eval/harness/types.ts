@@ -1,5 +1,5 @@
 /**
- * Case categories from PLAN.md §7.2:
+ * Case categories:
  * A exact-name definition · B fuzzy-name definition · C all references ·
  * D callers / callees · E text → containing symbol · F concept · G impact.
  */
