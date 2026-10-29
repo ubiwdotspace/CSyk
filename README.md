@@ -24,7 +24,7 @@ into the agent as an MCP server.
 | first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, over 120 issues in four languages, and faster | per answer, median |
 
 <p align="center">
-  <b><a href="#install">Install</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
+  <b><a href="#install">Install</a> · <a href="#languages">Languages</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
 </p>
 
 Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS and Linux.
@@ -33,17 +33,46 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 
 ## Install
 
-```sh
-npm install -g csyk          # or: pnpm add -g csyk
-cd your-project
-csyk setup
-```
+You need Node.js 22.18 or later, on macOS or Linux, and an AI coding agent: Claude Code, Codex or
+Antigravity. Any other agent that supports MCP works too, set up by hand.
 
-`csyk setup` asks which agents to set up (Claude Code, Codex, Antigravity) and for which projects,
-then adds the MCP server, a short note the agent always reads and a skill. If Go or Dart support
-needs a language server you do not have, it offers to install it. Start your agent and the six
-CSyk tools are there. Options for scripts, every file it writes, and hooks:
-[docs/setup.md](docs/setup.md).
+1. **Install CSyk**, once for your machine:
+
+   ```sh
+   npm install -g csyk          # or, with pnpm: pnpm add -g csyk
+   ```
+
+2. **Set it up in your project:**
+
+   ```sh
+   cd your-project
+   csyk setup
+   ```
+
+   It asks, with the arrow keys and Enter: which agents should use CSyk (the ones on your machine
+   are already ticked), whether for this project or for every project, and whether to write the
+   files it lists. Nothing is written before you say yes.
+
+3. **Start your agent in the project.** CSyk starts with it, and the agent has six more tools and a
+   short note on when to use them.
+
+## Languages
+
+| | Language | What you need | Also recognises |
+|:---:|---|---|---|
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg" alt="TypeScript" width="28"> | TypeScript | nothing more | React components and hooks, NestJS routes and providers |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/javascript/javascript-original.svg" alt="JavaScript" width="28"> | JavaScript | nothing more | React components and hooks |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/python/python-original.svg" alt="Python" width="28"> | Python | nothing more | FastAPI routes |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/go/go-original.svg" alt="Go" width="28"> | Go | `gopls`, Go's language server | |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/dart/dart-original.svg" alt="Dart" width="28"> | Dart and Flutter | the Dart or Flutter SDK | Flutter widgets |
+
+TypeScript, JavaScript and Python work as soon as CSyk is installed: their compilers come with it.
+For Go and Dart, CSyk uses the compiler you install for those languages. If `csyk setup` does not
+find it, it offers to install it for you, or says how. Without it, CSyk still finds names and text
+in those files, but cannot confirm which uses and callers are real.
+
+Every file `csyk setup` writes, its options for scripts, and its hooks are in
+[setup](docs/setup.md).
 
 ## Before and after
 
