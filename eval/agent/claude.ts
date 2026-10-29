@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { countTokens } from '../harness/tokens.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const tools = 'Read,Grep,Glob';
@@ -14,6 +15,8 @@ export type Setup = { mcp?: Record<string, unknown>; allowed: string[]; settings
 export type ClaudeRun = {
   answer: string;
   tokens: number;
+  /** Tokens of what the tools returned (o200k_base), the part a search tool controls. */
+  toolTokens: number;
   /** The parts of [tokens]: input, cache writes, cache reads, output. */
   usage: Record<string, number>;
   costUsd: number;
@@ -105,10 +108,13 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
   });
   const ms = performance.now() - start;
   let calls = 0;
+  let toolTokens = 0;
   let result: { result?: string; total_cost_usd?: number; num_turns?: number; usage?: Record<string, number> } = {};
   for (const line of lines) {
-    const event = JSON.parse(line) as { type?: string; message?: { content?: { type: string }[] } };
-    if (event.type === 'assistant') calls += (event.message?.content ?? []).filter((c) => c.type === 'tool_use').length;
+    const event = JSON.parse(line) as { type?: string; message?: { content?: ToolBlock[] } };
+    const blocks = Array.isArray(event.message?.content) ? event.message.content : [];
+    if (event.type === 'assistant') calls += blocks.filter((c) => c.type === 'tool_use').length;
+    if (event.type === 'user') for (const block of blocks) if (block.type === 'tool_result') toolTokens += countTokens(textOf(block.content));
     if (event.type === 'result') result = event as typeof result;
   }
   const usage = result.usage ?? {};
@@ -120,6 +126,7 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
   return {
     answer: result.result ?? '',
     tokens,
+    toolTokens,
     usage,
     costUsd: result.total_cost_usd ?? 0,
     calls,
@@ -127,3 +134,13 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
     ms,
   };
 }
+
+type ToolBlock = { type: string; content?: unknown };
+
+// The text of a tool result: a string, or a list of text blocks.
+function textOf(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  return content.map((c: { type?: string; text?: string }) => (c.type === 'text' ? (c.text ?? '') : '')).join('\n');
+}
+
