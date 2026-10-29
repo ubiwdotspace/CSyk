@@ -93,7 +93,12 @@ async function main(): Promise<void> {
   await mkdir(dirname(out), { recursive: true });
   for (const instance of sample) {
     if (results.some((r) => r.id === instance.instance_id)) continue;
-    const repo = await checkout(instance);
+    // An issue whose repository cannot be fetched is left for the next run, not the end of this one.
+    const repo = await checkout(instance).catch((error: unknown) => {
+      console.log(`${instance.instance_id}: skipped, checkout failed: ${error instanceof Error ? error.message.split('\n')[0] : error}`);
+      return undefined;
+    });
+    if (!repo) continue;
     const gold = await goldOf(instance, repo);
     const setup = setups(repo)[values.setup];
     if (!setup) throw new Error(`no setup ${values.setup}`);
@@ -198,7 +203,16 @@ async function checkout(instance: Instance): Promise<string> {
     git('init', '-q');
     git('remote', 'add', 'origin', `https://github.com/${instance.repo}.git`);
   }
-  git('fetch', '-q', '--depth', '1', 'origin', instance.base_commit);
+  // A large repository's fetch can drop on a slow network; it is tried three times.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      git('fetch', '-q', '--depth', '1', 'origin', instance.base_commit);
+      break;
+    } catch (error) {
+      if (attempt === 3) throw error;
+      await new Promise((done) => setTimeout(done, 10_000 * attempt));
+    }
+  }
   git('checkout', '-q', '-f', 'FETCH_HEAD');
   git('clean', '-q', '-fd');
   return dir;
