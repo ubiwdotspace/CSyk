@@ -118,28 +118,29 @@ Where a dataset does not list the changed functions (SWE-bench, Multi-SWE-bench)
 line of the fix is mapped to the function around it. Dart has no public benchmark of this kind;
 its numbers are the single-question ones above.
 
-### The current version, 80 issues twice
+### The current version, 80 issues three times
 
-The first 20 issues of each benchmark, run twice with CSyk and twice with Claude Code alone, side
-by side (160 sessions each), with the version that reads docs and configs, answers a missed
-`grep` briefly and gives a file's path once above its hits. Each issue is averaged over its
-two runs.
+The first 20 issues of each benchmark, run three times with CSyk and three times with Claude Code
+alone, side by side (240 sessions each), with the version that reads docs and configs, answers a
+missed `grep` briefly and gives a file's path once above its hits. The third run could also `read`
+several symbols in one call; it read as often as the first two (0.94 reads a session), and
+without the issue below its tokens fell between theirs (14.5% fewer, against 14.0% and 15.5%).
+Each issue is averaged over its three runs.
 
 | | With CSyk, against Claude Code alone |
 |---|---|
-| Issues where CSyk used fewer tokens | **55 of 80** (sign test p = 0.001) |
-| Tokens per issue, the median issue | **10.4% fewer** |
-| Tokens per issue, mean | 7.3% fewer (95% interval: 19.2% fewer to 8.4% more) |
-| Turns per issue | **3.68** against 4.41 |
-| Changed functions named | 1.7 points more |
-| First file right | 3.8 points more |
-| All changed files in first five | 1.9 points fewer |
+| Issues where CSyk used fewer tokens | **57 of 80** (sign test p = 0.0002) |
+| Tokens per issue, mean | **11.4% fewer** (95% interval: 3.5% to 17.9% fewer) |
+| Tokens per issue, the median issue | 9.2% fewer |
+| Turns per issue | **3.66** against 4.44 |
+| Changed functions named | 1.5 points more (better on 12 issues, worse on 8) |
+| First file right | 3.3 points more (better on 7, worse on 3) |
+| All changed files in first five | 1.3 points fewer (better on 2, worse on 4) |
 
-By language, the mean: JavaScript 24.4% fewer, Go 15.3% fewer, Python 3.8% fewer, TypeScript
-15.5% more. TypeScript's mean rests on one issue, `microsoft__vscode-173585`, a session of 12 to 29
-turns in either setup that the agent rarely solves: 817k tokens with CSyk against 192k without
-in one round, 385k against 387k in the other. One run alone (the second) was 13.0% fewer tokens
-with a 95% interval of 6.7% to 19.3% fewer, and fewer in all four languages.
+By language, the mean: JavaScript 22.3% fewer, Go 14.3% fewer, Python 8.6% fewer, TypeScript 0.8%
+more. TypeScript rests on one issue, `microsoft__vscode-173585`, whose sessions ran from 6 to 29
+turns in either setup: 817k tokens with CSyk against 192k without in one run, 74k against 363k in
+another. Without it, each run used 14.0% to 15.5% fewer tokens.
 
 ## Against Serena and Graphify
 

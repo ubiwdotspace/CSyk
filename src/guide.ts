@@ -13,8 +13,8 @@ export const note = `## Code search (CSyk)
   class, and hits in a few small functions bring their source along, so you can often answer
   without opening files.
 - A name, or part of one → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`.
-- One symbol → \`read <id>\`; a large file's symbols → \`read <path>\`. Read a file whole when you
-  need most of it.
+- A symbol → \`read <id>\`, several in one call → \`read <id>, <id>\`; a large file's symbols →
+  \`read <path>\`. Read a file whole when you need most of it.
 - Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
   or path it mentions, called in parallel. Each extra turn re-reads your whole context.
 - After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
@@ -40,7 +40,7 @@ whole-file Read. Every extra turn re-reads your whole context, so the fewest cal
 | a symbol and want callers or callees | \`calls <id>\` (\`direction\` in or out, \`depth\` 1–3) | callers with call lines, or callees with their declarations |
 | an error message, a label, any text | \`grep "Could not find"\` | each hit with its file, line and enclosing symbol |
 | a file or folder | \`read <path>\` | its symbols with line ranges |
-| a symbol id | \`read <id>\` (\`mode: signature\` for one line) | exactly its source |
+| one or more symbol ids | \`read <id>, <id>\` (\`mode: signature\` for one line) | exactly their source, in one call |
 | edits in the working tree | \`impact\` (\`since\` a revision) | changed symbols, callers two levels up, test files |
 
 Ids look like \`src/cart/total.ts#Cart.total\`; pass them to \`read\`, \`refs\` and \`calls\` as they are.
