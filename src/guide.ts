@@ -13,15 +13,15 @@ export const note = `## Code search (CSyk)
   class, and hits in a few small functions bring their source along, so you can often answer
   without opening files.
 - A name, or part of one → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`.
-- One symbol → \`read <id>\`. Read a file whole when you need most of it; \`outline\` only to pick
-  what to read in a large one.
-- Ask independent questions in one \`batch\`. After editing, \`impact\` lists the changed symbols,
-  their callers and the tests to run.`;
+- One symbol → \`read <id>\`; a large file's symbols → \`read <path>\`. Read a file whole when you
+  need most of it.
+- Make independent calls in parallel. After editing, \`impact\` lists the changed symbols, their
+  callers and the tests to run.`;
 
 /** The skill, as .claude/skills/csyk/SKILL.md. */
 export const skill = `---
 name: csyk
-description: How to search code with the CSyk tools (find, outline, read, refs, calls, impact, grep, batch) in few turns and few tokens. Use when locating code for an issue or a change, tracing who uses or calls something, or checking what an edit affects.
+description: How to search code with the CSyk tools (find, grep, read, refs, calls, impact) in few turns and few tokens. Use when locating code for an issue or a change, tracing who uses or calls something, or checking what an edit affects.
 ---
 
 # Searching code with CSyk
@@ -38,17 +38,16 @@ whole-file Read. Every extra turn re-reads your whole context, so the fewest cal
 | a symbol and want its uses | \`refs <id or name>\` | per file, each line and the function it is in (\`code: true\` adds the text) |
 | a symbol and want callers or callees | \`calls <id>\` (\`direction\` in or out, \`depth\` 1–3) | callers with call lines, or callees with their declarations |
 | an error message, a label, any text | \`grep "Could not find"\` | each hit with its file, line and enclosing symbol |
-| a file or folder | \`outline <path>\` | its symbols with line ranges |
+| a file or folder | \`read <path>\` | its symbols with line ranges |
 | a symbol id | \`read <id>\` (\`mode: signature\` for one line) | exactly its source |
 | edits in the working tree | \`impact\` (\`since\` a revision) | changed symbols, callers two levels up, test files |
-| several of the above | \`batch\` | up to eight answers in one call |
 
 Ids look like \`src/cart/total.ts#Cart.total\`; pass them to \`read\`, \`refs\` and \`calls\` as they are.
 
 ## Recipes
 
 **Locate the code an issue needs changed.** \`grep\` the most specific text in the issue (an error
-message, a UI label, an option name) and \`find\` the names it mentions, in one \`batch\`. The hits
+message, a UI label, an option name) and \`find\` the names it mentions, as parallel calls in one turn. The hits
 already name their functions: that is usually the answer. \`read\` only the one or two candidates
 you need to be sure of, then \`calls direction=in\` if the fix may belong in a caller.
 

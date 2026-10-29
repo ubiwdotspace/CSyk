@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { resetMarker, Session } from '../token/session.ts';
-import { batch, batchSchema, runTool, toolNames, toolSchemas } from '../tools/dispatch.ts';
+import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
 import type { ToolResult } from '../tools/tools.ts';
 import { Workspace } from '../workspace/workspace.ts';
 
@@ -28,15 +28,12 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
     }
   };
 
-  for (const name of toolNames) {
-    const { description, input } = toolSchemas[name];
+  for (const name of Object.keys(listedTools) as (keyof typeof listedTools)[]) {
+    const { description, input } = listedSchema(name);
     server.registerTool(name, { description, inputSchema: input }, (args: unknown) =>
       answer((ws) => runTool(ws, name, args, session)),
     );
   }
-  server.registerTool('batch', { description: batchSchema.description, inputSchema: batchSchema.input }, (args) =>
-    answer((ws) => batch(ws, args.calls, session)),
-  );
 
   return {
     server,
