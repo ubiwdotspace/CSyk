@@ -48,7 +48,11 @@ describe('the MCP server', () => {
       '  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);',
       '}',
     ]);
-    expect(await call('read', { target: 'src/auth/token-store.ts' })).toContain('method save');
+    const file = await call('read', { target: 'src/auth/token-store.ts' });
+    expect(file).toContain('src/auth/token-store.ts · lines 1-');
+    expect(file).toContain("throw new Error('Session expired");
+    expect(await call('read', { target: 'src/cart/total.ts:calculateTotal' })).toContain('src/cart/total.ts#calculateTotal');
+    expect(await call('read', { target: 'src/auth/token-store.ts#save' })).toContain('save(');
     expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  calculateTotal');
   });
 
@@ -58,6 +62,23 @@ describe('the MCP server', () => {
       ['src/cart/total.ts#calculateTotal · 4 refs in 2 files · lsp', 'src/cart/checkout.ts  1, 10·checkout', 'test/cart.test.ts  1, 5'].join('\n'),
     );
   }, 30_000);
+
+  it('reads what agents write for a place: file:line, Class.method, a wrong path', async () => {
+    expect(await call('read', { target: 'src/auth/token-store.ts:30' })).toContain('src/auth/token-store.ts#refreshAccessToken · lines 25-37');
+    expect(await call('read', { target: 'src/auth/token-store.ts:2-4' })).toBe(
+      ['src/auth/token-store.ts · lines 2-4', 'export class TokenStore {', '  private access?: string;', '  private refresh?: string;'].join('\n'),
+    );
+    expect(await call('read', { target: 'TokenStore.clear' })).toContain('this.access = undefined;');
+    expect(await call('read', { target: 'src/nope/token-store.ts' })).toContain('similar paths: src/auth/token-store.ts');
+  });
+
+  it('searches everywhere when grep misses in the folder it was given', async () => {
+    for (const path of ['src/cart', 'src/missing']) {
+      const answer = await call('grep', { pattern: 'Session expired', path });
+      expect(answer).toContain(`no match in ${path}; everywhere: `);
+      expect(answer).toContain('src/auth/token-store.ts:32');
+    }
+  });
 
   it('greps text and names the symbol around each hit', async () => {
     const answer = await call('grep', { pattern: 'Session expired' });
