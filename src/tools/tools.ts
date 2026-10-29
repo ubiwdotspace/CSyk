@@ -395,9 +395,28 @@ export async function grep(
   const list = fitted.text.split('\n');
   if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
   return {
-    text: [...list, ...body].join('\n'),
+    text: [...groupByFile(list), ...body].join('\n'),
     locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),
   };
+}
+
+/**
+ * A grep list with the rows of a file that has several hits under the
+ * file's path, given once: in a large repository the path is often longer
+ * than the hit, and was repeated on every row. Files keep the order of
+ * their first row; a file with one hit keeps its `file:line` row.
+ */
+function groupByFile(list: string[]): string[] {
+  const row = /^(\S.*?):(\d+) {2}(.*)$/;
+  const byFile = new Map<string, string[]>();
+  const rest: string[] = [];
+  for (const line of list.slice(1)) {
+    const match = row.exec(line);
+    if (match?.[1]) byFile.set(match[1], [...(byFile.get(match[1]) ?? []), `  ${match[2]}  ${match[3]}`]);
+    else rest.push(line);
+  }
+  const grouped = [...byFile].flatMap(([file, rows]) => (rows.length === 1 ? [`${file}:${rows[0]?.trimStart()}`] : [file, ...rows]));
+  return [list[0] ?? '', ...grouped, ...rest];
 }
 
 /**
