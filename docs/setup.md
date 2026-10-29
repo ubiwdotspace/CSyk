@@ -21,15 +21,23 @@ csyk setup --agent codex                                # print what it would wr
 
 ## What `csyk setup` writes
 
+For this project, everything goes inside the project and nothing in your home folder:
+
 | Agent | MCP server | Note, always in context | Skill |
 |---|---|---|---|
-| Claude Code | `.mcp.json` (`claude mcp add --scope user` for every project) | `CLAUDE.md` (`~/.claude/rules/csyk.md`) | `.claude/skills/csyk/SKILL.md` |
-| Codex | `~/.codex/config.toml` | `AGENTS.md` (`~/.codex/AGENTS.md`) | `.codex/skills/csyk/SKILL.md` |
-| Antigravity | `~/.gemini/antigravity/mcp_config.json`, and `~/.gemini/config/mcp_config.json` for the `agy` command line | `.agents/rules/csyk.md` (`~/.gemini/GEMINI.md`) | `.agents/skills/csyk/SKILL.md` |
+| Claude Code | `.mcp.json` | `CLAUDE.md` | `.claude/skills/csyk/SKILL.md` |
+| Codex | `.codex/config.toml`, read once Codex trusts the project | `AGENTS.md` | `.agents/skills/csyk/SKILL.md` |
+| Antigravity | a workspace plugin in `.agents/plugins/csyk/`: its `mcp_config.json`, `rules/AGENTS.md` and `skills/` | | |
 
-Codex and Antigravity read MCP servers from your home folder only, so their server is added for
-every project either way; the note and the skill follow the choice. A second run replaces what
-the first wrote and leaves everything else in those files alone.
+For every project (`--user`):
+
+| Agent | MCP server | Note | Skill |
+|---|---|---|---|
+| Claude Code | `claude mcp add --scope user` | `~/.claude/rules/csyk.md` | `~/.claude/skills/csyk/SKILL.md` |
+| Codex | `~/.codex/config.toml` | `~/.codex/AGENTS.md` | `~/.codex/skills/csyk/SKILL.md` |
+| Antigravity | `~/.gemini/antigravity/mcp_config.json`, and `~/.gemini/config/mcp_config.json` for `agy` | `~/.gemini/GEMINI.md` | `~/.gemini/config/skills/csyk/SKILL.md` |
+
+A second run replaces what the first wrote and leaves everything else in those files alone.
 
 For Claude Code, setup also writes `.claude/settings.json` (`~/.claude/settings.json`): a hook
 that resets what CSyk has shown when a session starts or is compacted, and a rule that turns off

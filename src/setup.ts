@@ -164,19 +164,20 @@ export const agents: Agent[] = [
     found: () => Boolean(onPath('codex')),
     steps(scope) {
       const csyk = self();
-      // Codex reads MCP servers from its home config only, and starts them in the project.
-      const config = join(process.env.CODEX_HOME ?? home('.codex'), 'config.toml');
+      // Codex starts MCP servers in the project. It reads a project's .codex/config.toml once the
+      // project is trusted, and its skills from .agents/skills.
+      const codexHome = process.env.CODEX_HOME ?? home('.codex');
+      const config = scope === 'user' ? join(codexHome, 'config.toml') : join('.codex', 'config.toml');
       const args = [...csyk.slice(1), 'serve'].map((a) => JSON.stringify(a)).join(', ');
       const table = `[mcp_servers.csyk]\ncommand = ${JSON.stringify(csyk[0])}\nargs = [${args}]`;
-      const base = scope === 'user' ? (process.env.CODEX_HOME ?? home('.codex')) : '.';
       return [
         {
           target: config,
-          preview: table,
+          preview: scope === 'user' ? table : `${table}\n(read once Codex trusts the project)`,
           apply: () => write(config, withTomlTable(existsSync(config) ? readFileSync(config, 'utf8') : '', table)),
         },
-        sectionStep(join(base, 'AGENTS.md'), note),
-        fileStep(join(base, scope === 'user' ? '' : '.codex', 'skills', 'csyk', 'SKILL.md'), skill),
+        sectionStep(scope === 'user' ? join(codexHome, 'AGENTS.md') : 'AGENTS.md', note),
+        fileStep(scope === 'user' ? join(codexHome, 'skills', 'csyk', 'SKILL.md') : join('.agents', 'skills', 'csyk', 'SKILL.md'), skill),
       ];
     },
   },
@@ -186,8 +187,21 @@ export const agents: Agent[] = [
     found: () => Boolean(onPath('agy')) || existsSync('/Applications/Antigravity.app') || existsSync(home('.gemini', 'antigravity')),
     steps(scope) {
       const csyk = self();
-      // The editor reads its MCP servers from ~/.gemini/antigravity and names the open folder in
-      // ${workspace.path}; the agy command line reads ~/.gemini/config and starts them in the project.
+      if (scope === 'project') {
+        // A workspace plugin: on in this project only, with its server, rule and skill. Antigravity
+        // starts a plugin's server in the plugin's folder, three levels below the project.
+        const plugin = join('.agents', 'plugins', 'csyk');
+        const server = { mcpServers: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', '../../..'] } } };
+        const manifest = { name: 'csyk', description: 'Code search for the agent: definitions, uses, callers and edit impact, from the compiler.' };
+        return [
+          fileStep(join(plugin, 'plugin.json'), `${JSON.stringify(manifest, null, 2)}\n`),
+          fileStep(join(plugin, 'mcp_config.json'), `${JSON.stringify(server, null, 2)}\n`),
+          fileStep(join(plugin, 'rules', 'AGENTS.md'), `${note}\n`),
+          fileStep(join(plugin, 'skills', 'csyk', 'SKILL.md'), skill),
+        ];
+      }
+      // For every project: the editor reads ~/.gemini/antigravity and names the open folder in
+      // ${workspace.path}; the agy command line reads ~/.gemini/config and starts servers in the project.
       const steps = [
         jsonStep(home('.gemini', 'antigravity', 'mcp_config.json'), ['mcpServers', 'csyk'], {
           command: csyk[0],
@@ -197,11 +211,7 @@ export const agents: Agent[] = [
       if (onPath('agy') || existsSync(home('.gemini', 'config'))) {
         steps.push(jsonStep(home('.gemini', 'config', 'mcp_config.json'), ['mcpServers', 'csyk'], { command: csyk[0], args: [...csyk.slice(1), 'serve'] }));
       }
-      if (scope === 'user') {
-        return [...steps, sectionStep(home('.gemini', 'GEMINI.md'), note), fileStep(home('.gemini', 'config', 'skills', 'csyk', 'SKILL.md'), skill)];
-      }
-      const rule = `---\ntrigger: always_on\ndescription: Search code with the CSyk tools.\n---\n\n${note}\n`;
-      return [...steps, fileStep(join('.agents', 'rules', 'csyk.md'), rule), fileStep(join('.agents', 'skills', 'csyk', 'SKILL.md'), skill)];
+      return [...steps, sectionStep(home('.gemini', 'GEMINI.md'), note), fileStep(home('.gemini', 'config', 'skills', 'csyk', 'SKILL.md'), skill)];
     },
   },
 ];
