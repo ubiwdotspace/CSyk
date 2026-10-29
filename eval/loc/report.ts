@@ -16,6 +16,7 @@ type Result = {
   nodeRecall?: number;
   tokens: number;
   toolTokens?: number;
+  peakContext?: number;
   calls: number;
   errors?: number;
   ms: number;
@@ -35,9 +36,22 @@ const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 const change = (value: number, base: number) => ` (${value <= base ? '−' : '+'}${pct(Math.abs(1 - value / base))})`;
 const labels: Record<string, string> = { b0: 'B0', csyk: 'CSyk', 'csyk-nohooks': 'CSyk, no hooks', 'csyk-lean': 'CSyk lean' };
 console.log(
-  '| benchmark | language | setup | issues | file Acc@1 | file Acc@5 | function recall | time p50 / mean | tokens | tokens from tools | tool calls | denied |',
+  '| benchmark | language | setup | issues | file Acc@1 | file Acc@5 | function recall | time p50 / mean | tokens | tokens from tools | peak context | tool calls | cost |',
 );
-console.log('|---|---|---|---|---|---|---|---|---|---|---|---|');
+console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+// Peak context, compared with B0 on issues where both recorded it.
+let peakBase = 0;
+function peakCell(run: Run, rs: Result[]): string {
+  const known = rs.filter((r) => r.peakContext !== undefined);
+  if (known.length === 0) return '–';
+  const value = mean(known.map((r) => r.peakContext ?? 0));
+  if (run.setup === 'b0') {
+    peakBase = value;
+    return Math.round(value).toLocaleString('en');
+  }
+  return `${Math.round(value).toLocaleString('en')}${peakBase ? change(value, peakBase) : ''}`;
+}
+
 const keys = [...new Set([...runs.values()].map((r) => `${r.dataset ?? 'polybench'}:${r.language}`))];
 for (const key of keys) {
   const b0 = runs.get(`b0:${key}`);
@@ -55,7 +69,6 @@ for (const key of keys) {
       const tokens = mean(rs.map((r) => r.tokens));
       const toolRs = rs.filter(bothTool);
       const tool = mean(toolRs.map((r) => r.toolTokens ?? 0));
-      const denied = rs.filter((r) => r.errors !== undefined);
       const [dataset, language] = key.split(':');
       console.log(
         `| ${names[dataset ?? ''] ?? dataset} | ${language} | ${labels[run.setup] ?? run.setup} | ${rs.length} | ` +
@@ -63,7 +76,7 @@ for (const key of keys) {
           `${Math.round(percentile(rs.map((r) => r.ms), 50) / 1000)} s / ${Math.round(mean(rs.map((r) => r.ms)) / 1000)} s | ` +
           `${Math.round(tokens).toLocaleString('en')}${run !== b0 ? change(tokens, baseTokens) : ''} | ` +
           `${toolRs.length ? `${Math.round(tool).toLocaleString('en')}${run !== b0 ? change(tool, baseTool) : ''}` : '–'} | ` +
-          `${mean(rs.map((r) => r.calls)).toFixed(1)} | ${denied.length ? mean(denied.map((r) => r.errors ?? 0)).toFixed(1) : '–'} |`,
+          `${peakCell(run, rs)} | ${mean(rs.map((r) => r.calls)).toFixed(1)} | $${rs.reduce((a, r) => a + r.costUsd, 0).toFixed(2)} |`,
       );
     }
   }

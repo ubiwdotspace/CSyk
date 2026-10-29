@@ -9,13 +9,14 @@
 /** The note for CLAUDE.md or ~/.claude/rules/csyk.md; kept short, as it costs tokens on every turn. */
 export const note = `## Code search (CSyk)
 
-- Use the CSyk tools before Grep and Read. Every answer names the enclosing function or class of
-  each hit, so you rarely need to open a file to locate code.
-- A name (or part of one) → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`; text or an
-  error message → CSyk \`grep\`; a file's shape → \`outline\`.
-- Read one symbol with \`read <id>\`, not the whole file. Ask independent questions in one \`batch\`.
-- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.
-- For how to use them well, load the \`csyk\` skill.`;
+- Search code with CSyk \`grep\` (a regex, as for Grep). Every hit names its enclosing function or
+  class, and hits in a few small functions bring their source along, so you can often answer
+  without opening files.
+- A name, or part of one → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`.
+- One symbol → \`read <id>\`. Read a file whole when you need most of it; \`outline\` only to pick
+  what to read in a large one.
+- Ask independent questions in one \`batch\`. After editing, \`impact\` lists the changed symbols,
+  their callers and the tests to run.`;
 
 /** The skill, as .claude/skills/csyk/SKILL.md. */
 export const skill = `---

@@ -145,7 +145,7 @@ export async function runTool(
       return status(ws);
     case 'grep': {
       const { pattern, ...options } = z.object(toolSchemas.grep.input).parse(args);
-      return grep(ws, pattern, given(options));
+      return grep(ws, pattern, given(options), session);
     }
     case 'def': {
       const { target, file, line, column } = z.object(toolSchemas.def.input).parse(args);
