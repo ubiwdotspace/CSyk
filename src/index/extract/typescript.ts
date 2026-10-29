@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import type { SymbolSink } from '../sink.ts';
-import type { SymbolKind } from '../symbols.ts';
+import type { CodeSymbol, SymbolKind } from '../symbols.ts';
 
 const functionValues = new Set(['arrow_function', 'function_expression', 'function', 'generator_function']);
 const fieldTypes = new Set(['public_field_definition', 'field_definition']);
@@ -8,16 +8,28 @@ const httpDecorator = /^@(Get|Post|Put|Patch|Delete|Options|Head|All|Sse)\b/;
 
 /**
  * TS/JS declarations: top-level functions, classes, interfaces, types,
- * enums and bindings, and class methods. React components and hooks, and
+ * enums, bindings and namespaces (with what they declare), and class methods. React components and hooks, and
  * NestJS controllers' routes and injectable providers, get their own kinds.
  * Function locals are left out; nobody searches for them by name.
  */
 export function extractTypeScript(root: Node, sink: SymbolSink): void {
   const jsx = /\.[jt]sx$/.test(sink.file);
 
-  const declare = (node: Node, exported: boolean, outer: string[] = []): void => {
+  const declare = (node: Node, exported: boolean, outer: string[] = [], parent?: CodeSymbol): void => {
     const name = node.childForFieldName('name');
     switch (node.type) {
+      case 'expression_statement':
+        // `namespace A { … }` at the top level is an expression statement.
+        for (const child of node.namedChildren) if (child?.type === 'internal_module') declare(child, exported, [], parent);
+        return;
+      case 'internal_module': {
+        // `namespace A.B` is named by its last part.
+        const named = name?.type === 'nested_identifier' ? name.lastNamedChild : name;
+        if (!named) return;
+        const owner = sink.add(named, 'namespace', node, exported, parent);
+        for (const child of node.childForFieldName('body')?.namedChildren ?? []) if (child) declare(child, false, [], owner);
+        return;
+      }
       case 'export_statement': {
         // Decorators written before `export class` belong to the export.
         const decorators = node.namedChildren.filter((c) => c?.type === 'decorator').map((c) => c?.text ?? '');
@@ -26,28 +38,28 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         const named = value ? namedFunctionIn(value) : undefined;
         const namedName = named?.childForFieldName('name');
         if (named && namedName) {
-          sink.add(namedName, named.type.includes('class') ? 'class' : functionKind(namedName.text, jsx), named, true);
+          sink.add(namedName, named.type.includes('class') ? 'class' : functionKind(namedName.text, jsx), named, true, parent);
           return;
         }
-        for (const child of node.namedChildren) if (child) declare(child, true, decorators);
+        for (const child of node.namedChildren) if (child) declare(child, true, decorators, parent);
         return;
       }
       case 'ambient_declaration':
-        for (const child of node.namedChildren) if (child) declare(child, exported);
+        for (const child of node.namedChildren) if (child) declare(child, exported, [], parent);
         return;
       case 'function_declaration':
       case 'generator_function_declaration':
       case 'function_signature':
-        if (name) sink.add(name, functionKind(name.text, jsx), node, exported);
+        if (name) sink.add(name, functionKind(name.text, jsx), node, exported, parent);
         return;
       case 'class_declaration':
       case 'abstract_class_declaration':
       case 'class':
-        if (name) declareClass(node, name, exported, outer);
+        if (name) declareClass(node, name, exported, outer, parent);
         return;
       case 'interface_declaration': {
         if (!name) return;
-        const owner = sink.add(name, 'interface', node, exported);
+        const owner = sink.add(name, 'interface', node, exported, parent);
         for (const member of node.childForFieldName('body')?.namedChildren ?? []) {
           const memberName = member?.childForFieldName('name');
           if (!member || memberName?.type !== 'property_identifier') continue;
@@ -57,11 +69,11 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         return;
       }
       case 'type_alias_declaration':
-        if (name) sink.add(name, 'type', node, exported);
+        if (name) sink.add(name, 'type', node, exported, parent);
         return;
       case 'enum_declaration': {
         if (!name) return;
-        const owner = sink.add(name, 'enum', node, exported);
+        const owner = sink.add(name, 'enum', node, exported, parent);
         for (const member of node.childForFieldName('body')?.namedChildren ?? []) {
           const value = member?.type === 'enum_assignment' ? member.childForFieldName('name') : member;
           if (member && value?.type === 'property_identifier') sink.add(value, 'field', member, exported, owner);
@@ -74,18 +86,18 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           const binding = declarator?.childForFieldName('name');
           if (declarator?.type !== 'variable_declarator' || !binding) continue;
           if (binding.type === 'identifier') {
-            sink.add(binding, bindingKind(binding.text, declarator.childForFieldName('value'), jsx), declarator, exported);
+            sink.add(binding, bindingKind(binding.text, declarator.childForFieldName('value'), jsx), declarator, exported, parent);
             continue;
           }
-          for (const bound of boundNames(binding)) sink.add(bound, 'const', declarator, exported);
+          for (const bound of boundNames(binding)) sink.add(bound, 'const', declarator, exported, parent);
         }
         return;
     }
   };
 
-  const declareClass = (node: Node, name: Node, exported: boolean, outer: string[]) => {
+  const declareClass = (node: Node, name: Node, exported: boolean, outer: string[], parent?: CodeSymbol) => {
     const decorators = [...outer, ...node.namedChildren.filter((c) => c?.type === 'decorator').map((c) => c?.text ?? '')];
-    const owner = sink.add(name, decorators.some((d) => d.startsWith('@Injectable')) ? 'provider' : 'class', node, exported);
+    const owner = sink.add(name, decorators.some((d) => d.startsWith('@Injectable')) ? 'provider' : 'class', node, exported, parent);
     const controller = decorators.some((d) => d.startsWith('@Controller'));
     let pending: string[] = [];
     for (const member of node.childForFieldName('body')?.namedChildren ?? []) {

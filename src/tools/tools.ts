@@ -188,19 +188,27 @@ export async function def(
 export async function grep(
   ws: Workspace,
   pattern: string,
-  options: { regex?: boolean; path?: string; limit?: number; budget?: number } = {},
+  options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number } = {},
 ): Promise<ToolResult> {
-  const args = ['--line-number', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
-  if (!options.regex) args.push('--fixed-strings');
-  let stdout = '';
-  try {
-    ({ stdout } = await run(rgPath, [...args, '-e', pattern, '--', options.path ?? '.'], {
+  // --with-filename: a search of one file names it too, as every hit needs.
+  const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
+  if (options.glob) args.push('--glob', options.glob);
+  const search = async (literal: boolean) => {
+    const { stdout } = await run(rgPath, [...args, ...(literal ? ['--fixed-strings'] : []), '-e', pattern, '--', options.path ?? '.'], {
       cwd: ws.root,
       maxBuffer: 256 * 1024 * 1024,
-    }));
+    });
+    return stdout;
+  };
+  let stdout = '';
+  try {
+    stdout = await search(options.literal === true);
   } catch (error) {
-    // Exit code 1 is ripgrep's "no match".
-    if ((error as { code?: unknown }).code !== 1) throw error;
+    const code = (error as { code?: unknown }).code;
+    // Exit code 1 is ripgrep's "no match"; 2 here is a pattern that is no
+    // regex (`f(x`), which is then searched for as written.
+    if (code === 2 && !options.literal) stdout = await search(true).catch(() => '');
+    else if (code !== 1) throw error;
   }
   type Hit = { file: string; line: number; code: string; home?: CodeSymbol; rank: number };
   const hits: Hit[] = [];
@@ -215,13 +223,37 @@ export async function grep(
   }
   if (hits.length === 0) return { text: 'no match · text', locations: [] };
   hits.sort((a, b) => a.rank - b.rank);
+  const limit = options.limit ?? 30;
   const perPlace = new Map<string, number>();
   const shown: Hit[] = [];
   for (const hit of hits) {
     const key = hit.home?.id ?? `${hit.file}:${hit.line}`;
     const count = perPlace.get(key) ?? 0;
     perPlace.set(key, count + 1);
-    if (count < 2 && shown.length < (options.limit ?? 30)) shown.push(hit);
+    if (count < 2 && shown.length < limit) shown.push(hit);
+  }
+  // Too many places to list: the files with the most hits first, code before
+  // tests, each with the symbols its hits fall in, so one call shows where
+  // the text lives instead of the first thirty lines in path order.
+  if (perPlace.size > limit) {
+    const byFile = new Map<string, Hit[]>();
+    for (const hit of hits) byFile.set(hit.file, [...(byFile.get(hit.file) ?? []), hit]);
+    const files = [...byFile.entries()].sort(
+      ([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b),
+    );
+    const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
+    const fitted = fit(
+      `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
+      files.map(([file, fileHits]) => {
+        const names = homes(fileHits);
+        return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
+      }),
+      { budget: options.budget ?? defaultBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
+    );
+    return {
+      text: fitted.text,
+      locations: files.slice(0, fitted.shown).map(([file, fileHits]) => ({ file, line: fileHits[0]?.line ?? 1 })),
+    };
   }
   const fitted = fit(
     `${plural(hits.length, 'hit')} in ${plural(perPlace.size, 'place')} · text`,
