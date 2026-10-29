@@ -90,7 +90,8 @@ async function main(): Promise<void> {
   const save = () =>
     writeFile(
       out,
-      `${JSON.stringify({ setup: values.setup, dataset: values.dataset, language: values.language, model: values.model, seed: values.seed, results }, null, 2)}\n`,
+      // The sample in order: its first n issues are the run at --count n.
+      `${JSON.stringify({ setup: values.setup, dataset: values.dataset, language: values.language, model: values.model, seed: values.seed, sample: sample.map((i) => i.instance_id), results }, null, 2)}\n`,
     );
   await mkdir(dirname(out), { recursive: true });
   for (const instance of sample) {
