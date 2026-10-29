@@ -43,6 +43,7 @@ describe('Workspace', () => {
     const answer = await runTool(ws, 'grep', { pattern: 'needle' }, new Session());
     expect(answer.text).toContain('big.ts:101  big');
     expect(answer.text).toContain('big.ts · lines 96-111\n  const x94 = 94;');
+    expect(answer.text.split('const needle = 1;')).toHaveLength(2);
     await ws.close();
   });
 
