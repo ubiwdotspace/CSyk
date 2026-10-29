@@ -33,7 +33,7 @@ npm run corpora                                   # once: fetch the pinned publi
 npm run eval -- --adapter csyk --corpus <name>
 ```
 
-The [Evaluation](README.md#evaluation) section of the README lists the corpora and the kinds of
+[docs/benchmarks.md](docs/benchmarks.md#reproduce) lists the corpora and the kinds of
 question. Tool descriptions are re-read by the agent on every turn, so a longer description needs
 a measured reason.
 
