@@ -53,6 +53,8 @@ export type AdapterResult = {
 /** A way of answering cases: a baseline, another tool, or CSyk itself. */
 export interface Adapter {
   name: string;
+  /** Runs in the harness's own process, rather than as a server it starts. */
+  inProcess?: boolean;
   supports(c: Case): boolean;
   run(c: Case, corpus: Corpus): Promise<AdapterResult>;
   /** Releases what the adapter started, such as a server. */
