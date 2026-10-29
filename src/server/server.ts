@@ -11,16 +11,16 @@ import { Workspace } from '../workspace/workspace.ts';
  * gave until a hook touches the reset marker.
  */
 export function createServer(root: string): { server: McpServer; close: () => Promise<void> } {
-  const workspace = Workspace.open(root, { watch: true, persist: true });
-  // A failed build surfaces on the first tool call, not as an unhandled rejection.
-  workspace.catch(() => {});
+  const workspace = Workspace.start(root, { watch: true, persist: true });
+  // A failed build surfaces on a tool call that waits for it, not as an unhandled rejection.
+  workspace.ready.catch(() => {});
   const session = new Session({ marker: resetMarker(root) });
   const server = new McpServer({ name: 'csyk', version: '0.0.0' });
 
   const answer = async (run: (ws: Workspace) => Promise<ToolResult>) => {
     session.nextCall();
     try {
-      const { text } = await run(await workspace);
+      const { text } = await run(workspace);
       return { content: [{ type: 'text' as const, text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -39,7 +39,7 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
     server,
     close: async () => {
       await server.close();
-      await (await workspace.catch(() => undefined))?.close();
+      await workspace.close();
     },
   };
 }

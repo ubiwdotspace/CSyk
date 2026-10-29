@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 const cli = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
 
 describe('csyk setup --write', () => {
-  it('writes the server, hooks, CLAUDE.md note and skill, and a second run changes nothing', () => {
+  it('writes the server, the Grep deny rule, CLAUDE.md note and skill, and a second run changes nothing', () => {
     const dir = mkdtempSync(join(tmpdir(), 'csyk-setup-'));
     writeFileSync(join(dir, 'CLAUDE.md'), '# Project\n\nOwn notes.\n');
     const setup = () => execFileSync(process.execPath, [cli, 'setup', '--write'], { cwd: dir });
@@ -23,6 +23,9 @@ describe('csyk setup --write', () => {
     expect(second).toEqual(first);
     expect(first[2]).toMatch(/^# Project\n\nOwn notes\.\n\n<!-- csyk:start -->\n## Code search \(CSyk\)/);
     expect(JSON.parse(first[0] ?? '{}').mcpServers.csyk.args.at(-1)).toBe('serve');
+    const settings = JSON.parse(first[1] ?? '{}');
+    expect(settings.permissions.deny).toEqual(['Grep']);
+    expect(Object.keys(settings.hooks).sort()).toEqual(['PreCompact', 'SessionStart']);
     expect(existsSync(join(dir, '.claude/skills/csyk/SKILL.md'))).toBe(true);
   }, 30_000);
 });

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { describe, expect, it } from 'vitest';
+import { Session } from '../token/session.ts';
+import { runTool } from '../tools/dispatch.ts';
 import { Workspace } from './workspace.ts';
 
 const folder = (files: Record<string, string>) => {
@@ -20,6 +22,17 @@ describe('Workspace', () => {
     const ws = await Workspace.open(root, { persist: true });
     expect(ws.index.reused).toBe(1);
     expect(ws.index.named('c')).toHaveLength(1);
+    await ws.close();
+  });
+
+  it('greps before the index is full, indexing the files it hits', async () => {
+    const files = Object.fromEntries(Array.from({ length: 3000 }, (_, i) => [`f${i}.ts`, `export function f${i}() {}`]));
+    const root = folder({ ...files, 'z.ts': 'export function needle() {\n  return "find me";\n}' });
+    const ws = Workspace.start(root);
+    const answer = await runTool(ws, 'grep', { pattern: 'find me' }, new Session());
+    expect(ws.complete).toBe(false);
+    expect(answer.text).toContain('z.ts:2  needle');
+    await ws.ready;
     await ws.close();
   });
 

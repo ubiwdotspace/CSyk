@@ -8,14 +8,16 @@ import { preGrep, preRead, servedRoots, sessionReset, type HookInput } from './h
 const usage = `Usage:
   csyk [serve] [workspace]   serve a workspace (the current folder by default) over MCP stdio
   csyk hook <name>           run a Claude Code hook: pre-read, pre-grep or session-reset
-  csyk setup [--write] [--user] [--no-hooks]
-                             print, or write, the Claude Code configuration: the MCP server, hooks,
-                             a CLAUDE.md note (a rules file with --user) and the csyk skill`;
+  csyk setup [--write] [--user] [--hooks]
+                             print, or write, the Claude Code configuration: the MCP server, CSyk
+                             grep in place of the built-in Grep, a CLAUDE.md note (a rules file with
+                             --user) and the csyk skill; --hooks adds the hooks that turn down
+                             whole-file reads and identifier greps`;
 
 const [command = 'serve', ...rest] = process.argv.slice(2);
 
 if (command === 'hook') await hook(rest[0] ?? '');
-else if (command === 'setup') setup(rest.includes('--write'), rest.includes('--user'), !rest.includes('--no-hooks'));
+else if (command === 'setup') setup(rest.includes('--write'), rest.includes('--user'), rest.includes('--hooks'));
 else if (command === 'serve' || !command.startsWith('-')) {
   const { serve } = await import('./server/main.ts');
   await serve(resolve(command === 'serve' ? (rest[0] ?? process.cwd()) : command));
@@ -64,6 +66,9 @@ function setup(write: boolean, user: boolean, withHooks: boolean): void {
     SessionStart: [{ hooks: run('session-reset') }],
     PreCompact: [{ hooks: run('session-reset') }],
   };
+  // CSyk grep searches as Grep does and names each hit's symbol; with both listed, agents use
+  // both, and Grep's tool description costs more tokens on every turn than all of CSyk's tools.
+  const permissions = { deny: ['Grep'] };
   const base = user ? join(homedir(), '.claude') : '.claude';
   const settings = join(base, 'settings.json');
   const skillFile = join(base, 'skills', 'csyk', 'SKILL.md');
@@ -73,7 +78,7 @@ function setup(write: boolean, user: boolean, withHooks: boolean): void {
   if (!write) {
     if (!user) console.log(`.mcp.json (or: ${addMcp})\n${JSON.stringify(mcp, null, 2)}\n`);
     else console.log(`MCP server, for every project:\n  ${addMcp}\n`);
-    console.log(`${settings}\n${JSON.stringify({ hooks }, null, 2)}\n`);
+    console.log(`${settings}\n${JSON.stringify({ permissions, hooks }, null, 2)}\n`);
     console.log(`${noteFile}\n${note}\n`);
     console.log(`${skillFile}: the csyk skill (how to use the tools in few turns)\n`);
     console.log(`Run "csyk setup --write${user ? ' --user' : ''}" to write them.`);
@@ -89,7 +94,10 @@ function setup(write: boolean, user: boolean, withHooks: boolean): void {
       const fresh = entries.filter((e) => !JSON.stringify(current).includes(JSON.stringify(e.hooks[0]?.command)));
       merged[event] = [...current, ...fresh];
     }
-    return { ...config, hooks: merged };
+    const deny = asRecord(config.permissions).deny;
+    const denied = Array.isArray(deny) ? deny : [];
+    const allDenied = [...denied, ...permissions.deny.filter((rule) => !denied.includes(rule))];
+    return { ...config, permissions: { ...asRecord(config.permissions), deny: allDenied }, hooks: merged };
   });
   writeSection(noteFile, note);
   mkdirSync(dirname(skillFile), { recursive: true });

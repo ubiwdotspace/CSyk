@@ -275,6 +275,8 @@ export async function grep(
     if (code === 2 && !options.literal) stdout = await search(true).catch(() => '');
     else if (code !== 1) throw error;
   }
+  // Files hit while the index still fills are indexed first, for their symbols.
+  await ws.indexNow([...new Set(stdout.split('\n').map((entry) => /^(?:\.\/)?(.+?):\d+:/.exec(entry)?.[1] ?? ''))].slice(0, 200));
   type Hit = { file: string; line: number; code: string; home?: CodeSymbol; rank: number };
   const hits: Hit[] = [];
   for (const entry of stdout.split('\n')) {
