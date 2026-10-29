@@ -23,6 +23,11 @@ repositories, and can be reproduced with one command.
 Means over the twelve corpora (CodeSift indexes no Dart symbols, which pulls its A and B down);
 per-corpus tables are in [docs/BASELINES.md](docs/BASELINES.md).
 
+On public issue benchmarks (SWE-bench Verified, SWE-PolyBench Verified, Multi-SWE-bench; 30 random
+issues each), Claude Code with CSyk names more of the functions a real fix changed (+5 to +6 points
+in TypeScript, JavaScript and Go, level in Python) in about the same time, but uses 29–38% more
+tokens per session; see [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
+
 - Runs locally. Code never leaves the machine, and there is no telemetry.
 - macOS and Linux. Node 22.18 or later.
 - Apache-2.0.
@@ -35,6 +40,7 @@ per-corpus tables are in [docs/BASELINES.md](docs/BASELINES.md).
 - [Languages and frameworks](#languages-and-frameworks)
 - [Hooks](#hooks)
 - [Results](#results)
+- [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed)
 - [Limitations](#limitations)
 - [Evaluation](#evaluation)
 - [Development](#development)
@@ -205,6 +211,56 @@ callees, grep only finding callers; tokens: what the agent reads for one case of
 | pocketbase | 13.3% · 73.3% · **100%** | 3.3% · 63.3% · **96.7%** | 64.5% · 75.9% · **100%** | 66.7% · 33.8% · **96.7%** | 16,039 · 1,320 · **358** |
 | prometheus | 23.3% · 73.3% · **90%** | 10% · 70% · **96.7%** | 65.3% · 70.6% · **93.3%** | 98.7% · 27.4% · **93.3%** | 46,703 · 1,512 · **357** |
 
+## Public benchmarks: finding the code an issue needs changed
+
+Tool-level numbers say how good each answer is; what matters in the end is whether an agent finds
+the right code. Code localization measures that on real GitHub issues: headless Claude Code
+(Claude Sonnet) gets the issue text and the repository at the commit before the fix, and must name
+the files and functions to change without editing anything. Its answer is scored against the real,
+merged fix, as LocAgent and Agentless report localization: **file Acc@1** (the first file named was
+changed), **file Acc@5** (every changed file is among the first five) and **function recall** (the
+share of changed functions and methods it named).
+
+Each benchmark contributes 30 issues drawn at random from the whole dataset (seed 1, no filter on
+difficulty; each run prints the sample's repositories and difficulty next to the dataset's). The
+same issues run twice: **B0**, Claude Code with Read, Grep and Glob, and **CSyk**, the same tools
+plus CSyk's MCP server, hooks and CLAUDE.md note. Measured on 2026-10-29; 240 runs cost about $18
+at API prices.
+
+| Benchmark | Language | Setup | File Acc@1 | File Acc@5 | Function recall | Time p50 | Tokens, all | Tokens from tools | Cost |
+|---|---|---|---|---|---|---|---|---|---|
+| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | B0 | 96.7% | 46.7% | 65.2% | 11 s | 67,175 | 1,122 | $2.02 |
+| | | CSyk | 96.7% | 46.7% | **70.2%** | 13 s | 92,551 (+38%) | 1,394 (+24%) | $2.46 |
+| | JavaScript | B0 | 80.0% | 50.0% | 53.8% | 14 s | 80,941 | 1,740 | $2.50 |
+| | | CSyk | **90.0%** | **53.3%** | **59.8%** | 15 s | 104,622 (+29%) | 1,697 (−2%) | $2.55 |
+| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | B0 | 90.0% | 60.0% | 60.3% | 11 s | 58,108 | 1,506 | $2.22 |
+| | | CSyk | **93.3%** | 60.0% | **66.6%** | 12 s | 74,865 (+29%) | 1,230 (−18%) | $2.25 |
+| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | B0 | 93.3% | 86.7% | 66.0% | 9 s | 47,059 | 719 | $1.99 |
+| | | CSyk | 93.3% | 86.7% | 66.3% | 11 s | 63,661 (+35%) | 721 (0%) | $2.00 |
+
+What this shows, plainly:
+
+- **Accuracy goes up or stays.** With CSyk the agent names more of the functions the fix changed in
+  every language (+5 to +6 points in TypeScript, JavaScript and Go, level in Python) and picks the
+  right first file more often in JavaScript and Go. It is never worse.
+- **Time stays about the same**: one to two seconds more per issue at the median, on 9–15 s.
+- **Tokens do not go down at the agent level, they go up 29–38%.** Almost all of an agent's tokens
+  are its context (system prompt, tool list, conversation) re-read on every turn, and with CSyk
+  the agent takes about one more turn per issue. Those re-reads are cached, so cost rises much
+  less: 0.5–2% in Python, Go and JavaScript, 22% in TypeScript. What the tools themselves returned
+  is small in both setups for this task (700–1,700 tokens per issue), where reading a few files
+  answers most issues; CSyk's share is 18% lower in Go and higher in TypeScript.
+- 30 issues per benchmark is enough to see differences of 5–10 points, not of 1–2.
+
+The tool-level savings at the top of this README (98.6% fewer tokens than grep and a whole-file
+read for the same question) are real per question; this benchmark shows they do not yet turn into
+fewer tokens for a whole agent session on short localization tasks. Reducing turns, not answer
+size, is the next lever. Reproduce with
+`npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk> --count 30 --seed 1`
+and `npm run loc:report`. Where a dataset does not list the changed functions (SWE-bench,
+Multi-SWE-bench), each changed line of the fix is mapped to its enclosing function at the base
+commit. Dart has no public benchmark of this kind; its numbers are the tool-level ones above.
+
 ## Limitations
 
 - A name written under another name (`import { a as b }`, a default import named differently) is
@@ -217,8 +273,8 @@ callees, grep only finding callers; tokens: what the agent reads for one case of
 - A function declared twice under Go build tags resolves to the one `gopls` builds by default.
 - A name used thousands of times (Django's `Model.save`) gives a partial answer after the deadline,
   and says so.
-- Tool-level tokens are not agent-level tokens; the agent benchmark (`npm run agent`) measures
-  those.
+- Tool-level tokens are not agent-level tokens: on the public localization benchmarks an agent
+  with CSyk is more accurate but uses 29–38% more tokens, from one more turn per issue.
 
 ## Evaluation
 

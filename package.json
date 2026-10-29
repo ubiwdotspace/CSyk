@@ -18,7 +18,8 @@
     "eval": "node eval/run.ts",
     "agent": "node eval/agent/run.ts",
     "agent:tasks": "node eval/agent/make-tasks.ts",
-    "loc": "node eval/loc/run.ts"
+    "loc": "node eval/loc/run.ts",
+    "loc:report": "node eval/loc/report.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
