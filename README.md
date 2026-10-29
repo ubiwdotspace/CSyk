@@ -1,36 +1,39 @@
 # CSyk
 
-A code-search MCP server for AI coding agents: compiler-grade answers in a few dozen tokens.
+Code search for AI coding agents such as Claude Code: exact answers in a few lines.
 
-An agent that explores code with grep and whole-file reads spends most of its context on text it
-does not need, and still gets references wrong: comments, strings, imports and same-named symbols
-look alike to grep. CSyk answers the questions agents actually ask (where is this defined, who
-uses it, who calls it, what does my change touch) from a tree-sitter index and the language's own
-compiler, and returns one line per answer.
+When an agent looks for code with plain text search and whole-file reads, most of what it reads is
+text it does not need, and it still gets things wrong: a comment, a string, an import and a
+function that happens to share a name all look the same to text search. CSyk answers the questions
+an agent actually asks (where is this defined, who uses it, who calls it, what does my change
+touch) from a parsed index of the code and from the language's own compiler, one line per answer.
 
-TypeScript and JavaScript (React, Node, NestJS), Python (FastAPI, Django), Go and Dart (Flutter).
-Every number below is measured by the evaluation suite in this repository, on twelve pinned public
-repositories, and can be reproduced with one command.
+It works with TypeScript and JavaScript (React, Node, NestJS), Python (FastAPI, Django), Go and
+Dart (Flutter). It plugs into the agent as an MCP server (Model Context Protocol, the standard way
+to give an agent extra tools).
 
-| | grep + read (B0) | CodeSift MCP (B1) | **CSyk** |
+**Answers to single questions**, measured on twelve public repositories (three per language, small
+to large), against plain text search plus reading the file, and against CodeSift, another
+code-search server:
+
+| | Text search and file reads | CodeSift | **CSyk** |
 |---|---|---|---|
-| Definition by exact name, first answer right | 33.1% | 53.7% | **98.6%** |
-| Definition by partial name, first answer right | 7.6% | 53.6% | **99.5%** |
-| References: share of answers that are real references | 64.1% | 67.7% | **99.2%** |
-| Tokens read for the same questions (A, B, C, E) | 16,899 | 1,322 | **240 (−98.6%)** |
-| Time per answer, median, server warm | 75 ms | 10 ms | **8 ms** |
+| Finding a definition by its exact name: first answer right | 33.1% | 53.7% | **98.6%** |
+| Finding a definition by part of its name: first answer right | 7.6% | 53.6% | **99.5%** |
+| Finding uses of a symbol: share of answers that really are uses | 64.1% | 67.7% | **99.2%** |
+| Tokens the agent reads to answer the same questions | 16,899 | 1,322 | **240 (98.6% fewer)** |
+| Time per answer (median) | 75 ms | 10 ms | **8 ms** |
 
-Means over the twelve corpora (CodeSift indexes no Dart symbols, which pulls its A and B down);
-per-corpus tables are in [docs/BASELINES.md](docs/BASELINES.md).
+**Whole agent sessions** on real GitHub issues (SWE-bench Verified, SWE-PolyBench Verified and
+Multi-SWE-bench, 30 random issues each): Claude Code with CSyk used 8–10% fewer tokens per issue and
+finished about 0.6 seconds sooner in Python, JavaScript and Go, and found the right code as often or
+more often. In TypeScript, accuracy and the typical issue were about level, but tokens were 9%
+higher on average, from a few very long sessions. See
+[Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
 
-On public issue benchmarks (SWE-bench Verified, SWE-PolyBench Verified, Multi-SWE-bench; 30 random
-issues each), Claude Code with CSyk names more of the functions a real fix changed (+5 to +6 points
-in TypeScript, JavaScript and Go, level in Python) in about the same time, but uses 29–38% more
-tokens per session; see [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
-
-- Runs locally. Code never leaves the machine, and there is no telemetry.
-- macOS and Linux. Node 22.18 or later.
-- Apache-2.0.
+- Runs on your machine. Code never leaves it, and nothing is sent anywhere.
+- macOS and Linux, Node 22.18 or later.
+- Apache-2.0 licence.
 
 ## Contents
 
@@ -39,7 +42,7 @@ tokens per session; see [Public benchmarks](#public-benchmarks-finding-the-code-
 - [How it works](#how-it-works)
 - [Languages and frameworks](#languages-and-frameworks)
 - [Hooks](#hooks)
-- [Results](#results)
+- [Results on single questions](#results-on-single-questions)
 - [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed)
 - [Limitations](#limitations)
 - [Evaluation](#evaluation)
@@ -50,46 +53,54 @@ tokens per session; see [Public benchmarks](#public-benchmarks-finding-the-code-
 ```sh
 npm install -g csyk          # or from a clone: npm install && npm run build && npm install -g .
 cd your-project
-csyk setup --write           # writes .mcp.json, .claude/settings.json, CLAUDE.md and the csyk skill
+csyk setup --write           # sets up Claude Code for this project
 ```
 
-`csyk setup` without `--write` prints what it would write: the MCP server entry (equivalent to
-`claude mcp add csyk -- csyk serve`), a rule in `.claude/settings.json` that takes Claude Code's
-built-in `Grep` away in favour of CSyk's `grep`, a short note for `CLAUDE.md` that tells the agent
-when to use which tool, and a `csyk` skill with the detail. `--user` writes them for every project
-(the note as `~/.claude/rules/csyk.md`). Start Claude Code in the project and the `csyk` tools are
-there.
+`csyk setup --write` writes four things:
 
-Why take `Grep` away: CSyk's `grep` searches the same way (ripgrep, a regex, `path`, `glob`) and
-names the function each hit is in. With both, agents use both, and `Grep`'s description alone costs
-more tokens on every turn than all six CSyk tools. To keep it, delete `"Grep"` from
-`permissions.deny`.
+1. `.mcp.json`: tells Claude Code to start CSyk (the same as `claude mcp add csyk -- csyk serve`).
+2. `.claude/settings.json`: turns off Claude Code's own `Grep` tool, since CSyk's `grep` replaces
+   it (see below).
+3. A short note in `CLAUDE.md` telling the agent which CSyk tool to use when.
+4. `.claude/skills/csyk/SKILL.md`: a longer guide the agent loads when it needs it.
+
+Without `--write`, it only prints them. With `--user`, it writes them for every project (the note
+goes to `~/.claude/rules/csyk.md`). Then start Claude Code in the project.
+
+**Why turn off `Grep`.** CSyk's `grep` searches the same way (ripgrep, regular expressions, a
+`path` and a `glob`), and also says which function each match is in. When an agent has both, it
+uses both, and the description of `Grep` alone costs more tokens on every turn than all six CSyk
+tools together. To keep `Grep`, remove `"Grep"` from `permissions.deny` in `.claude/settings.json`.
 
 For Go, install `gopls` (`go install golang.org/x/tools/gopls@latest`); for Dart, the Dart or
-Flutter SDK. TypeScript and Python support is bundled.
+Flutter SDK. TypeScript and Python support comes bundled.
 
-Other MCP clients: run `csyk serve [workspace]` as a stdio server.
+Other agents that support MCP: run `csyk serve [folder]`, which talks over standard input and
+output.
 
 ## Tools
 
-Six tools, listed in 539 tokens: the tool list is re-read on every turn of every session, so each
-tool and argument has to earn its place. Every answer fits a token budget of 2,000 tokens and says
-what it left out and how to narrow the call.
+Six tools. Their descriptions take 539 tokens, which matters because an agent re-reads them on
+every turn. Every answer stays under 2,000 tokens (`grep` may add up to 1,000 more for the code
+around its matches) and says what it left out and how to narrow the question.
 
 | Tool | Question | Answer |
 |---|---|---|
-| `find` | Where is a symbol, by name or part of one? | one line per symbol: id, kind, line, signature; the source too when one symbol has exactly that name and is short |
-| `grep` | Where does this text appear? | matches, each with the symbol that contains it, and the source of up to three small ones; over many files, a per-file summary |
-| `read` | Show me this | a symbol's exact source (`file#Name`, `file:Name`, `Class.method` or a name); a short file whole, a longer one or a folder as its symbols; `file:line` or `file:start-end` as lines |
-| `refs` | Who uses this symbol? | every reference the compiler resolves, per file, with the enclosing symbol |
-| `calls` | Who calls it, or what does it call? | callers (`in`) or callees (`out`), up to three levels |
-| `impact` | What does my change touch? | changed symbols, their callers two levels up, the test files among them |
+| `find` | Where is a symbol, by name or part of a name? | one line per symbol: where it is, what kind it is, its first line; for a short symbol with exactly that name, its code too |
+| `grep` | Where does this text appear? | each match with the function or class it is in, plus the code around the matches when they are in a few files; across many files, a count per file |
+| `read` | Show me this | a symbol's code (`file#Name`, `file:Name`, `Class.method` or a plain name); a short file whole; a long file or a folder as a list of its symbols; `file:120` or `file:120-160` as those lines |
+| `refs` | Who uses this symbol? | every use the compiler confirms, file by file, with the function each one is in |
+| `calls` | Who calls this, or what does it call? | callers (`in`) or the functions it calls (`out`), up to three levels |
+| `impact` | What does my change touch? | the symbols you changed, their callers two levels up, and the test files among them |
 
-Answers are built so the agent needs no second call: `grep` that misses in the folder it was given
-searches everywhere and says so, a `read` of a path that does not exist names files of that name,
-and the first `grep` after a large checkout answers in about a second while the index still fills.
+Answers are built so the agent does not need to ask again. A `grep` that finds nothing in the
+folder it was given searches the whole project and says so. A `read` of a path that does not exist
+lists files with the same name. Right after starting on a large project, the first `grep` answers
+in about a second while the index is still being built. Once CSyk's answers in a session pass 6,000 tokens, `grep`
+and `find` stop showing code and `grep` lists half as much: in a long session, everything added is
+re-read on every later turn.
 
-What the agent sees, from the excalidraw repository:
+What the agent sees, in the excalidraw repository:
 
 ```text
 > find "restore elements"
@@ -112,82 +123,99 @@ excalidraw-app/data/firebase.ts#isSavedToFirebase  135
 …
 ```
 
-A `read` of a body the agent already saw, unchanged, returns `[unchanged: <id>, shown at call #n]`
-instead of the source again. Each hint appears once per session.
+The last word of each first line says where the answer came from: `index` (CSyk's own index of
+the code), `lsp` (the language's compiler, through its language server) or `text` (plain text,
+when no language server is installed).
+
+If the agent asks again for code it has already seen and that has not changed, CSyk answers
+`[unchanged: <id>, shown at call #n]` instead of sending it again.
 
 ## How it works
 
-**Index.** On start, CSyk parses every source file with tree-sitter (about 1 ms a file) and keeps
-the symbols in memory: functions, classes, methods, fields, constants, types, enum members, with
-their ranges and signatures, and framework roles as kinds. The index is saved under
-`~/.cache/csyk` and only changed files are parsed on the next start. A file watcher re-parses files
-whose content changed and tells the language servers; every tool call first applies pending
-changes, so answers never lag an edit.
+**Index.** On start, CSyk parses every source file with tree-sitter (a fast parser, about 1 ms per
+file) and keeps the symbols in memory: functions, classes, methods, fields, constants, types and
+enum members, with their line ranges and signatures. React components, NestJS routes, Flutter
+widgets and similar are marked as such. The index is saved in `~/.cache/csyk`, so the next start
+only parses files that changed. While running, CSyk watches the files: each tool call first takes
+in any edits, so answers are never out of date.
 
-**Names.** `find` ranks exact, squashed (`token store` → `TokenStore`), prefix, substring and
-word-prefix matches, weighted by kind, with tests and private helpers lower. A name with no match
-gets the three nearest names.
+**Names.** `find` ranks exact matches first, then joined words (`token store` finds `TokenStore`),
+then names that start with or contain the query. Tests and private helpers come lower. When
+nothing matches, it suggests the three closest names.
 
-**References.** A language server's own "find references" is limited to one project at a time, so
-references across workspace packages go missing. CSyk instead finds every whole-word mention of the
-name with ripgrep, asks the language server where each one is declared, and keeps those that land
-on the symbol. That crosses packages, tells same-named symbols apart, and leaves out comments and
-strings, because the server resolves nothing there. Overloads count as one symbol.
+**Uses.** A language server's own "find references" only looks inside one project, so uses in
+other packages of the same repository go missing. CSyk instead finds every mention of the name as
+a whole word, asks the language server what each mention points to, and keeps the ones that point
+to the symbol. This works across packages, tells apart different symbols with the same name, and
+skips comments and strings.
 
-**Calls and impact.** Callers are the references used as values (calls, constructions,
-decorators, JSX, callbacks), grouped by the symbol around them. For a method, calls through an
-interface or base class declared in the workspace count too, since they may dispatch to it; for
-Go, `gopls` names the interfaces a method satisfies. Callees are the calls in a body, each resolved
-to its declaration. `impact` maps `git diff` to the symbols it changes and follows callers two
-levels up, stopping at tests and at symbols with more than 40 callers.
+**Calls and impact.** Callers are uses that call the symbol (or construct it, decorate with it,
+render it, or pass it as a callback), grouped by the function they are in. For a method, calls
+through an interface or base class count too, since they can reach it. The functions a symbol
+calls are the calls in its body, each followed to its definition. `impact` reads `git diff`, finds
+the symbols the change touches and follows their callers two levels up, stopping at tests and at
+symbols with more than 40 callers.
 
-**Speed.** Answers about the same names are cached until a file changes. A search resolves the
-nearest mentions first and stops after five seconds (six for `calls` and `impact`); if it had to
-stop, the answer says how many mentions it resolved. Language servers start on first use and stop
-after ten idle minutes.
-
-**Precision labels.** Every answer ends its header with where it came from: `index`, `lsp`, or
-`text` when a language's server is not installed and CSyk falls back to mentions in code.
+**Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
+mentions first and stops after five seconds (six for `calls` and `impact`); when it stops early,
+the answer says how much it covered. Language servers start when first needed and stop after ten
+minutes without use.
 
 ## Languages and frameworks
 
-| Language | Index | References, definitions, calls | Framework roles |
+| Language | Index | Uses, definitions, calls | Recognised framework parts |
 |---|---|---|---|
-| TypeScript, JavaScript | tree-sitter | `tsc --lsp` (TypeScript 7, bundled) | React components and hooks, NestJS routes and providers |
+| TypeScript, JavaScript | tree-sitter | TypeScript 7 compiler (bundled) | React components and hooks, NestJS routes and providers |
 | Python | tree-sitter | pyright (bundled) | FastAPI routes |
 | Go | tree-sitter | `gopls` | |
 | Dart | tree-sitter (Dart 3.13 grammar) | the Dart analysis server | Flutter widgets |
 
-Install a project's dependencies (`npm install`, `go mod download`, `flutter pub get`) for the
-servers to resolve imports into them; CSyk's answers stay inside the workspace either way.
+Install the project's dependencies (`npm install`, `go mod download`, `flutter pub get`) so the
+compilers can follow imports into them. CSyk's answers only point inside the project either way.
 
 ## Hooks
 
-`csyk setup` wires `session-reset`; `csyk setup --hooks` adds `pre-read` and `pre-grep`, which
-turn calls down. They are opt-in: a turned-down call costs the agent a turn, and on the public
-benchmarks below the setup without them used fewer tokens. Each hook acts only while a CSyk server
-serves the folder, and lets the call through on any error. A hook starts and answers in about
-80 ms.
+Hooks are small programs Claude Code runs before or after a tool call. `csyk setup` adds one:
 
-- `pre-read` turns down a whole-file `Read` of a source file over 400 lines and points at
-  `read` with the file's path. A read with an offset or a limit always passes.
-- `pre-grep` turns down `Grep`, `rg` or recursive `grep` for a bare identifier and points at `find`
-  and `refs`. Phrases, regexes and searches outside the workspace pass; shell commands are lexed
-  (quotes, pipes, `cd`, redirections), and anything the lexer cannot follow passes.
-- `session-reset` (SessionStart, PreCompact) tells CSyk that the agent's context was reset, so
-  source it showed before is shown again.
+- `session-reset`: when a session starts or its context is compacted, tells CSyk to send code
+  again that it had already shown.
 
-## Results
+`csyk setup --hooks` adds two more, which refuse certain calls and point the agent to CSyk
+instead. They are off by default: each refused call costs the agent a turn, and on the public
+benchmarks below the agent used fewer tokens without them.
 
-Twelve public repositories, three per language from small to large, pinned to a commit. Cases are
-generated from each language's own server and scored against it; 30 per category unless a small
-repository has fewer.
+- `pre-read`: refuses reading a whole source file over 400 lines and suggests `read` with the
+  file's path. Reading part of a file is always allowed.
+- `pre-grep`: refuses a text search for a single identifier and suggests `find` and `refs`.
+  Phrases, regular expressions and searches outside the project are allowed.
 
-| corpus | A P@1 | B P@1 | C recall / precision | D recall / precision | E R@5 | G recall / precision |
+Each hook only acts while CSyk serves the folder, lets the call through if anything goes wrong,
+and answers in about 80 ms.
+
+## Results on single questions
+
+Twelve public repositories, each pinned to one commit. The test questions are generated from each
+language's own compiler, which also gives the right answers. There are 30 questions of each kind
+per repository, fewer when a small repository has fewer.
+
+The six kinds of question:
+
+- **Exact name**: find the definition of a name. Scored by whether the first answer is right.
+- **Part of a name**: find a definition from a few words of its name (`calc total` for
+  `calculateTotal`). Scored by whether the first answer is right.
+- **Uses**: find every use of a symbol. "Found" is the share of real uses in the answer; "correct"
+  is the share of the answer that really are uses.
+- **Callers and calls**: find who calls a function, or what it calls. Found and correct as above.
+- **Message**: given an error message or other text from the code, find the function it is in,
+  among the first five answers.
+- **Edit impact**: after an edit to one or two functions, list those functions and their callers
+  two levels up. Found and correct as above.
+
+| Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
-| zustand (TS, small) | 100% | 100% | 100% / 100% | 100% / 87% | 100% | 96.7% / 91.8% |
-| excalidraw (TS, medium) | 100% | 100% | 100% / 100% | 100% / 85.3% | 100% | 98.3% / 96.8% |
-| nest (TS, large) | 100% | 100% | 99.2% / 100% | 96.7% / 84.1% | 100% | 95.8% / 96.9% |
+| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 87% | 100% | 96.7% / 91.8% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 85.3% | 100% | 98.3% / 96.8% |
+| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 84.1% | 100% | 95.8% / 96.9% |
 | provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 93.2% | 100% | 70.9% / 89.2% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 99.2% | 100% | 100% / 98.2% |
 | flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.4% / 80.9% |
@@ -198,131 +226,128 @@ repository has fewer.
 | pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96% | 100% | 94.9% / 93.4% |
 | prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 89.3% / 97.2% |
 
-A and B: the first answer is a declaration of the name. C: recall and precision of references
-against the compiler. D: callers and callees against the server's call hierarchy. E: a quoted
-message's enclosing function in the top five. G: the symbols an edit changes and their callers two
-levels up. Latency, per tool and corpus, and the comparison with grep and CodeSift are in
-[docs/BASELINES.md](docs/BASELINES.md).
-
-**Against grep and CodeSift** (A and B: first answer right; C: precision; D: recall of callers and
-callees, grep only finding callers; tokens: what the agent reads for one case of each of A to E):
-
-| corpus | A P@1: B0 · B1 · CSyk | B P@1: B0 · B1 · CSyk | C precision: B0 · B1 · CSyk | D recall: B0 · B1 · CSyk | tokens A+B+C+D+E: B0 · B1 · CSyk |
-|---|---|---|---|---|---|
-| zustand | 28.6% · 47.6% · **100%** | 14.3% · 57.1% · **100%** | 46.9% · 45.7% · **100%** | 97.1% · 57.1% · **100%** | 8,838 · 1,496 · **250** |
-| excalidraw | 60% · 83.3% · **100%** | 10% · 83.3% · **100%** | 78.3% · 78.3% · **100%** | 100% · 50.4% · **100%** | 17,289 · 1,554 · **325** |
-| nest | 36.7% · 90% · **100%** | 10% · 86.7% · **100%** | 69.4% · 71.2% · **100%** | 96.7% · 41.9% · **96.7%** | 9,193 · 1,333 · **285** |
-| provider | 24% · 0% · **100%** | 13.6% · 0% · **100%** | 62% · 64.7% · **100%** | 50% · 0% · **100%** | 8,746 · 1,914 · **326** |
-| wonderous | 36.7% · 0% · **100%** | 13.3% · 0% · **100%** | 71.8% · 73.1% · **100%** | 66.7% · 0% · **100%** | 27,368 · 408 · **311** |
-| flame | 16.7% · 0% · **96.7%** | 0% · 0% · **100%** | 62.9% · 64.1% · **100%** | 94.7% · 0% · **97.9%** | 17,527 · 1,568 · **340** |
-| fastapi-template | 57.9% · 36.8% · **100%** | 0% · 57.1% · **100%** | 66% · 73.2% · **100%** | 100% · 54.7% · **100%** | 4,269 · 1,186 · **363** |
-| dispatch | 50% · 76.7% · **100%** | 10% · 70% · **100%** | 70.9% · 70.8% · **100%** | 100% · 58.1% · **100%** | 20,938 · 1,550 · **324** |
-| django | 40% · 76.7% · **96.7%** | 3.3% · 70% · **100%** | 61.3% · 67% · **96.7%** | 80% · 38.3% · **100%** | 18,646 · 1,489 · **337** |
-| chi | 10% · 86.7% · **100%** | 3.6% · 85.7% · **100%** | 49.4% · 57.5% · **100%** | 71.4% · 39.3% · **100%** | 9,197 · 1,163 · **232** |
-| pocketbase | 13.3% · 73.3% · **100%** | 3.3% · 63.3% · **96.7%** | 64.5% · 75.9% · **100%** | 66.7% · 33.8% · **96.7%** | 16,039 · 1,320 · **358** |
-| prometheus | 23.3% · 73.3% · **90%** | 10% · 70% · **96.7%** | 65.3% · 70.6% · **93.3%** | 98.7% · 27.4% · **93.3%** | 46,703 · 1,512 · **357** |
+The comparison with text search and with CodeSift for every repository, and the time each tool
+takes, are in [docs/BASELINES.md](docs/BASELINES.md).
 
 ## Public benchmarks: finding the code an issue needs changed
 
-Tool-level numbers say how good each answer is; what matters in the end is whether an agent finds
-the right code. Code localization measures that on real GitHub issues: headless Claude Code
-(Claude Sonnet) gets the issue text and the repository at the commit before the fix, and must name
-the files and functions to change without editing anything. Its answer is scored against the real,
-merged fix, as LocAgent and Agentless report localization: **file Acc@1** (the first file named was
-changed), **file Acc@5** (every changed file is among the first five) and **function recall** (the
-share of changed functions and methods it named).
+Answering single questions well is one thing; what matters in the end is whether an agent finds
+the right code with fewer tokens and in less time. These benchmarks check that on real GitHub
+issues. Claude Code (with the Claude Sonnet model, run from the command line without its
+interface) gets the text of an issue and the repository as it was just before the fix, and must
+name the files and functions that need to change, without editing anything. Its answer is
+compared with the fix that was actually merged:
 
-Each benchmark contributes 30 issues drawn at random from the whole dataset (seed 1, no filter on
-difficulty; each run prints the sample's repositories and difficulty next to the dataset's). The
-same issues run twice: **B0**, Claude Code with Read, Grep and Glob, and **CSyk**, the same tools
-plus CSyk's MCP server, hooks and CLAUDE.md note. Measured on 2026-10-29; 240 runs cost about $18
-at API prices.
+- **First file right**: the first file it names is one the fix changed.
+- **All changed files in first five**: every file the fix changed is among the first five it names.
+- **Changed functions named**: the share of the functions and methods the fix changed that it
+  names.
+- **Median time**: time per issue, from start to answer; the median of all runs.
+- **Tokens per issue**: everything the model read and wrote in the session, including the context
+  it re-reads on every turn; the mean and the median over the 30 issues.
 
-| Benchmark | Language | Setup | File Acc@1 | File Acc@5 | Function recall | Time p50 | Tokens, all | Tokens from tools | Cost |
-|---|---|---|---|---|---|---|---|---|---|
-| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | B0 | 96.7% | 46.7% | 65.2% | 11 s | 67,175 | 1,122 | $2.02 |
-| | | CSyk | 96.7% | 46.7% | **70.2%** | 13 s | 92,551 (+38%) | 1,394 (+24%) | $2.46 |
-| | JavaScript | B0 | 80.0% | 50.0% | 53.8% | 14 s | 80,941 | 1,740 | $2.50 |
-| | | CSyk | **90.0%** | **53.3%** | **59.8%** | 15 s | 104,622 (+29%) | 1,697 (−2%) | $2.55 |
-| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | B0 | 90.0% | 60.0% | 60.3% | 11 s | 58,108 | 1,506 | $2.22 |
-| | | CSyk | **93.3%** | 60.0% | **66.6%** | 12 s | 74,865 (+29%) | 1,230 (−18%) | $2.25 |
-| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | B0 | 93.3% | 86.7% | 66.0% | 9 s | 47,059 | 719 | $1.99 |
-| | | CSyk | 93.3% | 86.7% | 66.3% | 11 s | 63,661 (+35%) | 721 (0%) | $2.00 |
+Two setups answer the same issues. **Claude Code alone** has its own `Read`, `Grep` and `Glob`.
+**With CSyk** is Claude Code as `csyk setup` leaves it: CSyk's six tools in place of `Grep`, plus
+`Read` and `Glob`, the note and the skill.
 
-What this shows, plainly:
+Each benchmark contributes 30 issues drawn at random from the whole dataset (a fixed seed, no
+filter on difficulty). Each setup ran the same 30 issues several times, and the table shows the
+average of those runs: two runs of the same setup can differ by several points, so differences of
+one to three points are within that noise. Measured on 2026-10-29; the 660 sessions in the table
+cost about $30.
 
-- **Accuracy goes up or stays.** With CSyk the agent names more of the functions the fix changed in
-  every language (+5 to +6 points in TypeScript, JavaScript and Go, level in Python) and picks the
-  right first file more often in JavaScript and Go. It is never worse.
-- **Time stays about the same**: one to two seconds more per issue at the median, on 9–15 s.
-- **Tokens do not go down at the agent level, they go up 29–38%.** Almost all of an agent's tokens
-  are its context (system prompt, tool list, conversation) re-read on every turn, and with CSyk
-  the agent takes about one more turn per issue. Those re-reads are cached, so cost rises much
-  less: 0.5–2% in Python, Go and JavaScript, 22% in TypeScript. What the tools themselves returned
-  is small in both setups for this task (700–1,700 tokens per issue), where reading a few files
-  answers most issues; CSyk's share is 18% lower in Go and higher in TypeScript.
-- 30 issues per benchmark is enough to see differences of 5–10 points, not of 1–2.
+| Benchmark | Language | Setup | Runs | First file right | All changed files in first five | Changed functions named | Median time | Tokens per issue, mean | Tokens per issue, median | Issues where CSyk used fewer tokens |
+|---|---|---|---|---|---|---|---|---|---|---|
+| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | Claude Code alone | 4 | 93.3% | 45.0% | 55.3% | 12.1 s | 71,192 | 57,975 | |
+| | | with CSyk | 2 | 90.0% | 38.3% | 54.0% | 12.8 s | 77,928 (+9%) | 55,874 (−4%) | 19 of 30 |
+|  | JavaScript | Claude Code alone | 3 | 82.2% | 50.0% | 56.7% | 13.9 s | 80,667 | 73,658 | |
+| | | with CSyk | 2 | 85.0% | 53.3% | 55.7% | 13.3 s | 73,586 (−9%) | 67,538 (−8%) | 18 of 30 |
+| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | Claude Code alone | 4 | 92.5% | 85.0% | 66.0% | 9.2 s | 47,358 | 43,147 | |
+| | | with CSyk | 2 | 95.0% | 86.7% | 64.2% | 8.6 s | 42,391 (−10%) | 34,671 (−20%) | 22 of 30 |
+| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | Claude Code alone | 3 | 91.1% | 60.0% | 63.2% | 11.3 s | 60,535 | 54,242 | |
+| | | with CSyk | 2 | 96.7% | 60.0% | 68.1% | 10.7 s | 55,458 (−8%) | 54,071 (0%) | 17 of 30 |
 
-The tool-level savings at the top of this README (98.6% fewer tokens than grep and a whole-file
-read for the same question) are real per question; this benchmark shows they do not yet turn into
-fewer tokens for a whole agent session on short localization tasks. Reducing turns, not answer
-size, is the next lever. Reproduce with
-`npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk> --count 30 --seed 1`
-and `npm run loc:report`. Where a dataset does not list the changed functions (SWE-bench,
-Multi-SWE-bench), each changed line of the fix is mapped to its enclosing function at the base
-commit. Dart has no public benchmark of this kind; its numbers are the tool-level ones above.
+What this shows:
+
+- **Python, JavaScript and Go: fewer tokens, sooner, as accurate or more.** 8–10% fewer tokens per
+  issue on average (20% fewer on the median Python issue), about 0.6 seconds sooner, and the first
+  file right 2.5 to 5.6 points more often. The share of changed functions named is within two
+  points in Python and JavaScript, and 4.9 points higher in Go.
+- **TypeScript: level on the typical issue, more tokens on a few long ones.** The median issue uses
+  4% fewer tokens, and 19 of the 30 fewer, but the average is 9% higher. Three of the issues are
+  in VS Code, a very large repository where the agent sometimes searches for 20 to 30 turns, and
+  those long sessions cost more with CSyk. The first file was right 3 points less often and all
+  changed files were in the first five 7 points less often (one and two issues of 30), the share
+  of changed functions named was level, and the median time was 0.7 seconds longer.
+- **Where the savings come from.** Almost all of an agent's tokens are its context, re-read on
+  every turn, so a tool saves tokens by saving turns, not by giving shorter answers. CSyk's `grep`
+  names the function around each match and shows the code around matches in a few files, so the
+  agent goes back to read the place far less often: after 43% of searches that showed no code, and
+  after 19% of those that showed up to 1,000 tokens of it.
+
+To reproduce:
+`npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-lean> --count 30 --seed 1`,
+where `b0` is Claude Code alone and `csyk-lean` is with CSyk, then `npm run loc:report`. Each run
+writes its results to a file in `eval/results/` named after the setup, dataset and language;
+rename it before running the same setup again. Set `CSYK_LOC_DIR` to give a run its own copies of the repositories, so two setups
+can run at the same time. Where a dataset does not list the changed functions (SWE-bench,
+Multi-SWE-bench), each changed line of the fix is mapped to the function around it. Dart has no
+public benchmark of this kind; its numbers are the single-question ones above.
 
 ## Limitations
 
-- A name written under another name (`import { a as b }`, a default import named differently) is
-  not followed.
-- Dart's call hierarchy counts implicit `super(...)` constructor calls and calls through framework
-  base classes (Flutter's `State`, `Diagnosticable`); CSyk does not follow those, which is most of
-  the gap on provider and flame in G.
-- pyright's call hierarchy misses calls through module aliases and inferred receivers that CSyk
-  finds, so CSyk's precision against it on Python D and G understates.
-- A function declared twice under Go build tags resolves to the one `gopls` builds by default.
-- A name used thousands of times (Django's `Model.save`) gives a partial answer after the deadline,
-  and says so.
-- Tool-level tokens are not agent-level tokens: on the public localization benchmarks an agent
-  with CSyk is more accurate but uses 29–38% more tokens, from one more turn per issue.
+- A name imported under another name (`import { a as b }`, or a default import with a different
+  name) is not followed.
+- Dart's compiler counts hidden `super(...)` constructor calls and calls through Flutter's base
+  classes (`State`, `Diagnosticable`) as calls; CSyk does not, which is most of the gap on provider
+  and flame for edit impact.
+- pyright misses some calls through module aliases that CSyk finds, so CSyk's "correct" score
+  against pyright on Python callers and edit impact is lower than it really is.
+- A Go function declared twice under different build tags resolves to the one `gopls` builds by
+  default.
+- A name used thousands of times (Django's `Model.save`) gets a partial answer after the time
+  limit, and the answer says so.
+- In very large repositories, a long search session (20 turns and more) can use more tokens with
+  CSyk than without it; see the TypeScript results above.
 
 ## Evaluation
 
 ```sh
 npm install
-npm run corpora                              # fetch the twelve pinned corpora into eval/corpora/
+npm run corpora                              # fetch the twelve pinned repositories into eval/corpora/
 npm test                                     # unit tests
 npm run eval -- --adapter csyk --corpus excalidraw
-npm run eval -- --adapter b0                 # every case through the grep baseline
+npm run eval -- --adapter b0                 # every question through text search and file reads
 npm run generate -- --corpus <name> --lang <ts|py|go|dart> --category <A|B|C|D|E|G>
 ```
 
-- **Corpora** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`, `codesift`); a case file
-  refuses to run against any other commit. Run `go mod download` in the Go corpora and
-  `flutter pub get` in the Dart ones (`packages/*` for provider) so their servers resolve imports.
-  Private corpora go in a git-ignored `eval/corpora.local.yaml`, their cases in
-  `eval/cases/private/`.
-- **Cases** live in `eval/cases/<corpus>.<category>.yaml`: an `id`, a `query`, the `expect`ed
-  locations (`file`, optional inclusive `lines`) and, for D, a `direction`. `npm run generate`
-  writes them from the language's own server: references are every mention the server resolves to
-  the declaration; D and G come from its call hierarchy. Review generated cases before trusting
-  them.
-- **Baselines.** B0 (`eval/adapters/b0-ripgrep.ts`) is an agent with built-in tools: it greps,
-  then reads the first matching file whole; for references and callers the grep lines are its
-  answer. B1 (`eval/adapters/b1-codesift.ts`) is CodeSift over MCP, evaluated only; index each
-  corpus first with `codesift index <path> --no-watch` (CodeSift names a repository after its git
-  remote, so a second checkout of an indexed repository needs its remote removed).
-- **Scores** go to `eval/results/` (git-ignored). Token counts use o200k_base as a stand-in for
-  Claude's tokenizer.
-- **Agent benchmark** (PLAN.md §7.4): `npm run agent:tasks -- --corpus <name>` builds 20 tasks from
-  a corpus's cases, and `npm run agent -- --setup <b0|b1|csyk> --corpus <name>` runs them through
-  headless Claude Code (`claude -p`, billed to your account), recording tokens, tool calls, wall
+In the commands and result files, the kinds of question are letters: A exact name, B part of a
+name, C uses, D callers and calls, E message, G edit impact. `b0` is text search with file reads,
+`b1` is CodeSift.
+
+- **Repositories** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`, `codesift`); a
+  question file refuses to run against any other commit. Run `go mod download` in the Go
+  repositories and `flutter pub get` in the Dart ones (`packages/*` for provider) so their
+  compilers can follow imports. Private repositories go in `eval/corpora.local.yaml` and their
+  questions in `eval/cases/private/`; both are ignored by git.
+- **Questions** live in `eval/cases/<repository>.<letter>.yaml`: an `id`, a `query`, the expected
+  locations (`file`, optional `lines`) and, for callers and calls, a `direction`.
+  `npm run generate` writes them from the language's own compiler. Check generated questions
+  before trusting them.
+- **Text search and file reads** (`eval/adapters/b0-ripgrep.ts`) stands for an agent with only
+  built-in tools: it searches with ripgrep and reads the first matching file whole; for uses and
+  callers, the matching lines are its answer. **CodeSift** (`eval/adapters/b1-codesift.ts`) is
+  only measured here. Index each repository first with `codesift index <path> --no-watch`
+  (CodeSift names a repository after its git remote, so a second copy of an indexed repository
+  needs its remote removed).
+- **Scores** go to `eval/results/`, which git ignores. Tokens are counted with OpenAI's
+  `o200k_base` tokenizer as a stand-in for Claude's.
+- **Agent tasks**: `npm run agent:tasks -- --corpus <name>` builds 20 tasks from a repository's
+  questions, and `npm run agent -- --setup <b0|b1|csyk> --corpus <name>` runs them through Claude
+  Code without its interface (`claude -p`, billed to your account), recording tokens, tool calls,
   time, cost and passes.
-- **Localization on SWE-PolyBench** (Amazon's multi-language benchmark of real GitHub issues):
-  `npm run loc -- --setup <b0|csyk> --language TypeScript --count 10` asks headless Claude Code
-  which files and functions each issue's fix must change, at the issue's base commit, and scores
-  file Acc@1, Acc@5 and function recall against the real fix, with time and tokens.
+- **Public benchmarks**: see the command at the end of
+  [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
 
 ## Development
 
@@ -330,13 +355,13 @@ npm run generate -- --corpus <name> --lang <ts|py|go|dart> --category <A|B|C|D|E
 npm install
 npm run typecheck
 npm test
-npm run build      # JavaScript into dist/, for the npm package
-node src/cli.ts serve <workspace>   # run from source (Node strips the types)
+npm run build                       # JavaScript into dist/, for the npm package
+node src/cli.ts serve <folder>      # run from source (Node removes the types itself)
 ```
 
-The design, the phases and the decisions are in [docs/PLAN.md](docs/PLAN.md).
+The design, its phases and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md).
 
 ## Licence
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The Dart grammar is built from
-tree-sitter-dart (MIT); see [grammars/README.md](grammars/README.md).
+tree-sitter-dart (MIT licence); see [grammars/README.md](grammars/README.md).
