@@ -37,6 +37,9 @@ export class Workspace {
   readonly root: string;
   readonly index: SymbolIndex;
   readonly watching: boolean;
+  /** Settles once every file is indexed; until then, only the files a tool touched are. */
+  ready: Promise<void> = Promise.resolve();
+  complete = true;
   private readonly services = new Map<string, Running>();
   private readonly pending = new Set<string>();
   private readonly snapshot: string | undefined;
@@ -60,8 +63,32 @@ export class Workspace {
   }
 
   static async open(root: string, options: { watch?: boolean; persist?: boolean } = {}): Promise<Workspace> {
-    const index = await SymbolIndex.build(root, options.persist ? { snapshot: snapshotPath(root) } : {});
-    return new Workspace(root, index, options);
+    const ws = Workspace.start(root, options);
+    await ws.ready.catch(async (error: unknown) => {
+      await ws.close();
+      throw error;
+    });
+    return ws;
+  }
+
+  /**
+   * A workspace at once, its index filling in the background: a large
+   * checkout takes seconds to index, and grep need not wait for it.
+   */
+  static start(root: string, options: { watch?: boolean; persist?: boolean } = {}): Workspace {
+    const ws = new Workspace(root, SymbolIndex.empty(root), options);
+    ws.complete = false;
+    ws.ready = ws.index.fill(options.persist ? { snapshot: snapshotPath(root) } : {}).then(() => {
+      ws.complete = true;
+    });
+    return ws;
+  }
+
+  /** While the index fills, indexes [files] now, for a tool that needs only them. */
+  async indexNow(files: string[]): Promise<void> {
+    if (this.complete) return;
+    const missing = files.filter((f) => !this.index.has(f) && sourceExtensions.has(extname(f)) && !f.endsWith('.d.ts'));
+    await Promise.all(missing.map((file) => this.index.update(file)));
   }
 
   /** The language server for [file], or undefined when none is installed. */

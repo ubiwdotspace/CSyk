@@ -1,4 +1,6 @@
+import { extname } from 'node:path';
 import { z } from 'zod';
+import { sourceExtensions } from '../index/parse.ts';
 import { symbolKinds, type SymbolKind } from '../index/symbols.ts';
 import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
@@ -136,6 +138,11 @@ export async function runTool(
   args: unknown,
   session: Session,
 ): Promise<ToolResult> {
+  // Until the index is full, grep and a read of a file index only the files they touch.
+  const target = (args as { target?: unknown }).target;
+  const file = typeof target === 'string' ? target.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '') : '';
+  if (name === 'read' && sourceExtensions.has(extname(file))) await ws.indexNow([file]);
+  else if (name !== 'grep') await ws.ready;
   await ws.fresh();
   const raw = { ...(args as Record<string, unknown>) };
   for (const [key, [min, max]] of Object.entries(bounds)) {

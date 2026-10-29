@@ -70,6 +70,19 @@ export class SymbolIndex {
    */
   static async build(root: string, options: { snapshot?: string } = {}): Promise<SymbolIndex> {
     const index = new SymbolIndex(root);
+    await index.fill(options);
+    return index;
+  }
+
+  /** An index of [root] with no files yet, for [fill]. */
+  static empty(root: string): SymbolIndex {
+    return new SymbolIndex(root);
+  }
+
+  /** Indexes every source file, as [build] does. */
+  async fill(options: { snapshot?: string } = {}): Promise<void> {
+    const root = this.root;
+    const index = this;
     const files = await listFiles(root, sourceExtensions);
     const saved = options.snapshot ? await readSnapshot(options.snapshot) : undefined;
     // Reading files a batch at a time keeps parsing from waiting on disk.
@@ -86,7 +99,6 @@ export class SymbolIndex {
       );
     }
     if (options.snapshot) await index.save(options.snapshot);
-    return index;
   }
 
   /**
