@@ -118,6 +118,29 @@ Where a dataset does not list the changed functions (SWE-bench, Multi-SWE-bench)
 line of the fix is mapped to the function around it. Dart has no public benchmark of this kind;
 its numbers are the single-question ones above.
 
+### The current version, 80 issues twice
+
+The first 20 issues of each benchmark, run twice with CSyk and twice with Claude Code alone, side
+by side (160 sessions each), with the version that reads docs and configs, answers a missed
+`grep` briefly and gives a file's path once above its hits. Each issue is averaged over its
+two runs.
+
+| | With CSyk, against Claude Code alone |
+|---|---|
+| Issues where CSyk used fewer tokens | **55 of 80** (sign test p = 0.001) |
+| Tokens per issue, the median issue | **10.4% fewer** |
+| Tokens per issue, mean | 7.3% fewer (95% interval: 19.2% fewer to 8.4% more) |
+| Turns per issue | **3.68** against 4.41 |
+| Changed functions named | 1.7 points more |
+| First file right | 3.8 points more |
+| All changed files in first five | 1.9 points fewer |
+
+By language, the mean: JavaScript 24.4% fewer, Go 15.3% fewer, Python 3.8% fewer, TypeScript
+15.5% more. TypeScript's mean rests on one issue, `microsoft__vscode-173585`, a session of 12 to 29
+turns in either setup that the agent rarely solves: 817k tokens with CSyk against 192k without
+in one round, 385k against 387k in the other. One run alone (the second) was 13.0% fewer tokens
+with a 95% interval of 6.7% to 19.3% fewer, and fewer in all four languages.
+
 ## Against Serena and Graphify
 
 [Serena](https://github.com/oraios/serena) (2.1.1, commit `ede329a`) and
