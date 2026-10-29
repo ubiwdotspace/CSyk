@@ -34,8 +34,6 @@ export type Corpus = {
   private: boolean;
   /** The commit the cases were written against, when pinned. */
   commit?: string;
-  /** Its repo id in CodeSift, for the B1 baseline. */
-  codesift?: string;
   /** Where `npm run corpora` fetches it from, at `commit`. */
   git?: string;
 };

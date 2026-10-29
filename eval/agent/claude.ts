@@ -43,22 +43,15 @@ export type ClaudeRun = {
 };
 
 /**
- * The setups of PLAN.md §7.4 for a workspace at [workspace]: B0 (built-in
- * tools only), B1 (CodeSift, repo [codesift]) and CSyk (its MCP server, its
- * hooks and its CLAUDE.md note, from the build that buildCsyk makes).
+ * The setups for a workspace at [workspace]: b0 (Claude Code's built-in
+ * tools only) and CSyk in several configurations, run from the build that
+ * buildCsyk makes.
  */
-export function setups(workspace: string, codesift = ''): Record<string, Setup> {
+export function setups(workspace: string): Record<string, Setup> {
   const csyk = ['node', join(root, 'dist/cli.js')];
   const hook = (name: string) => [{ type: 'command', command: `${csyk.join(' ')} hook ${name}` }];
   return {
     b0: { allowed: [] },
-    b1: {
-      mcp: { codesift: { command: process.env.CODESIFT_MCP ?? 'codesift-mcp', args: [] } },
-      allowed: ['mcp__codesift'],
-      guide:
-        `Use the CodeSift tools (repo "${codesift}") for code: search_symbols, find_references, ` +
-        'trace_call_chain, search_text, get_file_outline. Prefer them to Grep and to reading whole files.',
-    },
     csyk: {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
       allowed: ['mcp__csyk'],

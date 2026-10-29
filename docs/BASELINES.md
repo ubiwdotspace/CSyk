@@ -1,19 +1,16 @@
 # Baselines
 
-Scores of CSyk and of two other ways to answer the same questions, recorded with
-`npm run eval -- --adapter <csyk|b0|b1> --corpus <name>`, one repository per process. Recorded
+Scores of CSyk and of plain text search on the same questions, recorded with
+`npm run eval -- --adapter <csyk|b0> --corpus <name>`, one repository per process. Recorded
 2026-10-29 on an Apple-silicon laptop (16 GB), with the language servers already running except
 where noted.
 
-The three ways to answer:
+The two ways to answer:
 
 - **Text search** (`b0` in commands): what an agent does with only built-in tools. It searches
   with ripgrep, then reads the first matching file whole; for uses and callers, the matching lines
   are its answer. It cannot find what a function calls, so for callers and calls it answers only
   the callers half.
-- **CodeSift** (`b1` in commands): the CodeSift code-search server, used the way its own rules say
-  (`search_symbols` with source, `find_references`, `trace_call_chain`, `search_text`). It has
-  nothing for the impact of an edit, so it answers none of those questions.
 - **CSyk**: `find` for exact names and parts of names, `refs` for uses, `calls` for callers and
   calls, `grep` for messages, `impact` for edit impact.
 
@@ -96,58 +93,53 @@ the language server, on the first question of a repository):
 | pocketbase | 1 / 2 | 0 / 0 | 48 / 160 | 11 / 41 | 27 / 29 | 108 / 873 |
 | prometheus | 2 / 10 | 1 / 2 | 144 / 5043 | 64 / 6499 | 42 / 51 | 629 / 12218 |
 
-## Against text search and CodeSift
+## Against text search
 
-Each cell is text search · CodeSift · CSyk. Exact name and part of a name: first answer right.
+Each cell is text search · CSyk. Exact name and part of a name: first answer right.
 Uses: correct. Callers and calls: found. Tokens: what the agent reads for one question of each of
 the first five kinds.
 
 | repository | Exact name | Part of a name | Uses: correct | Callers and calls: found | Tokens for five questions |
 |---|---|---|---|---|---|
-| zustand | 28.6% · 47.6% · **100%** | 14.3% · 57.1% · **100%** | 46.9% · 45.7% · **100%** | 97.1% · 57.1% · **100%** | 8,838 · 1,496 · **250** |
-| excalidraw | 60% · 83.3% · **100%** | 10% · 83.3% · **100%** | 78.3% · 78.3% · **100%** | 100% · 50.4% · **100%** | 17,289 · 1,554 · **325** |
-| nest | 36.7% · 90% · **100%** | 10% · 86.7% · **100%** | 69.4% · 71.2% · **100%** | 96.7% · 41.9% · **96.7%** | 9,193 · 1,333 · **285** |
-| provider | 24% · 0% · **100%** | 13.6% · 0% · **100%** | 62% · 64.7% · **100%** | 50% · 0% · **100%** | 8,746 · 1,914 · **326** |
-| wonderous | 36.7% · 0% · **100%** | 13.3% · 0% · **100%** | 71.8% · 73.1% · **100%** | 66.7% · 0% · **100%** | 27,368 · 408 · **311** |
-| flame | 16.7% · 0% · **96.7%** | 0% · 0% · **100%** | 62.9% · 64.1% · **100%** | 94.7% · 0% · **97.9%** | 17,527 · 1,568 · **340** |
-| fastapi-template | 57.9% · 36.8% · **100%** | 0% · 57.1% · **100%** | 66% · 73.2% · **100%** | 100% · 54.7% · **100%** | 4,269 · 1,186 · **363** |
-| dispatch | 50% · 76.7% · **100%** | 10% · 70% · **100%** | 70.9% · 70.8% · **100%** | 100% · 58.1% · **100%** | 20,938 · 1,550 · **324** |
-| django | 40% · 76.7% · **96.7%** | 3.3% · 70% · **100%** | 61.3% · 67% · **96.7%** | 80% · 38.3% · **100%** | 18,646 · 1,489 · **337** |
-| chi | 10% · 86.7% · **100%** | 3.6% · 85.7% · **100%** | 49.4% · 57.5% · **100%** | 71.4% · 39.3% · **100%** | 9,197 · 1,163 · **232** |
-| pocketbase | 13.3% · 73.3% · **100%** | 3.3% · 63.3% · **96.7%** | 64.5% · 75.9% · **100%** | 66.7% · 33.8% · **96.7%** | 16,039 · 1,320 · **358** |
-| prometheus | 23.3% · 73.3% · **90%** | 10% · 70% · **96.7%** | 65.3% · 70.6% · **93.3%** | 98.7% · 27.4% · **93.3%** | 46,703 · 1,512 · **357** |
+| zustand | 28.6% · **100%** | 14.3% · **100%** | 46.9% · **100%** | 97.1% · **100%** | 8,838 · **250** |
+| excalidraw | 60% · **100%** | 10% · **100%** | 78.3% · **100%** | 100% · **100%** | 17,289 · **325** |
+| nest | 36.7% · **100%** | 10% · **100%** | 69.4% · **100%** | 96.7% · **96.7%** | 9,193 · **285** |
+| provider | 24% · **100%** | 13.6% · **100%** | 62% · **100%** | 50% · **100%** | 8,746 · **326** |
+| wonderous | 36.7% · **100%** | 13.3% · **100%** | 71.8% · **100%** | 66.7% · **100%** | 27,368 · **311** |
+| flame | 16.7% · **96.7%** | 0% · **100%** | 62.9% · **100%** | 94.7% · **97.9%** | 17,527 · **340** |
+| fastapi-template | 57.9% · **100%** | 0% · **100%** | 66% · **100%** | 100% · **100%** | 4,269 · **363** |
+| dispatch | 50% · **100%** | 10% · **100%** | 70.9% · **100%** | 100% · **100%** | 20,938 · **324** |
+| django | 40% · **96.7%** | 3.3% · **100%** | 61.3% · **96.7%** | 80% · **100%** | 18,646 · **337** |
+| chi | 10% · **100%** | 3.6% · **100%** | 49.4% · **100%** | 71.4% · **100%** | 9,197 · **232** |
+| pocketbase | 13.3% · **100%** | 3.3% · **96.7%** | 64.5% · **100%** | 66.7% · **96.7%** | 16,039 · **358** |
+| prometheus | 23.3% · **90%** | 10% · **96.7%** | 65.3% · **93.3%** | 98.7% · **93.3%** | 46,703 · **357** |
 
 Tokens read and tool calls per question, means over the twelve repositories (text search ·
-CodeSift · CSyk):
+CSyk):
 
 | kind of question | tokens | tool calls |
 |---|---|---|
-| Exact name | 7,257 · 531 · **76** | 2.0 · 1.0 · 1.0 |
-| Part of a name | 1,495 · 528 · **38** | 1.3 · 1.0 · 1.0 |
-| Uses | 1,256 · 236 · **88** | 1.0 · 1.0 · 1.0 |
-| Callers and calls | 163 · 53 · **77** | 1.0 · 1.0 · 1.0 |
-| Message | 6,892 · 25 · **38** | 2.0 · 1.0 · 1.0 |
-| Edit impact | – · – · **224** | – · – · 1.0 |
+| Exact name | 7,257 · **76** | 2.0 · 1.0 |
+| Part of a name | 1,495 · **38** | 1.3 · 1.0 |
+| Uses | 1,256 · **88** | 1.0 · 1.0 |
+| Callers and calls | 163 · **77** | 1.0 · 1.0 |
+| Message | 6,892 · **38** | 2.0 · 1.0 |
+| Edit impact | – · **224** | – · 1.0 |
 
 ## What the numbers say
 
 - **Definitions.** Text search cannot rank, so an exact-name search often opens an importing file first,
-  and it cannot match a partial name at all. CodeSift ranks better but misses module constants,
-  class attributes and, on Dart, every symbol (it indexes none). CSyk's first answer is the
+  and it cannot match a partial name at all. CSyk's first answer is the
   declaration 98.6% of the time on exact names and 99.5% on partial ones.
 - **Uses.** Text search finds every use, but a third of what it returns is noise: comments,
-  strings, import paths and same-named symbols elsewhere. CodeSift's `find_references` is text
-  based and scores about the same. Resolving each mention through the language server removes
+  strings, import paths and same-named symbols elsewhere. Resolving each mention through the
+  language server removes
   nearly all of it.
-- **Callers.** CodeSift's call chain finds a third of the callers the servers report. Searching
-  for `name(` finds most callers but also declarations and same-named functions, and nothing for
+- **Callers.** Searching for `name(` finds most callers but also declarations and same-named functions, and nothing for
   callees. CSyk follows calls, constructions, decorators, JSX and callbacks, and calls through
   interfaces and base classes in the workspace.
 - **Tokens.** Across exact names, parts of names, uses and messages, CSyk returns about a
-  seventieth of what text search and a whole-file read cost (240 tokens against 16,899) and a
-  fifth of CodeSift's (1,322). It is a seventh of CodeSift's on exact names, a fourteenth on parts
-  of names and a third on uses; on callers and messages CodeSift's bare lines are shorter, since
-  CSyk also names the function each caller or match is in.
+  seventieth of what text search and a whole-file read cost (240 tokens against 16,899).
 - **Time.** Warm answers take single-digit milliseconds for names and tens of milliseconds for
   references and callers. Searches over very common names (Django's `Model.save`, Prometheus's
   hub methods) are bounded at five or six seconds and say when they are partial.

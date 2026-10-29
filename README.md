@@ -13,16 +13,15 @@ Dart (Flutter). It plugs into the agent as an MCP server (Model Context Protocol
 to give an agent extra tools).
 
 **Answers to single questions**, measured on twelve public repositories (three per language, small
-to large), against plain text search plus reading the file, and against CodeSift, another
-code-search server:
+to large), against plain text search plus reading the file:
 
-| | Text search and file reads | CodeSift | **CSyk** |
-|---|---|---|---|
-| Finding a definition by its exact name: first answer right | 33.1% | 53.7% | **98.6%** |
-| Finding a definition by part of its name: first answer right | 7.6% | 53.6% | **99.5%** |
-| Finding uses of a symbol: share of answers that really are uses | 64.1% | 67.7% | **99.2%** |
-| Tokens the agent reads to answer the same questions | 16,899 | 1,322 | **240 (98.6% fewer)** |
-| Time per answer (median) | 75 ms | 10 ms | **8 ms** |
+| | Text search and file reads | **CSyk** |
+|---|---|---|
+| Finding a definition by its exact name: first answer right | 33.1% | **98.6%** |
+| Finding a definition by part of its name: first answer right | 7.6% | **99.5%** |
+| Finding uses of a symbol: share of answers that really are uses | 64.1% | **99.2%** |
+| Tokens the agent reads to answer the same questions | 16,899 | **240 (98.6% fewer)** |
+| Time per answer (median) | 75 ms | **8 ms** |
 
 **Whole agent sessions** on real GitHub issues (SWE-bench Verified, SWE-PolyBench Verified and
 Multi-SWE-bench, 30 random issues each): Claude Code with CSyk used 8–10% fewer tokens per issue and
@@ -226,8 +225,8 @@ The six kinds of question:
 | pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96% | 100% | 94.9% / 93.4% |
 | prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 89.3% / 97.2% |
 
-The comparison with text search and with CodeSift for every repository, and the time each tool
-takes, are in [docs/BASELINES.md](docs/BASELINES.md).
+The comparison with text search for every repository, and the time each tool takes, are in
+[docs/BASELINES.md](docs/BASELINES.md).
 
 ## Public benchmarks: finding the code an issue needs changed
 
@@ -322,10 +321,10 @@ npm run generate -- --corpus <name> --lang <ts|py|go|dart> --category <A|B|C|D|E
 ```
 
 In the commands and result files, the kinds of question are letters: A exact name, B part of a
-name, C uses, D callers and calls, E message, G edit impact. `b0` is text search with file reads,
-`b1` is CodeSift.
+name, C uses, D callers and calls, E message, G edit impact. `b0` is text search with file
+reads.
 
-- **Repositories** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`, `codesift`); a
+- **Repositories** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`); a
   question file refuses to run against any other commit. Run `go mod download` in the Go
   repositories and `flutter pub get` in the Dart ones (`packages/*` for provider) so their
   compilers can follow imports. Private repositories go in `eval/corpora.local.yaml` and their
@@ -336,14 +335,11 @@ name, C uses, D callers and calls, E message, G edit impact. `b0` is text search
   before trusting them.
 - **Text search and file reads** (`eval/adapters/b0-ripgrep.ts`) stands for an agent with only
   built-in tools: it searches with ripgrep and reads the first matching file whole; for uses and
-  callers, the matching lines are its answer. **CodeSift** (`eval/adapters/b1-codesift.ts`) is
-  only measured here. Index each repository first with `codesift index <path> --no-watch`
-  (CodeSift names a repository after its git remote, so a second copy of an indexed repository
-  needs its remote removed).
+  callers, the matching lines are its answer.
 - **Scores** go to `eval/results/`, which git ignores. Tokens are counted with OpenAI's
   `o200k_base` tokenizer as a stand-in for Claude's.
 - **Agent tasks**: `npm run agent:tasks -- --corpus <name>` builds 20 tasks from a repository's
-  questions, and `npm run agent -- --setup <b0|b1|csyk> --corpus <name>` runs them through Claude
+  questions, and `npm run agent -- --setup <b0|csyk> --corpus <name>` runs them through Claude
   Code without its interface (`claude -p`, billed to your account), recording tokens, tool calls,
   time, cost and passes.
 - **Public benchmarks**: see the command at the end of
