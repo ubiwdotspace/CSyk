@@ -43,7 +43,9 @@ describe('Workspace', () => {
     const ws = await Workspace.open(root);
     const answer = await runTool(ws, 'grep', { pattern: 'needle' }, new Session());
     expect(answer.text).toMatch(/^12 hits in 1 place · text/);
-    expect(answer.text.match(/^one\.ts:\d+ {2}one/gm)).toHaveLength(12);
+    // The path is given once, above its hits.
+    expect(answer.text.split('\n')[1]).toBe('one.ts');
+    expect(answer.text.match(/^ {2}\d+ {2}one/gm)).toHaveLength(12);
     expect(answer.text).not.toContain('more;');
     await ws.close();
   });
