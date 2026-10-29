@@ -30,6 +30,8 @@ const kindWeight: Record<SymbolKind, number> = {
   const: 0.75,
   field: 0.7,
   namespace: 0.75,
+  // Docs rank after the code they describe.
+  section: 0.5,
 };
 
 /** Lower case, letters and digits only: `token store` and `TokenStore` meet. */

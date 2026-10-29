@@ -6,6 +6,7 @@ import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
+import { projectFile, readOther, refsToFile } from './other-files.ts';
 import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
@@ -111,8 +112,8 @@ const bounds: Record<string, [number, number]> = {
 export const listedTools = {
   find: { description: 'Find symbols by name or part of one.', args: ['query', 'kind', 'path'] },
   grep: { description: 'Regex search; each hit names its enclosing symbol.', args: ['pattern', 'literal', 'path', 'glob'] },
-  read: { description: "A symbol's source by id or name, or the symbols of a file or folder by path.", args: ['target'] },
-  refs: { description: 'Every reference to a symbol, resolved by the compiler.', args: ['target'] },
+  read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading).", args: ['target'] },
+  refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named.', args: ['target'] },
   calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
   impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
 } as const;
@@ -144,6 +145,9 @@ export async function runTool(
   if (name === 'read' && sourceExtensions.has(extname(file))) await ws.indexNow([file]);
   else if (name !== 'grep') await ws.ready;
   await ws.fresh();
+  // A name no indexed file declares may be in generated code that git ignores.
+  const asked = name === 'find' ? (args as { query?: unknown }).query : target;
+  if (name !== 'grep' && typeof asked === 'string' && /^[A-Za-z_$][\w$]*$/.test(asked)) await ws.indexIgnored(asked);
   const raw = { ...(args as Record<string, unknown>) };
   for (const [key, [min, max]] of Object.entries(bounds)) {
     if (typeof raw[key] === 'number') raw[key] = Math.min(Math.max(Math.round(raw[key]), min), max);
@@ -164,10 +168,16 @@ export async function runTool(
       const path = target.replace(/^\.\//, '').replace(/\/$/, '');
       const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
       if (isPath) return readPath(ws, path, options.budget);
+      // A file CSyk does not index: a config, data, a template or an image.
+      const other = target.includes('#') ? undefined : projectFile(ws, path);
+      if (other) return readOther(ws, other, options.budget);
       return read(ws, target, given(options), session);
     }
     case 'refs': {
       const { target, ...options } = z.object(toolSchemas.refs.input).parse(args);
+      // A file (an image, a doc, a config): the places that name it.
+      const file = target.includes('#') ? undefined : projectFile(ws, target);
+      if (file) return refsToFile(ws, file, options.budget);
       return refs(ws, target, given(options));
     }
     case 'calls': {

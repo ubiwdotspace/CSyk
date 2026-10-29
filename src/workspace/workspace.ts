@@ -4,7 +4,8 @@ import { watch, type FSWatcher } from 'node:fs';
 import { homedir } from 'node:os';
 import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
-import { sourceExtensions } from '../index/parse.ts';
+import { rgPath } from '@vscode/ripgrep';
+import { codeExtensions, sourceExtensions } from '../index/parse.ts';
 import { SymbolIndex } from '../index/symbol-index.ts';
 import { LspService, serverFor, servers } from '../precision/lsp-service.ts';
 
@@ -18,6 +19,8 @@ const idleMs = 10 * 60 * 1000;
 
 // Folders whose changes never touch the project's own sources.
 const ignoredDirs = /(^|\/)(node_modules|\.git|dist|build|out|coverage|\.next|\.dart_tool)\//;
+// Folders of dependencies and builds, left out when searching what git ignores.
+const dependencyDirs = ['node_modules', '.git', 'dist', 'build', 'out', 'coverage', '.next', '.dart_tool', 'vendor', 'target', '.venv', 'venv', '__pycache__', 'Pods', '.gradle'];
 
 /** Where the index of [root] is saved between runs. */
 export function snapshotPath(root: string): string {
@@ -44,6 +47,8 @@ export class Workspace {
   private readonly pending = new Set<string>();
   private readonly snapshot: string | undefined;
   private watcher: FSWatcher | undefined;
+  // Names already looked for in what git ignores: each search reads the whole tree.
+  private readonly searchedIgnored = new Set<string>();
   private timer: NodeJS.Timeout | undefined;
   // One flush at a time, so a tool never sees half of one.
   private flushing: Promise<void> = Promise.resolve();
@@ -89,6 +94,29 @@ export class Workspace {
     if (this.complete) return;
     const missing = files.filter((f) => !this.index.has(f) && sourceExtensions.has(extname(f)) && !f.endsWith('.d.ts'));
     await Promise.all(missing.map((file) => this.index.update(file)));
+  }
+
+  /**
+   * Indexes the code files git ignores that mention [name], when no indexed
+   * file declares it: generated code the project uses, such as Flutter's
+   * translations or protobuf stubs.
+   */
+  async indexIgnored(name: string): Promise<void> {
+    if (this.index.named(name).length > 0 || this.searchedIgnored.has(name)) return;
+    this.searchedIgnored.add(name);
+    const globs = [...[...codeExtensions].map((ext) => `*${ext}`), ...dependencyDirs.map((dir) => `!**/${dir}/**`)];
+    let stdout = '';
+    try {
+      ({ stdout } = await run(rgPath, ['--no-ignore', '--files-with-matches', '-w', '-F', ...globs.flatMap((g) => ['-g', g]), '-e', name, '.'], {
+        cwd: this.root,
+        maxBuffer: 16 * 1024 * 1024,
+      }));
+    } catch (error) {
+      // Exit code 1 is ripgrep's "no match".
+      if ((error as { code?: unknown }).code !== 1) throw error;
+    }
+    const files = stdout.split('\n').map((f) => f.replace(/^\.\//, '')).filter((f) => f && !this.index.has(f) && !f.endsWith('.d.ts'));
+    await Promise.all(files.slice(0, 20).map((file) => this.index.update(file)));
   }
 
   /** The language server for [file], or undefined when none is installed. */

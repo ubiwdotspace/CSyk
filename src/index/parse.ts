@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Language, Parser, type Node, type Tree } from 'web-tree-sitter';
 import { extractDart } from './extract/dart.ts';
 import { extractGo } from './extract/go.ts';
+import { extractMarkdown } from './extract/markdown.ts';
 import { extractPython } from './extract/python.ts';
 import { extractTypeScript } from './extract/typescript.ts';
 import { SymbolSink } from './sink.ts';
@@ -48,8 +49,11 @@ const dialects: Record<string, Dialect> = {
   '.dart': dart,
 };
 
-/** File extensions CSyk indexes. */
-export const sourceExtensions: ReadonlySet<string> = new Set(Object.keys(dialects));
+/** File extensions of code CSyk parses. */
+export const codeExtensions: ReadonlySet<string> = new Set(Object.keys(dialects));
+
+/** File extensions CSyk indexes: code, and Markdown for its sections. */
+export const sourceExtensions: ReadonlySet<string> = new Set([...codeExtensions, '.md']);
 
 /** The language of [file], when CSyk reads it. */
 export function langOf(file: string): Lang | undefined {
@@ -81,6 +85,7 @@ export async function parseFile(file: string, text: string): Promise<Tree | unde
 
 /** The declarations of [file]; see each language's extractor for which. */
 export async function extractSymbols(file: string, text: string): Promise<CodeSymbol[]> {
+  if (extname(file) === '.md') return extractMarkdown(file, text);
   const dialect = dialects[extname(file)];
   const tree = dialect ? await parseFile(file, text) : undefined;
   if (!dialect || !tree) return [];
