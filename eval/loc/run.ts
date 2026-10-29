@@ -194,9 +194,10 @@ async function datasetRows(dataset: string, split: string): Promise<Instance[]> 
   return rows;
 }
 
-// The instance's repository at its base commit, fetched without history into eval/corpora/loc/.
+// The instance's repository at its base commit, fetched without history into eval/corpora/loc/,
+// or into CSYK_LOC_DIR: two setups run side by side need a checkout each.
 async function checkout(instance: Instance): Promise<string> {
-  const dir = join(root, 'eval/corpora/loc', instance.repo.replace('/', '__'));
+  const dir = join(process.env.CSYK_LOC_DIR ?? join(root, 'eval/corpora/loc'), instance.repo.replace('/', '__'));
   const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: ['ignore', 'pipe', 'inherit'] });
   if (!existsSync(join(dir, '.git'))) {
     await mkdir(dir, { recursive: true });
