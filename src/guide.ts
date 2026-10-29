@@ -15,8 +15,9 @@ export const note = `## Code search (CSyk)
 - A name, or part of one → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`.
 - One symbol → \`read <id>\`; a large file's symbols → \`read <path>\`. Read a file whole when you
   need most of it.
-- Make independent calls in parallel. After editing, \`impact\` lists the changed symbols, their
-  callers and the tests to run.`;
+- Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
+  or path it mentions, called in parallel. Each extra turn re-reads your whole context.
+- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
 
 /** The skill, as .claude/skills/csyk/SKILL.md. */
 export const skill = `---
