@@ -214,10 +214,11 @@ async function checkout(instance: Instance): Promise<string> {
     git('init', '-q');
     git('remote', 'add', 'origin', `https://github.com/${instance.repo}.git`);
   }
-  // A large repository's fetch can drop on a slow network; it is tried three times.
+  // A large repository's fetch can drop or stall on a slow network: one that moves under 1 KB/s
+  // for a minute gives up, and it is tried three times.
   for (let attempt = 1; ; attempt++) {
     try {
-      git('fetch', '-q', '--depth', '1', 'origin', instance.base_commit);
+      git('-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=60', 'fetch', '-q', '--depth', '1', 'origin', instance.base_commit);
       break;
     } catch (error) {
       if (attempt === 3) throw error;
