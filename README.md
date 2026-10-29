@@ -142,8 +142,8 @@ Serena and Graphify take longer.
 
 ## Tools
 
-Six tools, 539 tokens of descriptions in all. Every answer stays under 2,000 tokens and says what
-it left out.
+Six tools, 539 tokens of descriptions in all. Every answer stays under 2,000 tokens (twice that
+for several symbols read in one call) and says what it left out.
 
 | Tool | Question |
 |---|---|
