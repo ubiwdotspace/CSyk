@@ -74,19 +74,6 @@ describe('Workspace', () => {
     await ws.close();
   });
 
-  it('lists many hits without their lines, and sums many files up in a few hundred tokens', async () => {
-    const functions = Array.from({ length: 20 }, (_, i) => `export function f${i}() {\n  return 'needle ${i}';\n}`);
-    const many = Object.fromEntries(Array.from({ length: 200 }, (_, i) => [`m${i}.ts`, `export const v${i} = 'pin ${i}';`]));
-    const ws = await Workspace.open(folder({ 'one.ts': functions.join('\n'), ...many }));
-    const inOne = (await runTool(ws, 'grep', { pattern: 'needle' }, new Session())).text;
-    expect(inOne).toContain('one.ts:2  f0\n');
-    expect(inOne).not.toContain("return 'needle 0'");
-    const spread = (await runTool(ws, 'grep', { pattern: 'pin' }, new Session())).text;
-    expect(spread).toMatch(/^200 hits in 200 files/);
-    expect(estimateTokens(spread)).toBeLessThanOrEqual(700);
-    await ws.close();
-  });
-
   // File system events can lag on a busy machine; the test retries rather than wait longer.
   it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });

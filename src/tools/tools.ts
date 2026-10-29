@@ -280,12 +280,6 @@ export async function def(
 const overviewFiles = 8;
 // The budget of a brief answer: a few lines, no source.
 const briefBudget = 400;
-// A summary per file names the files with the most hits; the long tail
-// past them is noise the agent narrows away from anyway.
-const overviewBudget = 700;
-// Up to this many hits are listed with their lines' text, and in a few files
-// with the lines around them.
-const textedHits = 12;
 
 export async function grep(
   ws: Workspace,
@@ -372,23 +366,20 @@ export async function grep(
         const names = homes(fileHits);
         return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
       }),
-      { budget: Math.min(listBudget, overviewBudget), narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
+      { budget: listBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
     );
     return {
       text: fitted.text,
       locations: files.slice(0, fitted.shown).map(([file, fileHits]) => ({ file, line: fileHits[0]?.line ?? 1 })),
     };
   }
-  // Many hits are listed without their lines' text: the agent reads around
-  // the few it picks, and the text of the rest is re-read on every turn.
-  const terse = (h: Hit) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`;
   const fitted = fit(
     `${plural(hits.length, 'hit')} in ${plural(perPlace.size, 'place')} · text`,
-    shown.map((h) => (shown.length > textedHits ? terse(h) : `${terse(h)}  ${h.code}`)),
+    shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.code}`),
     {
       budget: listBudget,
       narrow: 'pass path or a longer pattern',
-      compact: shown.map(terse),
+      compact: shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`),
       total: hits.length,
     },
   );
@@ -399,7 +390,7 @@ export async function grep(
   const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
   const room = session.long || options.brief ? 0 : sourceBudget;
   let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
-  if (body.length === 0 && room > 0 && listed.length <= textedHits && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
+  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
   // With the source alongside, the hit lines need not repeat the code.
   const list = fitted.text.split('\n');
   if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
