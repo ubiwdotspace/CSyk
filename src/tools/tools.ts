@@ -1,5 +1,6 @@
 // size-ok: the six tools share their formatting, ranking and budget code.
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -107,12 +108,40 @@ export function outline(ws: Workspace, path: string, options: { budget?: number 
  * this session already saw, unchanged, comes back as a pointer to the call
  * that showed it.
  */
+/** A file or folder: a short file whole, since its outline would only lead to reading it; else its symbols. */
+export async function readPath(ws: Workspace, path: string, budget = defaultBudget): Promise<ToolResult> {
+  if (ws.index.has(path)) {
+    const text = await readFile(join(ws.root, path), 'utf8');
+    const count = text.split('\n').length;
+    if (count <= 200 && estimateTokens(text) <= budget) return { text: `${path} · lines 1-${count}\n${text}`, locations: [{ file: path, line: 1 }] };
+  }
+  return outline(ws, path, { budget });
+}
+
+/**
+ * [file]'s lines [start] to [end], as grep and stack traces print them; one
+ * line alone is the small symbol around it, or the lines just after it.
+ */
+async function readLines(ws: Workspace, file: string, start: number, end: number | undefined, budget = defaultBudget, session: Session): Promise<ToolResult> {
+  const home = end === undefined ? ws.index.containing(file, start) : undefined;
+  if (home && home.range[1] - home.range[0] < 120) return read(ws, home.id, { budget }, session);
+  const all = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+  const from = Math.max(1, end === undefined ? start - 10 : start);
+  const to = Math.min(all.length, end ?? start + 40, from + 199);
+  const header = `${file} · lines ${from}-${to}`;
+  let kept = to - from + 1;
+  while (kept > 0 && estimateTokens([header, ...all.slice(from - 1, from - 1 + kept)].join('\n')) > budget) kept = Math.floor(kept * 0.8);
+  return { text: [`${file} · lines ${from}-${from + kept - 1}`, ...all.slice(from - 1, from - 1 + kept)].join('\n'), locations: [{ file, line: from }] };
+}
+
 export async function read(
   ws: Workspace,
   target: string,
   options: { mode?: 'body' | 'signature'; context?: number; budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
+  const at = /^(.+?):(\d+)(?:-(\d+))?$/.exec(target);
+  if (at?.[1] && ws.index.has(at[1])) return readLines(ws, at[1], Number(at[2]), at[3] ? Number(at[3]) : undefined, options.budget, session);
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
   const location = [{ file: symbol.file, line: symbol.line }];
@@ -236,6 +265,8 @@ export async function grep(
   };
   let stdout = '';
   try {
+    // A missing path is searched as no match, not as ripgrep's error.
+    if (options.path && !existsSync(join(ws.root, options.path))) throw Object.assign(new Error(), { code: 1 });
     stdout = await search(options.literal === true);
   } catch (error) {
     const code = (error as { code?: unknown }).code;
@@ -255,7 +286,12 @@ export async function grep(
     const rank = ws.index.has(file) ? (isTestFile(file) ? 1 : 0) : 2;
     hits.push({ file, line, code: match[3].trim().slice(0, 120), ...(home ? { home } : {}), rank });
   }
-  if (hits.length === 0) return { text: 'no match · text', locations: [] };
+  if (hits.length === 0) {
+    // A guessed folder that misses costs a turn: search everywhere instead.
+    if (!options.path || options.path === '.') return { text: 'no match · text', locations: [] };
+    const wider = await grep(ws, pattern, { ...options, path: undefined }, session);
+    return { ...wider, text: `no match in ${options.path}; everywhere: ${wider.text}` };
+  }
   hits.sort((a, b) => a.rank - b.rank);
   // A few files' hits are all worth listing; the budget still caps them.
   const limit = Math.max(options.limit ?? 30, 0);
@@ -409,10 +445,25 @@ const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widg
  * the best ranked and names the others.
  */
 export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; note: string } {
-  if (target.includes('#')) {
-    const symbol = ws.index.get(target);
-    return symbol ? { symbol, note: '' } : { note: `no symbol with id ${target}` };
+  // Agents also write file:name or file::name for file#name.
+  const colon = /^(.+?\.\w+)::?([\w.$]+)$/.exec(target);
+  const id = !target.includes('#') && colon?.[1] && ws.index.has(colon[1]) ? `${colon[1]}#${colon[2]}` : target;
+  if (id.includes('#')) {
+    const symbol = ws.index.get(id);
+    if (symbol) return { symbol, note: '' };
+    // A method named without its class: the one symbol of that name in the file.
+    const [file = '', name = ''] = id.split('#');
+    const inFile = ws.index.symbolsIn(file).filter((s) => s.name === name.split('.').pop());
+    return inFile.length === 1 ? { symbol: inFile[0], note: '' } : { note: `no symbol with id ${id}` };
   }
+  if (target.includes('/')) {
+    const base = target.split('/').filter(Boolean).pop() ?? '';
+    const similar = ws.index.files.filter((f) => f.endsWith(`/${base}`) || f.includes(`/${base}/`)).slice(0, 5);
+    return { note: `no file or symbol ${target}${similar.length ? `; similar paths: ${similar.join(', ')}` : ''}` };
+  }
+  // Class.method without its file.
+  const qualified = target.includes('.') ? ws.index.named(target.split('.').pop() ?? '').filter((s) => s.id.endsWith(`#${target}`)) : [];
+  if (qualified.length) return { symbol: qualified[0], note: qualified.length > 1 ? `also: ${qualified.slice(1).map((s) => s.id).join(', ')}` : '' };
   const named = ws.index.named(target);
   if (named.length === 0) {
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);

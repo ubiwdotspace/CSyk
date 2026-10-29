@@ -4,7 +4,7 @@ import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
-import { def, find, grep, outline, read, refs, type ToolResult } from './tools.ts';
+import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
 const budget = z.number().optional();
@@ -156,7 +156,7 @@ export async function runTool(
       // A path reads as the symbols of that file or folder.
       const path = target.replace(/^\.\//, '').replace(/\/$/, '');
       const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
-      if (isPath) return outline(ws, path, given({ budget: options.budget }));
+      if (isPath) return readPath(ws, path, options.budget);
       return read(ws, target, given(options), session);
     }
     case 'refs': {
