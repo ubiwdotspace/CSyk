@@ -76,6 +76,16 @@ describe('Workspace', () => {
     await ws.close();
   });
 
+  it('reads several targets, comma-separated, in one answer', async () => {
+    const ws = await Workspace.open(folder({ 'a.ts': 'export function one() {\n  return 1;\n}\nexport function two() {\n  return 2;\n}', 'b.json': '{ "x": 1 }' }));
+    const answer = await runTool(ws, 'read', { target: 'a.ts#one, two , b.json' }, new Session());
+    expect(answer.text).toContain('a.ts#one · lines 1-3\nexport function one() {');
+    expect(answer.text).toContain('a.ts#two · lines 4-6\nexport function two() {');
+    expect(answer.text).toContain('b.json · lines 1-1\n{ "x": 1 }');
+    expect(answer.locations).toHaveLength(3);
+    await ws.close();
+  });
+
   // File system events can lag on a busy machine; the test retries rather than wait longer.
   it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });
