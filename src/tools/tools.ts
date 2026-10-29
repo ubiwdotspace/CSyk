@@ -42,7 +42,7 @@ export async function find(
     compact: hits.map((s) => `${s.id}  ${s.kind} ${s.line}`),
   });
   // The one symbol of exactly this name, when small, comes with its source.
-  const only = hits[0]?.name === query && ws.index.named(query).length === 1 ? hits[0] : undefined;
+  const only = hits[0]?.name === query && ws.index.named(query).length === 1 && !session.long ? hits[0] : undefined;
   const body = only ? await bodies(ws, [only], session, 40, (options.budget ?? defaultBudget) - estimateTokens(fitted.text)) : [];
   const hint = body.length ? [] : session.hint('find', 'hint: read <id> for the body, refs <id> for its uses');
   return {
@@ -280,6 +280,8 @@ export async function grep(
   options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
+  // A long session gets half the usual list.
+  const listBudget = options.budget ?? (session.long ? defaultBudget / 2 : defaultBudget);
   // --with-filename: a search of one file names it too, as every hit needs.
   const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
   if (options.glob) args.push('--glob', options.glob);
@@ -349,7 +351,7 @@ export async function grep(
         const names = homes(fileHits);
         return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
       }),
-      { budget: options.budget ?? defaultBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
+      { budget: listBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
     );
     return {
       text: fitted.text,
@@ -360,7 +362,7 @@ export async function grep(
     `${plural(hits.length, 'hit')} in ${plural(perPlace.size, 'place')} · text`,
     shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.code}`),
     {
-      budget: options.budget ?? defaultBudget,
+      budget: listBudget,
       narrow: 'pass path or a longer pattern',
       compact: shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`),
       total: hits.length,
@@ -371,9 +373,9 @@ export async function grep(
   // more often than not, and that turn re-reads the whole context.
   const listed = shown.slice(0, fitted.shown);
   const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
-  const room = sourceBudget;
+  const room = session.long ? 0 : sourceBudget;
   let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
-  if (body.length === 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
+  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
   // With the source alongside, the hit lines need not repeat the code.
   const list = fitted.text.split('\n');
   if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));

@@ -36,7 +36,7 @@ describe('Workspace', () => {
     await ws.close();
   });
 
-  it('greps with the lines around hits in a large function', async () => {
+  it('greps with the lines around hits in a large function, unless the session is long', async () => {
     const body = Array.from({ length: 150 }, (_, i) => (i === 99 ? '  const needle = 1;' : `  const x${i} = ${i};`));
     const root = folder({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
     const ws = await Workspace.open(root);
@@ -44,6 +44,9 @@ describe('Workspace', () => {
     expect(answer.text).toContain('big.ts:101  big');
     expect(answer.text).toContain('big.ts · lines 96-111\n  const x94 = 94;');
     expect(answer.text.split('const needle = 1;')).toHaveLength(2);
+    const long = new Session();
+    long.spend(7000);
+    expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text\nbig.ts:101  big  const needle = 1;');
     await ws.close();
   });
 

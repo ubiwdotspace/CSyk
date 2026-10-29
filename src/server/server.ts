@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { estimateTokens } from '../token/budget.ts';
 import { resetMarker, Session } from '../token/session.ts';
 import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
 import type { ToolResult } from '../tools/tools.ts';
@@ -21,6 +22,7 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
     session.nextCall();
     try {
       const { text } = await run(workspace);
+      session.spend(estimateTokens(text));
       return { content: [{ type: 'text' as const, text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
