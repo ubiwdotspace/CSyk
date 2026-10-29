@@ -32,6 +32,8 @@ export type ClaudeRun = {
   byTool: Record<string, number>;
   /** Tool calls that came back as errors, a hook's denial included: each costs a turn. */
   errors: number;
+  /** The largest context one request sent: the prompt plus everything gathered by then. */
+  peakContext: number;
   /** The parts of [tokens]: input, cache writes, cache reads, output. */
   usage: Record<string, number>;
   costUsd: number;
@@ -161,11 +163,15 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
   let toolTokens = 0;
   const byTool: Record<string, number> = {};
   let errors = 0;
+  let peakContext = 0;
   let result: { result?: string; total_cost_usd?: number; num_turns?: number; usage?: Record<string, number> } = {};
   for (const line of lines) {
     const event = JSON.parse(line) as { type?: string; message?: { content?: ToolBlock[] } };
     const blocks = Array.isArray(event.message?.content) ? event.message.content : [];
     if (event.type === 'assistant') {
+      const used = (event.message as { usage?: Record<string, number> } | undefined)?.usage ?? {};
+      const context = (used.input_tokens ?? 0) + (used.cache_read_input_tokens ?? 0) + (used.cache_creation_input_tokens ?? 0);
+      peakContext = Math.max(peakContext, context);
       for (const block of blocks.filter((c) => c.type === 'tool_use')) {
         calls++;
         byTool[block.name ?? '?'] = (byTool[block.name ?? '?'] ?? 0) + 1;
@@ -191,6 +197,7 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
     toolTokens,
     byTool,
     errors,
+    peakContext,
     usage,
     costUsd: result.total_cost_usd ?? 0,
     calls,
