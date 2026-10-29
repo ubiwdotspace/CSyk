@@ -2,6 +2,9 @@ node_modules/
 dist/
 .DS_Store
 
+# The maintainer's own plan stays local.
+docs/PLAN.md
+
 # Evaluation: results and checked-out corpora are generated; private cases
 # and local corpus paths (employer code) never leave the machine.
 eval/results/
