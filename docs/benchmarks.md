@@ -260,6 +260,11 @@ benchmark, the measured setup and Claude Code alone side by side, then prints bo
 tier is the number of questions of each kind per repository and of issues per language; tiers
 nest, so going up a tier only runs what is new. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
+Compare only sessions run side by side. Claude Code's own context, which is most of the tokens of
+every session, changes with its version and with the plugins and skills on the machine: on one
+laptop, a change of setup doubled it for every setup alike. `npm run bench` therefore runs Claude
+Code alone again under each `--run` name.
+
 Agent sessions:
 
 ```sh
