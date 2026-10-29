@@ -159,8 +159,8 @@ export async function runTool(
 ): Promise<ToolResult> {
   // Until the index is full, grep and a read of a file index only the files they touch.
   const target = (args as { target?: unknown }).target;
-  const file = typeof target === 'string' ? target.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '') : '';
-  if (name === 'read' && sourceExtensions.has(extname(file))) await ws.indexNow([file]);
+  const files = typeof target === 'string' ? target.split(/\s*,\s*/).map((t) => t.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '')) : [];
+  if (name === 'read' && files.length > 0 && files.every((f) => sourceExtensions.has(extname(f)))) await ws.indexNow(files);
   else if (name !== 'grep') await ws.ready;
   await ws.fresh();
   // A name no indexed file declares may be in generated code that git ignores.
