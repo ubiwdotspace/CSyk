@@ -17,10 +17,11 @@ import type { Adapter, Case, Corpus } from './harness/types.ts';
 
 const adapters: Record<string, () => Adapter> = { b0: () => b0Ripgrep, csyk, serena, graphify };
 
-const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>] [--category <A-G>[,<A-G>…]]
+const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>] [--category <A-G>[,<A-G>…]] [--limit <n>]
 
 Runs the cases in eval/cases/ (and eval/cases/private/) through an adapter,
-prints one table per corpus and writes every score to eval/results/.`;
+prints one table per corpus and writes every score to eval/results/. --limit
+keeps the first n cases of each kind per corpus.`;
 
 async function main(): Promise<void> {
   const { values } = parseArgs({
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
       adapter: { type: 'string', default: 'b0' },
       corpus: { type: 'string' },
       category: { type: 'string' },
+      limit: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -64,7 +66,8 @@ async function main(): Promise<void> {
         throw new Error(`Corpus ${corpusName} is not in eval/corpora.yaml or corpora.local.yaml`);
       }
       assertPinned(corpus);
-      const cases = files.filter((f) => f.corpus === corpusName).flatMap((f) => f.cases);
+      // Cases are written in random order, so the first n are a fair sample.
+      const cases = files.filter((f) => f.corpus === corpusName).flatMap((f) => f.cases.slice(0, Number(values.limit ?? Infinity)));
       const { scores, skipped } = await runCases(adapter, corpus, cases);
       results[corpusName] = scores;
       tables.push(renderTable(`${adapter.name} · ${corpusName}`, summarize(scores), skipped));

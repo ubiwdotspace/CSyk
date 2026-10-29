@@ -25,13 +25,19 @@ TypeScript and Python language servers come with the dependencies. To work on Go
 ## Changing answers
 
 If a change affects what a tool answers (ranking, what an answer shows, how long it is, or a tool
-description), run the evaluation on the corpora it touches before and after the change, and put
-both numbers in the pull request:
+description), measure it before and after, and put both numbers in the pull request. `npm run
+bench` measures at a chosen size, on only the tools a change touches:
 
 ```sh
 npm run corpora                                   # once: fetch the pinned public repositories
-npm run eval -- --adapter csyk --corpus <name>
+npm run bench -- --tier 5 --only grep --run my-change
+npm run bench -- --tier 10 --only grep --run my-change   # runs only the 5 new issues
 ```
+
+Tiers nest, so going up a tier reuses what ran. While optimizing, go 5, 10, 20, 30 and stop as soon
+as the change is clearly worse; a release is measured at 50. The agent sessions are billed to your
+Claude account (about $0.05 an issue); `--skip agents` runs only the single questions, which are
+free.
 
 [docs/benchmarks.md](docs/benchmarks.md#reproduce) lists the corpora and the kinds of
 question. Tool descriptions are re-read by the agent on every turn, so a longer description needs
