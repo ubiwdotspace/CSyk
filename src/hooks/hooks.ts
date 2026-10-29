@@ -81,7 +81,7 @@ export function preRead(input: HookInput, roots: readonly string[]): Denial | un
   const file = relative(root, absolute);
   return deny(
     `Reading a range with offset+limit is allowed and needs no search. ${file} has ${lines} lines: ` +
-      `CSyk outline "${file}" lists its symbols with line ranges, and read <id> returns just one.`,
+      `CSyk read "${file}" lists its symbols with line ranges, and read <id> returns just one.`,
   );
 }
 
