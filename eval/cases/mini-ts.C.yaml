@@ -1,0 +1,26 @@
+# C: every reference to a symbol, as the compiler sees them: imports and
+# uses count; the declaration, comments and strings do not.
+cases:
+  - id: C01
+    query: calculateTotal
+    expect:
+      - { file: src/cart/checkout.ts, lines: [1, 1] }
+      - { file: src/cart/checkout.ts, lines: [10, 10] }
+      - { file: test/cart.test.ts, lines: [1, 1] }
+      - { file: test/cart.test.ts, lines: [5, 5] }
+  - id: C02
+    query: refreshAccessToken
+    expect:
+      - { file: src/api/client.ts, lines: [1, 1] }
+      - { file: src/api/client.ts, lines: [11, 11] }
+  - id: C03
+    query: TokenStore
+    expect:
+      - { file: src/api/client.ts, lines: [1, 1] }
+      - { file: src/api/client.ts, lines: [3, 3] }
+      - { file: src/auth/token-store.ts, lines: [26, 26] }
+  - id: C04
+    query: calculateTax
+    expect:
+      - { file: src/cart/checkout.ts, lines: [1, 1] }
+      - { file: src/cart/checkout.ts, lines: [11, 11] }

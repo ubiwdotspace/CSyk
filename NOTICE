@@ -4,3 +4,8 @@ Copyright 2026 The CSyk Authors
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
 Third-party components and their licences are listed here as they are added.
+
+Evaluation data
+- eval/cases/excalidraw.*.yaml quote identifiers, file paths and messages from
+  Excalidraw (https://github.com/excalidraw/excalidraw), Copyright (c) 2020
+  Excalidraw, MIT License. The corpus itself is fetched, not redistributed.
