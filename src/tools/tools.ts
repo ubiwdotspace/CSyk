@@ -278,16 +278,19 @@ export async function def(
  */
 // Hits spread over more files than this are summed up per file, not listed.
 const overviewFiles = 8;
+// The budget of a brief answer: a few lines, no source.
+const briefBudget = 400;
 
 export async function grep(
   ws: Workspace,
   pattern: string,
-  options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number } = {},
+  options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number; brief?: boolean } = {},
   session = new Session(),
 ): Promise<ToolResult> {
   // A long session gets a short list: on the public benchmarks, its context
-  // grew a thousand tokens a turn faster than with the built-in Grep.
-  const listBudget = options.budget ?? (session.long ? 600 : defaultBudget);
+  // grew a thousand tokens a turn faster than with the built-in Grep. A brief
+  // answer (the wider search after a miss) is shorter still.
+  const listBudget = options.brief ? briefBudget : (options.budget ?? (session.long ? 600 : defaultBudget));
   // --with-filename: a search of one file names it too, as every hit needs.
   const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
   if (options.glob) args.push('--glob', options.glob);
@@ -324,9 +327,12 @@ export async function grep(
     hits.push({ file, line, code: match[3].trim().slice(0, 120), ...(home ? { home } : {}), rank });
   }
   if (hits.length === 0) {
-    // A guessed folder that misses costs a turn: search everywhere instead.
+    // A guessed folder that misses costs a turn: search everywhere instead,
+    // briefly. The agent aimed elsewhere, and a full list of the other hits
+    // (over a thousand tokens on the public benchmarks) would be re-read on
+    // every later turn.
     if (!options.path || options.path === '.') return { text: 'no match · text', locations: [] };
-    const wider = await grep(ws, pattern, { ...options, path: undefined }, session);
+    const wider = await grep(ws, pattern, { ...options, path: undefined, brief: true }, session);
     return { ...wider, text: `no match in ${options.path}; everywhere: ${wider.text}` };
   }
   hits.sort((a, b) => a.rank - b.rank);
@@ -346,9 +352,10 @@ export async function grep(
   // first, code before tests, each with the symbols its hits fall in, so one
   // call shows where the text lives instead of the first lines in path order.
   // Hits in a few files are listed line by line, which needs no second call.
+  // A brief answer sums up as soon as the hits span a few files.
   const byFile = new Map<string, Hit[]>();
   for (const hit of hits) byFile.set(hit.file, [...(byFile.get(hit.file) ?? []), hit]);
-  if (perPlace.size > limit && byFile.size > overviewFiles) {
+  if (options.brief ? byFile.size > 3 : perPlace.size > limit && byFile.size > overviewFiles) {
     const files = [...byFile.entries()].sort(
       ([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b),
     );
@@ -381,7 +388,7 @@ export async function grep(
   // more often than not, and that turn re-reads the whole context.
   const listed = shown.slice(0, fitted.shown);
   const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
-  const room = session.long ? 0 : sourceBudget;
+  const room = session.long || options.brief ? 0 : sourceBudget;
   let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
   if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
   // With the source alongside, the hit lines need not repeat the code.
