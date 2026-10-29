@@ -2,6 +2,7 @@ import { extname } from 'node:path';
 import { z } from 'zod';
 import { sourceExtensions } from '../index/parse.ts';
 import { symbolKinds, type SymbolKind } from '../index/symbols.ts';
+import { defaultBudget } from '../token/budget.ts';
 import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
@@ -112,7 +113,7 @@ const bounds: Record<string, [number, number]> = {
 export const listedTools = {
   find: { description: 'Find symbols by name or part of one.', args: ['query', 'kind', 'path'] },
   grep: { description: 'Regex search; each hit names its enclosing symbol.', args: ['pattern', 'literal', 'path', 'glob'] },
-  read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading).", args: ['target'] },
+  read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading); several, comma-separated.", args: ['target'] },
   refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named.', args: ['target'] },
   calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
   impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
@@ -128,6 +129,23 @@ export function listedSchema(name: keyof typeof listedTools): { description: str
 export type ToolName = keyof typeof toolSchemas;
 export const toolNames = Object.keys(toolSchemas) as ToolName[];
 
+// One target of `read`: a path reads as the symbols of that file or folder, a
+// file CSyk does not index (a config, data, an image) as its text or kind,
+// anything else as a symbol.
+function readOne(
+  ws: Workspace,
+  target: string,
+  options: { mode?: 'body' | 'signature'; context?: number; budget?: number },
+  session: Session,
+): Promise<ToolResult> {
+  const path = target.replace(/^\.\//, '').replace(/\/$/, '');
+  const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
+  if (isPath) return readPath(ws, path, options.budget);
+  const other = target.includes('#') ? undefined : projectFile(ws, path);
+  if (other) return readOther(ws, other, options.budget);
+  return read(ws, target, options, session);
+}
+
 // Drops arguments the caller left out, so tools see their own defaults.
 const given = <T extends object>(args: T) =>
   Object.fromEntries(Object.entries(args).filter(([, v]) => v !== undefined)) as T;
@@ -141,8 +159,8 @@ export async function runTool(
 ): Promise<ToolResult> {
   // Until the index is full, grep and a read of a file index only the files they touch.
   const target = (args as { target?: unknown }).target;
-  const file = typeof target === 'string' ? target.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '') : '';
-  if (name === 'read' && sourceExtensions.has(extname(file))) await ws.indexNow([file]);
+  const files = typeof target === 'string' ? target.split(/\s*,\s*/).map((t) => t.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '')) : [];
+  if (name === 'read' && files.length > 0 && files.every((f) => sourceExtensions.has(extname(f)))) await ws.indexNow(files);
   else if (name !== 'grep') await ws.ready;
   await ws.fresh();
   // A name no indexed file declares may be in generated code that git ignores.
@@ -164,14 +182,15 @@ export async function runTool(
     }
     case 'read': {
       const { target, ...options } = z.object(toolSchemas.read.input).parse(args);
-      // A path reads as the symbols of that file or folder.
-      const path = target.replace(/^\.\//, '').replace(/\/$/, '');
-      const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
-      if (isPath) return readPath(ws, path, options.budget);
-      // A file CSyk does not index: a config, data, a template or an image.
-      const other = target.includes('#') ? undefined : projectFile(ws, path);
-      if (other) return readOther(ws, other, options.budget);
-      return read(ws, target, given(options), session);
+      // Several targets, comma-separated, come back in one answer: reading a
+      // class's methods one call at a time cost a turn each, and every turn
+      // re-reads the whole context. They share twice one answer's budget.
+      const targets = target.split(/\s*,\s*/).filter(Boolean);
+      if (targets.length < 2) return readOne(ws, target, given(options), session);
+      const each = Math.max(500, Math.floor((options.budget ?? 2 * defaultBudget) / targets.length));
+      const parts = [];
+      for (const one of targets) parts.push(await readOne(ws, one, { ...given(options), budget: each }, session));
+      return { text: parts.map((p) => p.text).join('\n\n'), locations: parts.flatMap((p) => p.locations) };
     }
     case 'refs': {
       const { target, ...options } = z.object(toolSchemas.refs.input).parse(args);
