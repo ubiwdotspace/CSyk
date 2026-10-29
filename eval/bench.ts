@@ -20,8 +20,8 @@ tier, so going up a tier only runs what is new.
   --only   the tools a change touches (find, grep, read, refs, calls,
            impact): single questions then cover only their kinds
   --setup  the agent setup to measure (default csyk-lean)
-  --run    keeps this version's agent results apart from earlier ones; use a
-           new name for each version measured
+  --run    names this measurement: the setup and Claude Code alone both run
+           fresh under it, side by side; use a new name for each version
   --skip   leave out the single questions or the agent sessions
 
 Agent sessions are billed to your Claude account: about $0.05 an issue.`;
@@ -97,8 +97,11 @@ if (values.skip !== 'agents') {
   const named = values.run ? ['--run', values.run] : [];
   for (const [dataset, language] of benchmarks) {
     const common = ['--dataset', dataset, '--language', language, '--count', String(tier), '--seed', '1'];
+    // Claude Code alone runs again under the same name: its context changes
+    // with Claude Code and with the plugins and skills of the machine, so a
+    // baseline from another day is not comparable.
     await Promise.all([
-      node('eval/loc/run.ts', [...common, '--setup', 'b0'], { CSYK_LOC_DIR: join(root, 'eval/corpora/loc-b0') }),
+      node('eval/loc/run.ts', [...common, '--setup', 'b0', ...named], { CSYK_LOC_DIR: join(root, 'eval/corpora/loc-b0') }),
       node('eval/loc/run.ts', [...common, '--setup', values.setup, ...named], { CSYK_LOC_DIR: join(root, `eval/corpora/loc-${values.setup}`) }),
     ]);
     console.log(`  ${language}: done`);
@@ -112,7 +115,7 @@ if (values.skip !== 'agents') {
   };
   console.log(`| language | issues | tokens, against alone | changed functions named | first file right | peak memory | CPU | cost of the measured setup |\n|---|---|---|---|---|---|---|---|`);
   for (const [dataset, language] of benchmarks) {
-    const [alone, measured] = [await read('b0', dataset, language), await read(values.setup, dataset, language, values.run)];
+    const [alone, measured] = [await read('b0', dataset, language, values.run), await read(values.setup, dataset, language, values.run)];
     if (!alone || !measured) continue;
     const ids = new Set((measured.sample ?? measured.results.map((r) => r.id)).slice(0, tier));
     const pairs = measured.results
