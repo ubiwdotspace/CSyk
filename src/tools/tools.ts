@@ -333,7 +333,9 @@ export async function grep(
     const key = hit.home?.id ?? `${hit.file}:${hit.line}`;
     const count = perPlace.get(key) ?? 0;
     perPlace.set(key, count + 1);
-    if (count < 2 && shown.length < limit) shown.push(hit);
+    // Two hits a place keep one long function from filling a long list;
+    // when every hit fits, all are shown, or the agent would grep again.
+    if ((count < 2 || hits.length <= limit) && shown.length < limit) shown.push(hit);
   }
   // Too many places in many files to list: the files with the most hits
   // first, code before tests, each with the symbols its hits fall in, so one

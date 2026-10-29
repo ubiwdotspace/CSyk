@@ -21,7 +21,7 @@ tools).
 
 | **98.6%** | **240 tokens** | **7% fewer tokens** | **8 ms** |
 |:---:|:---:|:---:|:---:|
-| first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, and faster, in all four languages measured | per answer, median |
+| first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, over 120 issues in four languages, and faster | per answer, median |
 
 <p align="center">
   <b><a href="#install">Install</a> · <a href="#before-and-after">Before and after</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a> · <a href="#how-it-works">How it works</a> · <a href="#contributing">Contributing</a></b>
@@ -111,10 +111,10 @@ plain text search plus reading the file:
 | Tokens the agent reads to answer the same questions | 16,899 | **240 (98.6% fewer)** |
 | Time per answer (median) | 75 ms | **8 ms** |
 
-**Whole agent sessions** on four benchmarks of real GitHub issues: Claude Code with CSyk used
-fewer tokens in every language (10% fewer in JavaScript, 9% in Python, 7% in Go, 1% in
-TypeScript), finished 0.8 to 2.8 seconds sooner per issue, and named more of the functions the fix
-changed in TypeScript, Go and Python. Details in
+**Whole agent sessions** on four benchmarks of real GitHub issues: over all 120 issues, Claude
+Code with CSyk used 7% fewer tokens (11% in JavaScript, 10% in Python, 8% in Go, level in
+TypeScript), finished sooner per issue, and named 3.4 points more of the functions the fix changed.
+Details in
 [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed) and
 [Results on single questions](#results-on-single-questions).
 
@@ -381,40 +381,54 @@ Two setups answer the same issues. **Claude Code alone** has its own `Read`, `Gr
 
 Each benchmark contributes 30 issues drawn at random from the whole dataset (a fixed seed, no
 filter on difficulty). Each setup ran the same 30 issues several times, and the table shows the
-average of those runs: two runs of the same setup can differ by several points, so differences of
-one to three points are within that noise. The model's response time changes over the day, so
-times come from one round where both setups ran at the same moment. Measured on 2026-10-29; the 930
-sessions in the table cost about $50.
+average of those runs: two runs of the same setup can differ by several points. The model's
+response time changes over the day, so times come from the two rounds where both setups ran at the
+same moment. Measured on 2026-10-29; the CSyk runs are its last two versions, which differ only in
+`grep` listing every match when they all fit. The 1,170 sessions in the table cost about $57.
 
 | Benchmark | Language | Setup | Runs | First file right | All changed files in first five | Changed functions named | Median time, run side by side | Tokens per issue, mean | Tokens per issue, median | Issues where CSyk used fewer tokens |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | Claude Code alone | 5 | 94.0% | 45.3% | 55.5% | 14.8 s | 70,394 | 58,530 | |
-| | | with CSyk | 4 | 91.7% | 42.5% | 63.1% | 14.0 s | 69,554 (−1%) | 55,836 (−5%) | 23 of 30 |
-|  | JavaScript | Claude Code alone | 4 | 83.3% | 50.0% | 57.9% | 18.0 s | 82,193 | 75,008 | |
-| | | with CSyk | 3 | 85.6% | 48.9% | 56.6% | 15.2 s | 73,823 (−10%) | 65,445 (−13%) | 21 of 30 |
-| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | Claude Code alone | 5 | 93.3% | 85.3% | 66.7% | 12.3 s | 47,178 | 44,637 | |
-| | | with CSyk | 3 | 92.2% | 85.6% | 68.0% | 10.7 s | 43,011 (−9%) | 35,496 (−20%) | 24 of 30 |
-| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | Claude Code alone | 4 | 90.8% | 60.8% | 63.3% | 13.9 s | 60,691 | 54,742 | |
-| | | with CSyk | 3 | 90.0% | 60.0% | 69.9% | 11.8 s | 56,201 (−7%) | 53,625 (−2%) | 20 of 30 |
+| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | Claude Code alone | 6 | 93.9% | 45.6% | 55.7% | 15.3 s | 69,740 | 57,950 | |
+| | | with CSyk | 5 | 90.7% | 42.0% | 63.5% | 14.1 s | 69,604 (−0%) | 56,977 (−2%) | 22 of 30 |
+|  | JavaScript | Claude Code alone | 5 | 84.0% | 50.0% | 57.5% | 20.2 s | 82,770 | 74,647 | |
+| | | with CSyk | 4 | 85.0% | 48.3% | 57.2% | 15.5 s | 73,872 (−11%) | 64,867 (−13%) | 20 of 30 |
+| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | Claude Code alone | 6 | 92.8% | 85.0% | 66.6% | 11.9 s | 47,390 | 45,580 | |
+| | | with CSyk | 4 | 90.8% | 86.7% | 68.0% | 10.4 s | 42,747 (−10%) | 35,488 (−22%) | 24 of 30 |
+| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | Claude Code alone | 5 | 91.3% | 60.7% | 64.7% | 14.6 s | 60,814 | 55,022 | |
+| | | with CSyk | 4 | 90.0% | 60.0% | 70.0% | 13.8 s | 56,004 (−8%) | 52,882 (−4%) | 21 of 30 |
+
+Over all 120 issues, comparing each issue's average with and without CSyk (with a 95% confidence
+interval from resampling the issues):
+
+| | With CSyk, against Claude Code alone | 95% interval |
+|---|---|---|
+| Tokens per issue | **7.1% fewer** | 3.0% to 11.2% fewer |
+| Changed functions named | **3.4 points more** | 0.9 to 6.1 points more |
+| First file right | 1.4 points fewer | 3.3 fewer to 0.4 more |
+| All changed files in first five | 1.1 points fewer | 3.0 fewer to 0.8 more |
 
 What this shows:
 
-- **Fewer tokens in every language.** 1% to 10% fewer per issue on average, 2% to 20% fewer on the
-  median issue, and fewer on 20 to 24 of the 30 issues.
-- **Sooner.** 0.8 to 2.8 seconds less per issue at the median, with both setups running at the
+- **Fewer tokens.** 8% to 11% fewer per issue in JavaScript, Python and Go (22% fewer on the median
+  Python issue), level in TypeScript; fewer on 20 to 24 of each benchmark's 30 issues.
+- **Sooner.** 0.8 to 4.7 seconds less per issue at the median, with both setups running at the
   same time.
-- **As accurate, and more on functions.** The share of changed functions named is 7.6 points higher
-  in TypeScript, 6.6 in Go and 1.3 in Python, and 1.3 lower in JavaScript. The first file and the
-  first five files stay within three points either way: less than one issue in 30.
+- **More of the right functions, about the same files.** The agent names more of the functions the
+  fix changed (7.8 points more in TypeScript, 5.3 in Go, 1.4 in Python, level in JavaScript). On
+  files it may be slightly behind: one to two points fewer, less than one issue in 30, and within
+  what separates two runs of the same setup.
 - **TypeScript saves least.** Three of its issues are in VS Code, a very large repository where the
   agent sometimes searches for 10 to 30 turns. Every answer added in such a session is re-read on
   every later turn, so once a session's CSyk answers pass 3,000 tokens, CSyk keeps them short.
-  Before that change, those sessions made TypeScript's average 9% higher than Claude Code alone.
-- **Where the savings come from.** Almost all of an agent's tokens are its context, re-read on
-  every turn, so a tool saves tokens by saving turns, not by giving shorter answers. CSyk's `grep`
-  names the function around each match and shows the code around matches in a few files, so the
-  agent goes back to read the place far less often: after 43% of searches that showed no code, and
-  after 19% of those that showed up to 1,000 tokens of it.
+  Before that, those sessions made TypeScript's average 9% higher than Claude Code alone; now it
+  is level.
+- **Why the savings are not larger.** About 96% of an agent's tokens on these issues are Claude
+  Code's own context (its instructions, the tool list, the conversation), re-read on every turn;
+  what the search tools return is 1.4% to 2.4%. A tool saves tokens by saving turns, not by giving
+  shorter answers. CSyk's `grep` names the function around each match and shows the code around
+  matches in a few files, so the agent goes back to read the place far less often: after 43% of
+  searches that showed no code, and after 19% of those that showed up to 1,000 tokens of it. Longer
+  tasks, with more searching, leave more to save; these benchmarks are short (two to five turns).
 
 To reproduce:
 `npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-lean> --count 30 --seed 1`,
@@ -439,7 +453,7 @@ public benchmark of this kind; its numbers are the single-question ones above.
 - A name used thousands of times (Django's `Model.save`) gets a partial answer after the time
   limit, and the answer says so.
 - In very large repositories, long search sessions save little: TypeScript, with three VS Code
-  issues, is only 1% lower on average.
+  issues, is level on tokens on average.
 
 ## Contributing
 
