@@ -18,6 +18,7 @@ describe('extractSymbols for TypeScript', () => {
       'export const MAX_ITEMS = 10;',
       'const helper = () => 1;',
       'const [base, { file: coverageFile, min = 90 }, ...rest] = args;',
+      'export namespace Range { export function from(x: number) { return x; } }',
     ].join('\n');
     expect(await names('src/a.ts', text)).toEqual([
       'function calculateTotal',
@@ -39,6 +40,8 @@ describe('extractSymbols for TypeScript', () => {
       'const coverageFile (local)',
       'const min (local)',
       'const rest (local)',
+      'namespace Range',
+      'function from',
     ]);
   });
 

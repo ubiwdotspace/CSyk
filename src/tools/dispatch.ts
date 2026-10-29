@@ -8,7 +8,7 @@ import { def, find, grep, outline, read, refs, type ToolResult } from './tools.t
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
 const budget = z.number().optional();
-const target = z.string().describe('Symbol id (file#Name) or name');
+const target = z.string().describe('Symbol id or name');
 
 /** Each tool's one-line description and arguments, as the MCP server lists them. */
 export const toolSchemas = {
@@ -17,7 +17,7 @@ export const toolSchemas = {
     input: {
       query: z.string().describe('Name or part of a name'),
       kind: z.enum(symbolKinds as [SymbolKind, ...SymbolKind[]]).optional(),
-      path: z.string().optional().describe('Only files under this path'),
+      path: z.string().optional().describe('Under this path'),
       limit: z.number().optional(),
       budget,
     },
@@ -55,7 +55,7 @@ export const toolSchemas = {
     },
   },
   impact: {
-    description: 'What changes since a revision touch: changed symbols, their callers, tests.',
+    description: 'Changed symbols since a revision, their callers, tests.',
     input: {
       since: z.string().optional().describe('Git revision, default HEAD'),
       depth: z.number().optional().describe('Caller levels, 1-3, default 2'),
@@ -63,17 +63,18 @@ export const toolSchemas = {
     },
   },
   grep: {
-    description: 'Text or regex search; each hit names the symbol it is in.',
+    description: 'Regex search; each hit names its enclosing symbol.',
     input: {
       pattern: z.string(),
-      regex: z.boolean().optional(),
-      path: z.string().optional().describe('Only under this path'),
+      literal: z.boolean().optional().describe('Match as written'),
+      path: z.string().optional().describe('Under this path'),
+      glob: z.string().optional().describe('File glob, like *.ts'),
       limit: z.number().optional(),
       budget,
     },
   },
   status: {
-    description: 'Index size and which language servers run or are missing.',
+    description: 'Index and language server status.',
     input: {},
   },
   def: {

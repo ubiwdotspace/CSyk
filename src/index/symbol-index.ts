@@ -29,6 +29,7 @@ const kindWeight: Record<SymbolKind, number> = {
   enum: 0.8,
   const: 0.75,
   field: 0.7,
+  namespace: 0.75,
 };
 
 /** Lower case, letters and digits only: `token store` and `TokenStore` meet. */
