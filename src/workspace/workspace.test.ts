@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { describe, expect, it } from 'vitest';
+import { estimateTokens } from '../token/budget.ts';
 import { Session } from '../token/session.ts';
 import { runTool } from '../tools/dispatch.ts';
 import { Workspace } from './workspace.ts';
@@ -58,6 +59,18 @@ describe('Workspace', () => {
     const long = new Session();
     long.spend(4000);
     expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text\nbig.ts:101  big  const needle = 1;');
+    await ws.close();
+  });
+
+  it('answers a miss in the given file with a brief list of the hits elsewhere, without source', async () => {
+    const callers = Object.fromEntries(
+      Array.from({ length: 20 }, (_, i) => [`c${i}.ts`, `export function c${i}() {\n  return 'needle ${i}';\n}`]),
+    );
+    const ws = await Workspace.open(folder({ ...callers, 'other.ts': 'export const other = 1;' }));
+    const answer = (await runTool(ws, 'grep', { pattern: 'needle', path: 'other.ts' }, new Session())).text;
+    expect(answer).toMatch(/^no match in other\.ts; everywhere: 20 hits in 20 files/);
+    expect(answer).not.toContain("return 'needle");
+    expect(estimateTokens(answer)).toBeLessThanOrEqual(400);
     await ws.close();
   });
 
