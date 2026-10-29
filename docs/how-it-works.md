@@ -182,8 +182,10 @@ Ideas, not promises: each one lands only if the evaluation shows it helps.
 - **Renamed imports.** Follow `import { a as b }` and default imports under another name.
 - **Long sessions in very large repositories.** Keep answers short enough that a search of 20
   turns and more costs clearly fewer tokens with CSyk than without it.
-- **Lighter language servers.** Use the editor's running `gopls` (`gopls -remote=auto`) instead of
-  starting a second one, and keep folders with no code out of what a server loads
-  (`directoryFilters`). On Prometheus, `gopls` is 85 of CSyk's 90 CPU seconds and 2.2 GB of its
-  memory.
+- **Lighter language servers.** On Prometheus, `gopls` is 85 of CSyk's 90 CPU seconds and 2.2 GB
+  of its memory, nearly all of it type-checking the 256 modules the project depends on. Running it
+  as a shared daemon (`gopls -remote=auto`) was measured and does not help on its own: a second
+  CSyk still waited 5.3 seconds for its first answer, and the daemon kept 1.2 to 1.8 GB after CSyk
+  stopped. It saves memory only when the editor runs `gopls` the same way, so it would be an
+  option, not the default.
 - **Windows.** Support and CI on Windows, after macOS and Linux.
