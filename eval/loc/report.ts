@@ -21,6 +21,8 @@ type Result = {
   errors?: number;
   ms: number;
   costUsd: number;
+  peakMb?: number;
+  cpuSeconds?: number;
 };
 type Run = { setup: string; dataset?: string; language: string; results: Result[] };
 
@@ -34,11 +36,24 @@ for (const name of (await readdir(dir)).filter((n) => /^loc-[\w-]+-seed\d+\.json
 }
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 const change = (value: number, base: number) => ` (${value <= base ? '−' : '+'}${pct(Math.abs(1 - value / base))})`;
-const labels: Record<string, string> = { b0: 'B0', csyk: 'CSyk', 'csyk-nohooks': 'CSyk, no hooks', 'csyk-lean': 'CSyk lean' };
+const labels: Record<string, string> = {
+  b0: 'B0',
+  csyk: 'CSyk',
+  'csyk-nohooks': 'CSyk, no hooks',
+  'csyk-lean': 'CSyk lean',
+  serena: 'Serena',
+  graphify: 'Graphify',
+};
+// Mean peak memory and CPU time of Claude Code and its servers, where recorded.
+const resourceCell = (rs: Result[]) => {
+  const known = rs.filter((r) => r.peakMb);
+  if (known.length === 0) return '– | –';
+  return `${Math.round(mean(known.map((r) => r.peakMb ?? 0)))} MB | ${mean(known.map((r) => r.cpuSeconds ?? 0)).toFixed(1)} s`;
+};
 console.log(
-  '| benchmark | language | setup | issues | file Acc@1 | file Acc@5 | function recall | time p50 / mean | tokens | tokens from tools | peak context | tool calls | cost |',
+  '| benchmark | language | setup | issues | file Acc@1 | file Acc@5 | function recall | time p50 / mean | tokens | tokens from tools | peak context | tool calls | peak memory | CPU | cost |',
 );
-console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
 // Peak context, compared with B0 on issues where both recorded it.
 let peakBase = 0;
 function peakCell(run: Run, rs: Result[]): string {
@@ -76,7 +91,8 @@ for (const key of keys) {
           `${Math.round(percentile(rs.map((r) => r.ms), 50) / 1000)} s / ${Math.round(mean(rs.map((r) => r.ms)) / 1000)} s | ` +
           `${Math.round(tokens).toLocaleString('en')}${run !== b0 ? change(tokens, baseTokens) : ''} | ` +
           `${toolRs.length ? `${Math.round(tool).toLocaleString('en')}${run !== b0 ? change(tool, baseTool) : ''}` : '–'} | ` +
-          `${peakCell(run, rs)} | ${mean(rs.map((r) => r.calls)).toFixed(1)} | $${rs.reduce((a, r) => a + r.costUsd, 0).toFixed(2)} |`,
+          `${peakCell(run, rs)} | ${mean(rs.map((r) => r.calls)).toFixed(1)} | ${resourceCell(rs)} | ` +
+          `$${rs.reduce((a, r) => a + r.costUsd, 0).toFixed(2)} |`,
       );
     }
   }

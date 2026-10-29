@@ -9,7 +9,7 @@ import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--model sonnet] [--max-turns 40]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
@@ -104,6 +104,7 @@ async function main(): Promise<void> {
     const gold = await goldOf(instance, repo);
     const setup = setups(repo)[values.setup];
     if (!setup) throw new Error(`no setup ${values.setup}`);
+    await setup.prepare?.();
     const { answer, ...cost } = await runClaude(prompt(instance.problem_statement), repo, setup, values.model, values['max-turns']);
     const { files, functions } = parseAnswer(answer, repo);
     const score = scoreAnswer(gold, files, functions);
@@ -111,7 +112,8 @@ async function main(): Promise<void> {
     await save();
     console.log(
       `${instance.instance_id}: file@1 ${score.fileAt1} · file@5 ${score.fileAt5} · functions ${score.nodeRecall?.toFixed(2) ?? '–'} · ` +
-        `${cost.tokens} tokens (${cost.toolTokens} from tools) · ${cost.calls} calls · ${Math.round(cost.ms / 1000)} s · $${cost.costUsd.toFixed(3)}`,
+        `${cost.tokens} tokens (${cost.toolTokens} from tools) · ${cost.calls} calls · ${Math.round(cost.ms / 1000)} s · ` +
+        `${cost.peakMb} MB peak · ${cost.cpuSeconds} s CPU · $${cost.costUsd.toFixed(3)}`,
     );
   }
   const nodes = results.flatMap((r) => (r.nodeRecall === undefined ? [] : [r.nodeRecall]));
