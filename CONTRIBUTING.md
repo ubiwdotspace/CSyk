@@ -1,0 +1,79 @@
+# Contributing to CSyk
+
+Thank you for helping. Bug reports, wrong answers found on a public repository, and pull requests
+are all welcome.
+
+For anything larger than a small fix, open an issue first and say what you want to change. CSyk's
+answers are measured, so a change to what an answer contains is judged by its numbers.
+
+## Set up
+
+You need Node 22.18 or later (`nvm use` picks the version in `.nvmrc`) on macOS or Linux.
+
+```sh
+git clone https://github.com/ubiwdotspace/CSyk.git
+cd CSyk
+npm install
+npm run typecheck
+npm test
+node src/cli.ts serve <folder>      # run from source; Node removes the types itself
+```
+
+TypeScript and Python language servers come with the dependencies. To work on Go or Dart, install
+`gopls` (`go install golang.org/x/tools/gopls@latest`) or the Dart or Flutter SDK.
+
+## Changing answers
+
+If a change affects what a tool answers (ranking, what an answer shows, how long it is, or a tool
+description), run the evaluation on the corpora it touches before and after the change, and put
+both numbers in the pull request:
+
+```sh
+npm run corpora                                   # once: fetch the pinned public repositories
+npm run eval -- --adapter csyk --corpus <name>
+```
+
+[docs/benchmarks.md](docs/benchmarks.md#reproduce) lists the corpora and the kinds of
+question. Tool descriptions are re-read by the agent on every turn, so a longer description needs
+a measured reason.
+
+Only use public repositories as evaluation data. Private repositories go in
+`eval/corpora.local.yaml` and their questions in `eval/cases/private/`; git ignores both. Never
+commit code, paths or questions taken from a private repository.
+
+## Code
+
+- TypeScript in strict mode, ES modules. Node runs the sources directly, so use only syntax that
+  can be erased (no `enum`, `namespace` or constructor parameter properties).
+- Tests sit next to the code as `*.test.ts` and run with Vitest.
+- Comments say why, not what.
+- New third-party code or data that ships in the package goes in [NOTICE](NOTICE).
+
+## Commits and pull requests
+
+Commit messages start with a type (`feat`, `fix`, `eval`, `docs`, `chore`) and say what changed in
+plain words, for example `fix: grep hit lines do not repeat the code shown below them`.
+
+A pull request runs typecheck, tests and the build on macOS and Linux. Keep it to one change.
+
+## Releasing
+
+Maintainers release from an up-to-date, clean `main`:
+
+```sh
+npm version <patch|minor|major> -m "chore: release %s"   # bumps package.json, commits, tags v<version>
+git push --follow-tags
+```
+
+Before 1.0, use `minor` for new features or changed answers and `patch` for fixes. The pushed tag
+starts the [release workflow](.github/workflows/release.yml): it checks that the tag matches
+`package.json`, runs typecheck and tests, publishes to npm with provenance and creates the GitHub
+release with notes from the merged pull requests. It needs an npm automation token in the
+`NPM_TOKEN` repository secret.
+
+## Licence
+
+By contributing, you agree that your contribution is licensed under the Apache License 2.0, the
+same as the rest of the project (see section 5 of [LICENSE](LICENSE)).
+
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
