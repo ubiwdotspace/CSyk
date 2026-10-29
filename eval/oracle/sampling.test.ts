@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fuzzyQuery, seeded, shuffle, splitWords } from './sampling.ts';
+import { answers, fuzzyQuery, seeded, shuffle, splitWords } from './sampling.ts';
 
 describe('splitWords', () => {
   it('splits camel, Pascal, acronyms, snake and kebab case', () => {
@@ -15,6 +15,12 @@ describe('fuzzyQuery', () => {
     const random = seeded(7);
     const styles = new Set(Array.from({ length: 30 }, () => fuzzyQuery('calculateShippingCost', random)));
     expect(styles).toEqual(new Set(['calculate shipping cost', 'calcShippingCost', 'ShippingCost']));
+  });
+
+  it('keeps the separator of a snake_case name', () => {
+    const random = seeded(7);
+    const styles = new Set(Array.from({ length: 30 }, () => fuzzyQuery('remove_case_user', random)));
+    expect(styles).toEqual(new Set(['remove case user', 'remo_case_user', 'case_user']));
   });
 
   it('only lowers SCREAMING_CASE into words', () => {
@@ -35,3 +41,14 @@ describe('seeded shuffle', () => {
     expect([...shuffle(items, seeded(3))].sort((a, b) => a - b)).toEqual(items);
   });
 });
+
+describe('answers', () => {
+  it('matches squashed names and word prefixes in order', () => {
+    expect(answers('token store', 'TokenStore')).toBe(true);
+    expect(answers('calcTotal', 'calculateTotal')).toBe(true);
+    expect(answers('ToObject', 'arrayToObject')).toBe(true);
+    expect(answers('total calc', 'calculateTotal')).toBe(false);
+    expect(answers('calcTotal', 'calculateTax')).toBe(false);
+  });
+});
+

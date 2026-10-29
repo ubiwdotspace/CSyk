@@ -4,23 +4,26 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
+import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
-import { fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
-import { caseKinds, TsOracle } from './oracle/ts-oracle.ts';
+import { callCases, impactCases } from './oracle/call-cases.ts';
+import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
+import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|E> [--count 30] [--seed 1] [--force]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
-TypeScript compiler (tsc --lsp), to eval/cases/, or eval/cases/private/ for
-a corpus from corpora.local.yaml. Review the cases before trusting them.`;
+language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
+to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
+Review the cases before trusting them.`;
 
-type Generated = { query: string; expect: { file: string; lines: [number, number] }[] };
+type Generated = { query: string; direction?: 'in' | 'out'; expect: { file: string; lines: [number, number] }[] };
 
 // Code a case should be about: not tests, end-to-end suites, stories, or
-// generated and vendored code such as WebAssembly glue.
-const notSource =
-  /(__tests__|\.test\.|\.spec\.|\.stories\.|(^|\/)e2e\/|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.)/;
-const isSource = (file: string) => !notSource.test(file);
+// generated and vendored code such as WebAssembly glue or protobuf stubs.
+const generated =
+  /(\.stories\.|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.|\.pb\.go$|_gen\.go$|\.g\.dart$|\.freezed\.dart$)/;
+const isSource = (file: string) => !isTestFile(file) && !generated.test(file);
 
 // Names worth searching for: identifiers of five characters or more.
 const isSearchable = (name: string) => /^[A-Za-z_$][\w$]{4,}$/.test(name);
@@ -33,6 +36,7 @@ async function main(): Promise<void> {
       count: { type: 'string', default: '30' },
       seed: { type: 'string', default: '1' },
       force: { type: 'boolean', default: false },
+      lang: { type: 'string', default: 'ts' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -41,8 +45,8 @@ async function main(): Promise<void> {
     console.log(usage);
     return;
   }
-  if (!['A', 'B', 'C', 'E'].includes(category)) {
-    throw new Error('Only A, B, C and E cases can be generated; write D, F and G by hand.');
+  if (!['A', 'B', 'C', 'D', 'E', 'G'].includes(category)) {
+    throw new Error('F cases (concept questions) are written by hand.');
   }
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const corpus = (await loadCorpora(root)).get(values.corpus);
@@ -55,14 +59,20 @@ async function main(): Promise<void> {
 
   const count = Number(values.count);
   const random = seeded(Number(values.seed));
-  const oracle = await TsOracle.start(corpus.root);
+  if (!oracleServers[values.lang]) throw new Error(`--lang must be one of ${Object.keys(oracleServers).join(', ')}`);
+  const oracle = await LspOracle.start(corpus.root, values.lang);
   try {
+    const sources = oracle.files.filter(isSource);
     const cases =
       category === 'E'
         ? await stringCases(oracle, count, random)
-        : await symbolCases(oracle, category, count, random);
+        : category === 'D'
+          ? await callCases(oracle, sources, count, random)
+          : category === 'G'
+            ? await impactCases(oracle, sources, count, random)
+            : await symbolCases(oracle, category, count, random);
     await mkdir(dirname(out), { recursive: true });
-    await writeFile(out, render(corpus, category, Number(values.seed), cases));
+    await writeFile(out, render(corpus, oracleServers[values.lang] ?? values.lang, category, Number(values.seed), cases));
     console.log(`${cases.length} case(s) written to ${out.slice(root.length + 1)}`);
   } finally {
     await oracle.stop();
@@ -71,13 +81,15 @@ async function main(): Promise<void> {
 
 /** A, B and C cases: one symbol per file, from files in random order. */
 async function symbolCases(
-  oracle: TsOracle,
+  oracle: LspOracle,
   category: string,
   count: number,
   random: () => number,
 ): Promise<Generated[]> {
   const cases: Generated[] = [];
   const seen = new Set<string>();
+  // Every name in the repo, to keep only fuzzy queries one name answers.
+  const names = category === 'B' ? await oracle.names(oracle.files) : new Set<string>();
   for (const file of shuffle(oracle.files.filter(isSource), random)) {
     if (cases.length >= count) break;
     const symbols = shuffle(await oracle.symbols(file), random);
@@ -92,8 +104,9 @@ async function symbolCases(
         character: symbol.selectionRange.start.character,
       });
       if (self?.file !== file || self.nameLine !== symbol.selectionRange.start.line) continue;
+      if (await oracle.isImport(file, symbol.selectionRange.start)) continue;
       const declarations = await oracle.declarations(name);
-      const made = await makeCase(oracle, category, name, declarations, random);
+      const made = await makeCase(oracle, category, name, declarations, random, names);
       if (made) {
         cases.push(made);
         break;
@@ -104,11 +117,12 @@ async function symbolCases(
 }
 
 async function makeCase(
-  oracle: TsOracle,
+  oracle: LspOracle,
   category: string,
   name: string,
-  declarations: Awaited<ReturnType<TsOracle['declarations']>>,
+  declarations: Awaited<ReturnType<LspOracle['declarations']>>,
   random: () => number,
+  names: ReadonlySet<string>,
 ): Promise<Generated | undefined> {
   const lines = (d: (typeof declarations)[number]): [number, number] => [d.startLine + 1, d.endLine + 1];
   if (category === 'A') {
@@ -120,7 +134,9 @@ async function makeCase(
   if (!only || declarations.length !== 1) return undefined;
   if (category === 'B') {
     const query = fuzzyQuery(name, random);
-    return query ? { query, expect: [{ file: only.file, lines: lines(only) }] } : undefined;
+    // A query that another name answers too is ambiguous, not fuzzy.
+    const unique = query !== undefined && [...names].every((other) => other === name || !answers(query, other));
+    return unique ? { query, expect: [{ file: only.file, lines: lines(only) }] } : undefined;
   }
   const refs = await oracle.references(name, only);
   const unique = new Map(refs.map((ref) => [`${ref.file}:${ref.line}`, ref]));
@@ -136,8 +152,8 @@ async function makeCase(
 const sentencePattern = String.raw`["'\x60][A-Z][a-z]+ [^"'\x60$]{12,}["'\x60]`;
 
 /** E cases: sentences written once in the repo, answered by their enclosing symbol. */
-async function stringCases(oracle: TsOracle, count: number, random: () => number): Promise<Generated[]> {
-  const found = gitGrep(oracle.root, ['-n', '-E', '-e', sentencePattern, '--', '*.ts', '*.tsx', ':!*.d.ts']);
+async function stringCases(oracle: LspOracle, count: number, random: () => number): Promise<Generated[]> {
+  const found = gitGrep(oracle.root, ['-n', '-E', '-e', sentencePattern, '--', ...oracle.files.filter(isSource)]);
   const cases: Generated[] = [];
   for (const entry of shuffle(found, random)) {
     if (cases.length >= count) break;
@@ -162,17 +178,18 @@ async function stringCases(oracle: TsOracle, count: number, random: () => number
   return cases;
 }
 
-function render(corpus: Corpus, category: string, seed: number, cases: Generated[]): string {
+function render(corpus: Corpus, server: string, category: string, seed: number, cases: Generated[]): string {
   const at = corpus.commit ?? 'its working tree';
   const lines = [
     `# Generated by eval/generate.ts from ${corpus.name} at ${at}, seed ${seed}.`,
-    '# Answers come from tsc --lsp. Review before trusting: drop cases no person',
-    "# would ask, and rewrite queries that read like a machine's.",
+    `# Answers come from the ${server} language server. Review before trusting:`,
+    "# drop cases no person would ask, and rewrite queries that read like a machine's.",
     'cases:',
   ];
   cases.forEach((c, i) => {
     lines.push(`  - id: ${category}${String(i + 1).padStart(2, '0')}`);
     lines.push(`    query: ${JSON.stringify(c.query)}`);
+    if (c.direction) lines.push(`    direction: ${c.direction}`);
     lines.push('    expect:');
     for (const loc of c.expect) {
       lines.push(`      - { file: ${JSON.stringify(loc.file)}, lines: [${loc.lines[0]}, ${loc.lines[1]}] }`);
