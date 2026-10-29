@@ -14,5 +14,5 @@
     "types": ["node"]
   },
   "include": ["src", "eval", "vitest.config.ts"],
-  "exclude": ["eval/fixtures", "eval/corpora", "node_modules", "dist"]
+  "exclude": ["eval/fixtures", "eval/corpora", "eval/results", "node_modules", "dist"]
 }

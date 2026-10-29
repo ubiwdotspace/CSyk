@@ -1,0 +1,63 @@
+# Built by eval/agent/make-tasks.ts from the dispatch cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Where is `get_by_project` defined in this repository? Give the file path and its signature."
+    expect: ["src/dispatch/canvas/service.py"]
+  - id: T02
+    prompt: "Where is `shift_hours_type` defined in this repository? Give the file path and its signature."
+    expect: ["src/dispatch/service/models.py"]
+  - id: T03
+    prompt: "Where is `CaseSeverityPagination` defined in this repository? Give the file path and its signature."
+    expect: ["src/dispatch/case/severity/models.py"]
+  - id: T04
+    prompt: "Where is `experimental_features` defined in this repository? Give the file path and its signature."
+    expect: ["src/dispatch/auth/models.py"]
+  - id: T05
+    prompt: "Where is `get_incident_type` defined in this repository? Give the file path and its signature."
+    expect: ["src/dispatch/incident/type/views.py"]
+  - id: T06
+    prompt: "Which functions call `send_task_notification`? List each caller's name and file."
+    expect: ["create_or_update_task", "create_task", "update_task"]
+  - id: T07
+    prompt: "Which functions call `is_bot`? List each caller's name and file."
+    expect: ["handle_thread_creation", "message_context_middleware", "user_middleware"]
+  - id: T08
+    prompt: "Which functions call `send_case_triage_reminder`? List each caller's name and file."
+    expect: ["case_triage_reminder"]
+  - id: T09
+    prompt: "Which functions call `calculate_score`? List each caller's name and file."
+    expect: ["create", "update"]
+  - id: T10
+    prompt: "Which functions call `_update_signal`? List each caller's name and file."
+    expect: ["update_signal", "update_signal_with_filters"]
+  - id: T11
+    prompt: "Which functions or methods does `db_session_middleware` call? Name each one."
+    expect: ["get_path_params_from_request", "track_session", "untrack_session"]
+  - id: T12
+    prompt: "Which functions or methods does `get_case_participants_minimal` call? Name each one."
+    expect: ["PermissionsDependency", "get_participants"]
+  - id: T13
+    prompt: "Which functions or methods does `sync_document_terms` call? Name each one."
+    expect: ["add", "get_active_instance", "get_all", "build_term_vocab"]
+  - id: T14
+    prompt: "Which functions or methods does `get_match_status` call? Name each one."
+    expect: ["get_matchers", "create_ua_string"]
+  - id: T15
+    prompt: "Which functions or methods does `remove_user` call? Name each one."
+    expect: ["create_slack_client", "resolve_user", "remove_member_from_channel"]
+  - id: T16
+    prompt: "Which function or component shows the text \"Opening a dialog to report an incident...\"? Name it and its file."
+    expect: ["get_incident_conversation_command_message", "src/dispatch/plugins/dispatch_slack/messaging.py"]
+  - id: T17
+    prompt: "Which function or component shows the text \"Skipping data source. No external id for source {s}.\"? Name it and its file."
+    expect: ["sync_sources", "src/dispatch/data/source/scheduled.py"]
+  - id: T18
+    prompt: "Which function or component shows the text \"Maintain Case conversation context\"? Name it and its file."
+    expect: ["create_case_conversation", "src/dispatch/conversation/flows.py"]
+  - id: T19
+    prompt: "Which function or component shows the text \"Delete a form, returning only an HTTP 200 OK if successful.\"? Name it and its file."
+    expect: ["delete_form", "src/dispatch/forms/views.py"]
+  - id: T20
+    prompt: "Which function or component shows the text \"Incident participant(s) not added to conversation. No conversation plugin enable\"? Name it and its file."
+    expect: ["add_incident_participants_to_conversation", "src/dispatch/conversation/flows.py"]

@@ -2,18 +2,18 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { loadCaseFiles } from '../harness/cases.ts';
-import { TsOracle } from './ts-oracle.ts';
+import { LspOracle } from './lsp-oracle.ts';
 
 const evalDir = join(dirname(fileURLToPath(import.meta.url)), '..');
-let oracle: TsOracle;
+let oracle: LspOracle;
 
 beforeAll(async () => {
-  oracle = await TsOracle.start(join(evalDir, 'fixtures/mini-ts'));
+  oracle = await LspOracle.start(join(evalDir, 'fixtures/mini-ts'));
 }, 60_000);
 afterAll(() => oracle.stop());
 
 // The mini-ts cases were written by hand; the oracle must agree with them.
-describe('TsOracle on mini-ts', () => {
+describe('LspOracle on mini-ts', () => {
   it('finds the declarations the A cases expect', async () => {
     const [file] = (await loadCaseFiles(join(evalDir, 'cases'))).filter(
       (f) => f.corpus === 'mini-ts' && f.category === 'A',

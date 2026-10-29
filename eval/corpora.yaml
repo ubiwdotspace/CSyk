@@ -5,9 +5,88 @@
 mini-ts:
   path: eval/fixtures/mini-ts
 
-# React + TypeScript monorepo with workspace packages (MIT).
+# Each language has three public corpora, from small to large and hard.
+
+# TypeScript, small: a React state library (MIT).
+zustand:
+  git: https://github.com/pmndrs/zustand.git
+  commit: 382d29c485e67018c06e75ec7235130d0968522c
+  path: eval/corpora/zustand
+  codesift: local/zustand
+
+# TypeScript, medium: a React + TypeScript monorepo with workspace packages (MIT).
 excalidraw:
   git: https://github.com/excalidraw/excalidraw.git
   commit: 14bb42edee3d6fee6be264e3ee78670b3b9cee79
   path: eval/corpora/excalidraw
   codesift: local/excalidraw
+
+# TypeScript, large: the NestJS framework, decorators and dependency injection (MIT).
+nest:
+  git: https://github.com/nestjs/nest.git
+  commit: 95dd6b0edbccb608e92a78cc7cec3e25b62f9a71
+  path: eval/corpora/nest
+  codesift: local/nest
+
+# Python, small: the FastAPI full-stack template (MIT).
+fastapi-template:
+  git: https://github.com/fastapi/full-stack-fastapi-template.git
+  commit: f4bcfaba7c85be3c6332cc74a20819f586dcdbc6
+  path: eval/corpora/fastapi-template
+  codesift: local/full-stack-fastapi-template
+
+# Python, medium: a FastAPI application, archived (Apache-2.0).
+dispatch:
+  git: https://github.com/Netflix/dispatch.git
+  commit: dd2837e82a0bf5565b1b4b4b91ea30b7262d4061
+  path: eval/corpora/dispatch
+  codesift: local/dispatch
+
+# Python, large: Django (BSD-3-Clause).
+django:
+  git: https://github.com/django/django.git
+  commit: 2d9d619676e2047a8477c086dda161e4d510c316
+  path: eval/corpora/django
+  codesift: local/django
+
+# Go, small: the chi router (MIT).
+chi:
+  git: https://github.com/go-chi/chi.git
+  commit: 9f8adb1aabaa8a91180a821111d3f8e668d1c0bf
+  path: eval/corpora/chi
+  codesift: local/chi
+
+# Go, medium: a Go backend with its own router (MIT).
+pocketbase:
+  git: https://github.com/pocketbase/pocketbase.git
+  commit: 7f2773ec234b62d0b80ca47c508397cb3d0da3ea
+  path: eval/corpora/pocketbase
+  codesift: local/pocketbase
+
+# Go, large: Prometheus (Apache-2.0).
+prometheus:
+  git: https://github.com/prometheus/prometheus.git
+  commit: 54b414d5b9fbfc10f0aed6d05b26df6b6240cb3b
+  path: eval/corpora/prometheus
+  codesift: local/prometheus
+
+# Dart, small: the provider package (MIT).
+provider:
+  git: https://github.com/rrousselGit/provider.git
+  commit: 3ed4c6d6b1700c08256f25a034bb93f943bd7236
+  path: eval/corpora/provider
+  codesift: local/provider
+
+# Dart, medium: a Flutter app (MIT).
+wonderous:
+  git: https://github.com/gskinnerTeam/flutter-wonderous-app.git
+  commit: 747b945a7e5239356bf2664261aa2f3b020b8898
+  path: eval/corpora/wonderous
+  codesift: local/flutter-wonderous-app
+
+# Dart, large: the Flame game engine, a monorepo of packages (MIT).
+flame:
+  git: https://github.com/flame-engine/flame.git
+  commit: aee8f6f53bbe6225ac07813a2749a2169d75e85f
+  path: eval/corpora/flame
+  codesift: local/flame

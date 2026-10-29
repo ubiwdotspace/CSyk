@@ -13,17 +13,19 @@ const stopWords = new Set(['where', 'what', 'which', 'when', 'does', 'that', 'th
 /**
  * B0: an agent with its built-in tools only. It greps the way an agent
  * would; for a definition, a string or a concept it then reads the first
- * matching file whole (Grep → Read), while for references the grep lines
- * are the answer. Grep does not rank, so the hits come in path order.
+ * matching file whole (Grep → Read), while for references and callers the
+ * grep lines are the answer. Grep does not rank, so the hits come in path
+ * order.
  */
 export const b0Ripgrep: Adapter = {
   name: 'b0-ripgrep',
-  supports: (category) => ['A', 'B', 'C', 'E', 'F'].includes(category),
+  // Grep finds the lines that call a name, not what a body calls.
+  supports: (c) => ['A', 'B', 'C', 'E', 'F'].includes(c.category) || (c.category === 'D' && c.direction === 'in'),
   async run(c, corpus) {
     const grep = await ripgrep(searchArgs(c), corpus.root);
     const hits = parseHits(grep);
     const first = hits[0];
-    if (c.category === 'C' || !first) return { hits, output: grep, calls: 1 };
+    if (c.category === 'C' || c.category === 'D' || !first) return { hits, output: grep, calls: 1 };
     const file = await readFile(join(corpus.root, first.file), 'utf8');
     return { hits, output: grep + readLikeAgent(file), calls: 2 };
   },
@@ -35,6 +37,11 @@ function searchArgs(c: Case): string[] {
       return ['--fixed-strings', '--ignore-case', '-e', c.query];
     case 'C':
       return ['--fixed-strings', '--word-regexp', '-e', c.query];
+    case 'D': {
+      // A call: `name(`, `new Name`, `<Name` (JSX) or `@name` (a decorator).
+      const name = c.query.replace(/[$]/g, '\\$&');
+      return ['-e', `\\b${name}\\s*\\(|new\\s+${name}\\b|<${name}\\b|@${name}\\b`];
+    }
     case 'F': {
       const words = c.query
         .toLowerCase()

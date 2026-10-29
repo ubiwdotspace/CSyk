@@ -1,0 +1,63 @@
+# Built by eval/agent/make-tasks.ts from the excalidraw cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Where is `COMMENT_ICON_DIMENSION` defined in this repository? Give the file path and its signature."
+    expect: ["examples/with-script-in-browser/components/ExampleApp.tsx"]
+  - id: T02
+    prompt: "Where is `MicroActionsQueue` defined in this repository? Give the file path and its signature."
+    expect: ["packages/element/src/store.ts"]
+  - id: T03
+    prompt: "Where is `ResolvedViewportTarget` defined in this repository? Give the file path and its signature."
+    expect: ["packages/excalidraw/components/App.viewport.ts"]
+  - id: T04
+    prompt: "Where is `vectorNormal` defined in this repository? Give the file path and its signature."
+    expect: ["packages/math/src/vector.ts"]
+  - id: T05
+    prompt: "Where is `TTDDialogPanels` defined in this repository? Give the file path and its signature."
+    expect: ["packages/excalidraw/components/TTDDialog/TTDDialogPanels.tsx"]
+  - id: T06
+    prompt: "Which functions call `fontFacesStylesGenerator`? List each caller's name and file."
+    expect: ["generateFontFaceDeclarations"]
+  - id: T07
+    prompt: "Which functions call `isLinksEnabled`? List each caller's name and file."
+    expect: ["render", "handleInteractionStateChange", "handleInteractiveContentPointerMove", "handleInteractiveContentPointerUp"]
+  - id: T08
+    prompt: "Which functions call `radiansDifference`? List each caller's name and file."
+    expect: ["getLockedLinearCursorAlignSize"]
+  - id: T09
+    prompt: "Which functions call `bubbleUp`? List each caller's name and file."
+    expect: ["pop", "remove"]
+  - id: T10
+    prompt: "Which functions call `pointDistanceSq`? List each caller's name and file."
+    expect: ["getBoundEndExtension", "reanchorBindingsToOutline", "bindPointToSnapToElementOutline", "snapBoundPointToGrid"]
+  - id: T11
+    prompt: "Which functions or methods does `cssHueRotate` call? Name each one."
+    expect: ["degreesToRadians"]
+  - id: T12
+    prompt: "Which functions or methods does `getSegmentMidPointIndex` call? Name each one."
+    expect: ["getElement", "arePointsEqual"]
+  - id: T13
+    prompt: "Which functions or methods does `warnOnUnstableRenderEnvironment` call? Name each one."
+    expect: ["isDevEnv", "isTestEnv"]
+  - id: T14
+    prompt: "Which functions or methods does `ExampleApp` call? Name each one."
+    expect: ["ExampleApp", "Sidebar", "resolvablePromise"]
+  - id: T15
+    prompt: "Which functions or methods does `rangeInclusiveFromPair` call? Name each one."
+    expect: ["toBrandedType"]
+  - id: T16
+    prompt: "Which function or component shows the text \"Custom name of drawing\"? Name it and its file."
+    expect: ["ExampleApp", "examples/with-script-in-browser/components/ExampleApp.tsx"]
+  - id: T17
+    prompt: "Which function or component shows the text \"Job finished! Idle worker has been released from the pool.\"? Name it and its file."
+    expect: ["createWorker", "packages/excalidraw/workers.ts"]
+  - id: T18
+    prompt: "Which function or component shows the text \"Selection rendering is not supported for SVG\"? Name it and its file."
+    expect: ["renderElementToSvg", "packages/excalidraw/renderer/staticSvgScene.ts"]
+  - id: T19
+    prompt: "Which function or component shows the text \"Running yarn install...\"? Name it and its file."
+    expect: ["buildPackages", "scripts/release.js"]
+  - id: T20
+    prompt: "Which function or component shows the text \"Linear element is not normalized\"? Name it and its file."
+    expect: ["constructor", "packages/element/src/linearElementEditor.ts"]
