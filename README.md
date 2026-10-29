@@ -24,7 +24,7 @@ into the agent as an MCP server.
 | first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, over 120 issues in four languages, and faster | per answer, median |
 
 <p align="center">
-  <b><a href="#install">Install</a> · <a href="#before-and-after">Before and after</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a> · <a href="#docs">Docs</a></b>
+  <b><a href="#install">Install</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
 </p>
 
 Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS and Linux.
@@ -78,24 +78,38 @@ packages/excalidraw/tests/data/restore.test.ts  58, 77, 89, 97, 112, 118, 123, 1
 
 Same question, a tenth of the tokens, and the agent can act on it without opening a file.
 
+## Why CSyk
+
+Other tools already give agents more than text search. [Serena](https://github.com/oraios/serena)
+gives the agent an IDE: tools to find, edit and refactor code through language servers.
+[Graphify](https://github.com/Graphify-Labs/graphify) turns a whole project, docs included, into a
+knowledge graph to explore. CSyk does one job, finding code for the agent, and does it this way:
+
+- **Only finding code.** The agent already edits well with its own tools; it is slow at finding
+  the place to edit.
+- **Few tools, short answers.** An agent re-reads every tool description and every answer on every
+  turn, so six tools and answers under 2,000 tokens.
+- **The compiler decides.** A use or a caller counts only when the language's compiler confirms it.
+- **Always current.** Every edit is indexed before the next answer; there is nothing to rebuild.
+
 ## Numbers
 
-**Single questions** on twelve public repositories (three per language, small to large), scored
-against each language's own compiler:
+The same questions on twelve public repositories (three per language, small to large), and Claude
+Code on the first ten issues of four public benchmarks of real GitHub issues:
 
-| | Text search and file reads | **CSyk** |
-|---|---|---|
-| Finding a definition by its exact name: first answer right | 33.1% | **98.6%** |
-| Finding a definition by part of its name: first answer right | 7.6% | **99.5%** |
-| Finding uses of a symbol: share of answers that really are uses | 64.1% | **99.2%** |
-| Tokens the agent reads to answer the same questions | 16,899 | **240 (98.6% fewer)** |
-| Time per answer (median) | 75 ms | **8 ms** |
+| | Text search | **CSyk** | Serena | Graphify |
+|---|---|---|---|---|
+| Definition by name: first answer right | 33.1% | **98.6%** | 85.1% | 79.9% |
+| Uses of a symbol: answers that really are uses | 64.1% | **97.8%** | 81.2% | 41.6% |
+| Tokens per answer | 3,400 | **115** | 243 | 719 |
+| CPU for the same questions on all twelve, from cold | – | **205 s** | 2,764 s | 353 s |
+| Claude Code, tokens per issue against Claude Code alone | – | **−7%** | +8% | +53% |
 
-**Whole agent sessions** on four benchmarks of real GitHub issues: over all 120 issues, Claude
-Code with CSyk used 7% fewer tokens (11% in JavaScript, 10% in Python, 8% in Go, level in
-TypeScript), finished sooner per issue, and named 3.4 points more of the functions the fix changed.
-
-Method, every repository and every run: [docs/benchmarks.md](docs/benchmarks.md).
+Text search is ripgrep and a read of the first matching file, what an agent does with its built-in
+tools; Serena and Graphify answer through their own MCP servers, each asked the way its tools
+allow. The [full benchmarks](docs/benchmarks.md) have every repository and kind of question, the
+time and memory each tool uses with and without its index built, 30 issues per language, and why
+Serena and Graphify take longer.
 
 ## Tools
 
@@ -111,11 +125,7 @@ it left out.
 | `calls` | Who calls this, or what does it call? |
 | `impact` | What does my change touch, up to the tests? |
 
-## Docs
-
-- [Setup](docs/setup.md): what `csyk setup` writes, languages, hooks, other agents.
-- [How it works](docs/how-it-works.md): the index, the compiler, the answers, limitations.
-- [Benchmarks](docs/benchmarks.md): method, all results, and how to reproduce them.
+How each answer is built, and what CSyk cannot do yet, is in [how it works](docs/how-it-works.md).
 
 ## Contributing
 

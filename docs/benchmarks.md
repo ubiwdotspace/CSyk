@@ -118,7 +118,147 @@ Where a dataset does not list the changed functions (SWE-bench, Multi-SWE-bench)
 line of the fix is mapped to the function around it. Dart has no public benchmark of this kind;
 its numbers are the single-question ones above.
 
+## Against Serena and Graphify
+
+[Serena](https://github.com/oraios/serena) (2.1.1, commit `ede329a`) and
+[Graphify](https://github.com/Graphify-Labs/graphify) (0.9.97) answered the same questions on the
+same twelve repositories, through their own MCP servers, each asked the way its own tools allow:
+
+- **Serena**, in the `claude-code` context that `serena setup claude-code` registers: `find_symbol`
+  for a name (with substring matching for part of a name); for uses and callers, `find_symbol` to
+  get the symbol's file and then `find_referencing_symbols`. It has no tool for what a function
+  calls or for an edit's impact, and in that context it leaves text search to the agent's own Grep.
+- **Graphify**, on the code graph it builds from the repository with tree-sitter (no LLM):
+  `get_node` for a name (and for each candidate when the name is ambiguous, as its answer says
+  to), `query_graph` for part of a name or a message, `get_neighbors` for uses, callers and calls.
+  Its MCP server has no tool for an edit's impact.
+
+Queries are passed as the questions are written, the same for every tool.
+
+### Accuracy and tokens
+
+Means over the twelve repositories, everything started cold.
+
+| | **CSyk** | Serena | Graphify |
+|---|---|---|---|
+| Exact name: first answer right | **98.6%** | 85.1% | 79.9% |
+| Part of a name: first answer right | **99.4%** | 17.0% | 31.6% |
+| Uses: found / correct | **97.3% / 97.8%** | 76.5% / 81.2% | 28.6% / 41.6% |
+| Callers and calls: found / correct | **98.7% / 93.5%** | 77.5% / 75.0% | 47.7% / 53.8% |
+| Message: in the first five | **100%** | – | 11.9% |
+| Tokens per answer | **115** | 243 | 719 |
+| Tool calls per question | **1.0** | 1.5 | 1.2 |
+
+Serena's uses and callers come from its language server like CSyk's, but its `find_symbol` takes a
+name's pattern, not words, so parts of names written as words (`set state internal`) rarely
+match, and the first symbol it returns for a common name is often not the one asked about.
+Graphify's graph keeps one edge between two symbols, so a function that uses a name several
+times shows one of those lines, and a search for a message only matches words in names.
+
+### Time and resources on the same work
+
+Exact names, parts of names and uses, the kinds all three answer. CPU time and peak memory are the
+tool's and every process it starts (language servers, Graphify's graph build), sampled with `ps`;
+for CSyk, which the harness runs in its own process, its growth over the harness's size. Measured
+from cold: CSyk with an empty index cache, Serena without its symbol cache, Graphify building its
+graph in the run.
+
+| Median time per answer | a name | part of a name | uses |
+|---|---|---|---|
+| **CSyk** | **1 ms** | **1 ms** | **45 ms** |
+| Serena | 234 ms | 212 ms | 592 ms |
+| Graphify, once its graph is built | 1 ms | 19 ms | 1 ms |
+
+| Repository | CSyk: CPU / peak memory | Serena | Graphify |
+|---|---|---|---|
+| zustand | **2.8 s / 533 MB** | 125 s / 1,440 MB | 8.3 s / 681 MB |
+| excalidraw | **6.6 s / 822 MB** | 670 s / 3,126 MB | 31 s / 931 MB |
+| nest | **23 s** / 1,290 MB | 582 s / 2,882 MB | 46 s / **918 MB** |
+| provider | 16.5 s / 1,349 MB | 17.7 s / 1,108 MB | **5.8 s / 695 MB** |
+| wonderous | 9.7 s / 815 MB | 23 s / 864 MB | **8.5 s / 719 MB** |
+| flame | **18.5 s** / 803 MB | 183 s / 1,322 MB | 26 s / **765 MB** |
+| fastapi-template | **1.3 s / 293 MB** | 12 s / 1,477 MB | 8 s / 751 MB |
+| dispatch | **3.7 s / 326 MB** | 32 s / 713 MB | 31 s / 903 MB |
+| django | **21 s / 959 MB** | 167 s / 2,212 MB | 105 s / 1,615 MB |
+| chi | **3.4 s** / 601 MB | 9.6 s / **558 MB** | 6.1 s / 684 MB |
+| pocketbase | **7.5 s / 635 MB** | 38 s / 888 MB | 38 s / 996 MB |
+| prometheus | 90 s / 2,220 MB | 904 s / 1,835 MB | **39 s / 1,077 MB** |
+| **All twelve: CPU / mean peak** | **205 s / 887 MB** | 2,764 s / 1,535 MB | 353 s / 895 MB |
+
+CSyk's own process grows by about 100 MB on a large repository; the rest of its memory and almost
+all its CPU is the language server it starts for uses (for Prometheus, `gopls` type-checking 256
+modules: 85 of the 90 CPU seconds and 2.2 GB). Questions about names never start one.
+
+### Why Serena and Graphify take longer
+
+- **Serena** answers every question through its language server and its own Python layer, names
+  included: 0.2 to 3 seconds per question, where CSyk answers names from its index in memory. Uses
+  take two calls (the symbol's file first), and for each reference Serena then finds the symbol
+  around it; on a TypeScript monorepo the language server first loads every project, over 100
+  seconds for some questions on excalidraw. Its first use downloads and starts the language server
+  and builds its symbol cache.
+- **Graphify** answers in milliseconds because the work is done first: `graphify extract` parses
+  the whole repository into a graph, and after code changes the graph has to be rebuilt
+  (`graphify update`, or its git hooks after a commit); until then, answers can be out of date. Its
+  answers are longer (`query_graph` returns up to about 2,000 tokens of graph), and in Claude Code
+  its rules and hooks send the agent to the graph before it searches, which adds turns.
+- **CSyk** parses a file in about a millisecond, saves its index, and before every answer takes in
+  the files that changed; it starts a language server only for uses, callers and impact, and keeps
+  it ten minutes.
+
+### Agent sessions
+
+The issues of [Agent sessions on real issues](#agent-sessions-on-real-issues), with each tool set
+up as its own Claude Code setup installs it: Serena with the `claude-code` context and the hooks
+its documentation recommends; Graphify with the rules and hooks `graphify claude install` writes
+and its graph rebuilt for each issue before the session (not counted). No setup has a shell, so
+Graphify's command line is reached through its MCP server. The four setups ran side by side;
+peak memory and CPU are Claude Code's and every server it started.
+
+The first ten issues of each benchmark (40 issues):
+
+| Language | Setup | First file right | All changed files in first five | Changed functions named | Tokens per issue | Median time | Peak memory | CPU |
+|---|---|---|---|---|---|---|---|---|
+| TypeScript | Claude Code alone | 100% | 80% | 75.0% | 49,289 | 23.6 s | 262 MB | 1.7 s |
+| | with CSyk | 90% | 80% | 62.5% | **46,689 (−5%)** | **20.2 s** | 564 MB | 8.2 s |
+| | with Serena | 90% | 70% | 75.0% | 47,658 (−3%) | 25.0 s | 616 MB | 4.6 s |
+| | with Graphify | 90% | 80% | 75.0% | 98,599 (+100%) | 28.0 s | 598 MB | 4.4 s |
+| JavaScript | Claude Code alone | 80% | 40% | 67.5% | 55,793 | 16.4 s | 275 MB | 1.0 s |
+| | with CSyk | 90% | 40% | 67.5% | 61,110 (+10%) | 19.8 s | 543 MB | 2.4 s |
+| | with Serena | 80% | 50% | 70.0% | 65,378 (+17%) | 19.0 s | 665 MB | 2.8 s |
+| | with Graphify | 80% | 50% | 70.0% | 77,291 (+39%) | 20.5 s | 381 MB | 1.8 s |
+| Python | Claude Code alone | 90% | 80% | 67.8% | 25,096 | 13.1 s | 262 MB | 1.4 s |
+| | with CSyk | 90% | 80% | 71.1% | **19,864 (−21%)** | **11.5 s** | 548 MB | 5.5 s |
+| | with Serena | 90% | 80% | 67.8% | 24,437 (−3%) | 14.0 s | 530 MB | 4.2 s |
+| | with Graphify | 90% | 80% | 67.8% | 44,790 (+78%) | 19.7 s | 600 MB | 3.4 s |
+| Go | Claude Code alone | 90% | 70% | 59.0% | 57,036 | 20.1 s | 271 MB | 1.1 s |
+| | with CSyk | 90% | 70% | 71.3% | **45,636 (−20%)** | **15.1 s** | 461 MB | 3.2 s |
+| | with Serena | 90% | 70% | 67.3% | 64,090 (+12%) | 19.0 s | 768 MB | 11.3 s |
+| | with Graphify | 90% | 70% | 57.3% | 66,005 (+16%) | 13.0 s | 445 MB | 1.8 s |
+
+Over the 40 issues, against the same issues with Claude Code alone: CSyk 7.4% fewer tokens and 1.5
+points more changed functions named; Serena 7.7% more tokens and 2.9 points more; Graphify 53%
+more tokens and 0.2 points more. Ten issues per language is a small sample: a difference of a
+few points, or JavaScript's +10% for CSyk, is within what separates two runs of the same setup.
+On all 30 issues of each benchmark (120), CSyk used 8.0% fewer tokens and named 3.1 points more
+changed functions; Serena used 20.1% more tokens and named 1.4 points more.
+
+### Limits of this comparison
+
+- Each tool is measured on what it is for here: finding code. Serena also edits and refactors, and
+  Graphify also maps docs, papers and images; neither is measured.
+- Answers are scored on the lines they point at. Graphify's graph keeps one edge between two
+  symbols rather than every line of a use, which costs it on uses.
+- Times are on one laptop (Apple silicon, 16 GB) that was also running other benchmarks; CPU time
+  and memory change little with load, wall time does.
+
 ## Reproduce
+
+A change, at a chosen size: `npm run bench -- --tier <5|10|20|30|50> [--only <tools>] [--run <name>]`
+runs the single questions of the kinds those tools answer and the agent sessions on every
+benchmark, the measured setup and Claude Code alone side by side, then prints both summaries. A
+tier is the number of questions of each kind per repository and of issues per language; tiers
+nest, so going up a tier only runs what is new. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 Agent sessions:
 

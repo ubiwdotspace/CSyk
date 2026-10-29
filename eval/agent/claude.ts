@@ -1,10 +1,14 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { note, skill } from '../../src/guide.ts';
+import { buildGraphifyGraph, graphifyFrom, graphifyRules } from '../adapters/graphify.ts';
+import { uvToolBin } from '../adapters/mcp.ts';
+import { serenaFrom, serenaOptions } from '../adapters/serena.ts';
+import { watchResources } from '../harness/resources.ts';
 import { countTokens } from '../harness/tokens.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -20,6 +24,8 @@ export type Setup = {
   settings?: unknown;
   guide?: string;
   files?: Record<string, string>;
+  /** Work done before the session and not counted in it, such as building a graph. */
+  prepare?: () => Promise<void>;
 };
 
 /** One headless run: the final answer and what it cost. */
@@ -40,17 +46,63 @@ export type ClaudeRun = {
   calls: number;
   turns: number;
   ms: number;
+  /** Peak memory of Claude Code and every server it started, together. */
+  peakMb: number;
+  /** CPU time of Claude Code and every server it started. */
+  cpuSeconds: number;
 };
 
 /**
  * The setups for a workspace at [workspace]: b0 (Claude Code's built-in
- * tools only) and CSyk in several configurations, run from the build that
- * buildCsyk makes.
+ * tools only), CSyk in several configurations, run from the build that
+ * buildCsyk makes, and Serena and Graphify as their own Claude Code setups
+ * install them.
  */
 export function setups(workspace: string): Record<string, Setup> {
   const csyk = ['node', join(root, 'dist/cli.js')];
   const hook = (name: string) => [{ type: 'command', command: `${csyk.join(' ')} hook ${name}` }];
   return {
+    // Serena as `serena setup claude-code` registers it, with its default agent interface
+    // and the hooks its documentation strongly recommends for Claude Code. Its project
+    // folder is kept between issues, as it would be between sessions. A getter, so only
+    // a run of this setup needs uv.
+    get serena(): Setup {
+      const bin = uvToolBin(serenaFrom);
+      const run = (name: string) => [
+        { matcher: '', hooks: [{ type: 'command', command: `${join(bin, 'serena-hooks')} ${name} --client=claude-code` }] },
+      ];
+      return {
+        mcp: { serena: { command: join(bin, 'serena'), args: ['start-mcp-server', ...serenaOptions, '--project-from-cwd'] } },
+        allowed: ['mcp__serena'],
+        settings: { hooks: { PreToolUse: run('remind'), SessionStart: run('activate'), SessionEnd: run('cleanup') } },
+        prepare: () => exclude(workspace, '.serena/'),
+      };
+    },
+    // Graphify as `graphify claude install` sets it up: the rules it writes into CLAUDE.md
+    // and its hooks on Bash, Grep, Read and Glob, with the graph in graphify-out/ brought up
+    // to date for each issue. No setup has a shell, so its CLI is reached through its MCP server.
+    get graphify(): Setup {
+      const bin = uvToolBin(graphifyFrom);
+      const guard = (matcher: string, kind: string) => ({
+        matcher,
+        hooks: [{ type: 'command', command: `${join(bin, 'graphify')} hook-guard ${kind}`, timeout: 10 }],
+      });
+      return {
+        mcp: { graphify: { command: join(bin, 'python'), args: ['-m', 'graphify.serve', join(workspace, 'graphify-out/graph.json')] } },
+        allowed: ['mcp__graphify'],
+        settings: { hooks: { PreToolUse: [guard('Bash|Grep', 'search'), guard('Read|Glob', 'read')] } },
+        guide:
+          `${graphifyRules()}\n\nIn this session the graph is served by the graphify MCP tools: query_graph for ` +
+          '`graphify query`, get_node and get_neighbors for `graphify explain`, shortest_path for `graphify path`.',
+        // The graph is built anew for each issue's commit (Graphify refuses an update that
+        // shrinks it); its cache of parsed files is kept.
+        prepare: async () => {
+          await exclude(workspace, 'graphify-out/');
+          for (const file of ['graph.json', 'manifest.json']) await rm(join(workspace, 'graphify-out', file), { force: true });
+          await buildGraphifyGraph(workspace, workspace);
+        },
+      };
+    },
     b0: { allowed: [] },
     csyk: {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
@@ -85,6 +137,16 @@ export function setups(workspace: string): Record<string, Setup> {
         'for its uses and callers, impact after edits, grep for text. Read a whole file only when you need most of it.',
     },
   };
+}
+
+// Keeps [pattern] out of git in [workspace], so the checkout's clean before the next issue leaves it.
+async function exclude(workspace: string, pattern: string): Promise<void> {
+  const file = join(workspace, '.git/info/exclude');
+  const text = await readFile(file, 'utf8').catch(() => '');
+  if (!text.split('\n').includes(pattern)) {
+    await mkdir(dirname(file), { recursive: true });
+    await appendFile(file, `${text && !text.endsWith('\n') ? '\n' : ''}${pattern}\n`);
+  }
 }
 
 /**
@@ -139,14 +201,17 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
     ...(setup.guide ? ['--append-system-prompt', setup.guide] : []),
   ];
   const start = performance.now();
+  let watch: ReturnType<typeof watchResources> | undefined;
   const lines = await new Promise<string[]>((done, fail) => {
     const child = spawn('claude', args, { cwd, stdio: ['ignore', 'pipe', 'inherit'] });
+    if (child.pid) watch = watchResources(child.pid);
     let out = '';
     child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString('utf8')));
     child.on('error', fail);
     child.on('close', () => done(out.split('\n').filter(Boolean)));
   });
   const ms = performance.now() - start;
+  const { peakMb, cpuSeconds } = (await watch?.stop()) ?? { peakMb: 0, cpuSeconds: 0 };
   // CSYK_TRANSCRIPTS=<dir> keeps each run's events, to see what the agent did.
   if (process.env.CSYK_TRANSCRIPTS) {
     await mkdir(process.env.CSYK_TRANSCRIPTS, { recursive: true });
@@ -196,6 +261,8 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
     calls,
     turns: result.num_turns ?? 0,
     ms,
+    peakMb,
+    cpuSeconds,
   };
 }
 
