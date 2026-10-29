@@ -97,6 +97,40 @@ TypeScript), finished sooner per issue, and named 3.4 points more of the functio
 
 Method, every repository and every run: [docs/benchmarks.md](docs/benchmarks.md).
 
+## Against Serena and Graphify
+
+[Serena](https://github.com/oraios/serena) gives the agent an IDE: tools to find, edit and refactor
+code through language servers. [Graphify](https://github.com/Graphify-Labs/graphify) turns a whole
+project, docs included, into a knowledge graph to explore. CSyk does one job, finding code for the
+agent, and does it this way:
+
+- **Only finding code.** The agent already edits well with its own tools; it is slow at finding
+  the place to edit.
+- **Few tools, short answers.** An agent re-reads every tool description and every answer on every
+  turn, so six tools and answers under 2,000 tokens.
+- **The compiler decides.** A use or a caller counts only when the language's compiler confirms it.
+- **Always current.** Every edit is indexed before the next answer; there is nothing to rebuild.
+
+Measured on that job, each tool asked the way its own tools allow:
+
+| | **CSyk** | Serena | Graphify |
+|---|---|---|---|
+| Definition by exact name: first answer right | **98.6%** | 85.1% | 79.9% |
+| Definition by part of a name: first answer right | **99.4%** | 17.0% | 31.6% |
+| Uses of a symbol: found / correct | **97.3% / 97.8%** | 76.5% / 81.2% | 28.6% / 41.6% |
+| Callers and calls: found / correct | **98.7% / 93.5%** | 77.5% / 75.0% | 47.7% / 53.8% |
+| From a message to the function it is in | **100%** | no such tool | 11.9% |
+| Tokens per answer | **115** | 243 | 719 |
+| Time per answer, median: a name / its uses | **1 ms / 45 ms** | 234 ms / 592 ms | 1 ms / 1 ms, from a graph built first |
+| CPU for the same questions on twelve repositories, from cold | **205 s** | 2,764 s | 353 s |
+| Peak memory, mean per repository | **887 MB** | 1,535 MB | 895 MB |
+| Claude Code on 40 real issues: tokens, against Claude Code alone | **−7%** | +8% | +53% |
+
+CPU and memory include the language servers each tool starts and, from cold, building CSyk's
+index, Serena's cache and Graphify's graph. The issues are ten per language, so a few points
+either way are noise. Why the others take longer, and every number:
+[docs/benchmarks.md](docs/benchmarks.md#against-serena-and-graphify).
+
 ## Tools
 
 Six tools, 539 tokens of descriptions in all. Every answer stays under 2,000 tokens and says what
