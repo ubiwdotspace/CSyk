@@ -280,8 +280,9 @@ export async function grep(
   options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
-  // A long session gets half the usual list.
-  const listBudget = options.budget ?? (session.long ? defaultBudget / 2 : defaultBudget);
+  // A long session gets a short list: on the public benchmarks, its context
+  // grew a thousand tokens a turn faster than with the built-in Grep.
+  const listBudget = options.budget ?? (session.long ? 600 : defaultBudget);
   // --with-filename: a search of one file names it too, as every hit needs.
   const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
   if (options.glob) args.push('--glob', options.glob);
