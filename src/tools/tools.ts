@@ -12,6 +12,7 @@ import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
+import { mentionsOutsideCode, projectFile } from './other-files.ts';
 
 const run = promisify(execFile);
 
@@ -168,7 +169,7 @@ export async function read(
   session = new Session(),
 ): Promise<ToolResult> {
   const at = /^(.+?):(\d+)(?:-(\d+))?$/.exec(target);
-  if (at?.[1] && ws.index.has(at[1])) return readLines(ws, at[1], Number(at[2]), at[3] ? Number(at[3]) : undefined, options.budget, session);
+  if (at?.[1] && (ws.index.has(at[1]) || projectFile(ws, at[1]))) return readLines(ws, at[1], Number(at[2]), at[3] ? Number(at[3]) : undefined, options.budget, session);
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
   const location = [{ file: symbol.file, line: symbol.line }];
@@ -231,13 +232,17 @@ export async function refs(
     compact: files.map(([file, numbers]) => `${file}  ${numbers.join(', ')}`),
     total: options.code ? found.length : new Set(found.map((p) => p.file)).size,
   });
+  // Docs, specs, configs and translations that name it, which the compiler does not see.
+  const outside = await mentionsOutsideCode(ws.root, symbol.name);
+  const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
+  const text = outside.total > 0 ? `${fitted.text}\noutside code: ${outside.shown.join(', ')}${more}` : fitted.text;
   const shownFiles = options.code
     ? new Set(rows.slice(0, fitted.shown).map((r) => r.slice(0, r.indexOf(':'))))
     : new Set(files.slice(0, fitted.shown).map(([file]) => file));
   const locations = files
     .filter(([file]) => shownFiles.has(file))
     .flatMap(([file, numbers]) => numbers.map((line) => ({ file, line })));
-  return { text: fitted.text, locations };
+  return { text, locations };
 }
 
 /** `def`: where a name, or the name at a file position, is declared. */
@@ -315,7 +320,7 @@ export async function grep(
     const file = match[1];
     const line = Number(match[2]);
     const home = ws.index.containing(file, line);
-    const rank = ws.index.has(file) ? (isTestFile(file) ? 1 : 0) : 2;
+    const rank = ws.index.has(file) && !file.endsWith('.md') ? (isTestFile(file) ? 1 : 0) : 2;
     hits.push({ file, line, code: match[3].trim().slice(0, 120), ...(home ? { home } : {}), rank });
   }
   if (hits.length === 0) {
@@ -412,6 +417,13 @@ export async function references(
   if (service) {
     const group = [...overloads, ...related];
     const { found, partial } = await service.references(symbol, { ...options, viaSupertypes, overloads: group });
+    // A server still loading the project resolves nothing in time: its unconfirmed mentions beat none.
+    if (found.length === 0 && partial?.resolved === 0) {
+      const mentions = (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]), options.where)).filter(
+        (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
+      );
+      return { found: mentions, precision: `text, unconfirmed: the language server is still loading (${partial.total} mentions)` };
+    }
     // A much-used name has more mentions than one search resolves in time; say so.
     const cut = partial ? `, partial: ${partial.resolved} of ${partial.total} mentions resolved in time` : '';
     return { found, precision: `lsp${cut}` };
@@ -512,7 +524,18 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
     return { note: `no symbol named ${target}${near.length ? `; nearest: ${near.join(', ')}` : ''}` };
   }
   // Ranked among the symbols of exactly this name, not cut first: a close name can rank higher.
-  const [best, ...others] = ws.index.search(target, { limit: Number.MAX_SAFE_INTEGER }).filter((s) => s.name === target);
+  const ranked = ws.index.search(target, { limit: Number.MAX_SAFE_INTEGER }).filter((s) => s.name === target);
+  // An override gives way to the declaration it overrides, which calls through the base type reach.
+  let best = ranked[0];
+  for (let base = best && baseOf(ws, best, ranked); base; base = baseOf(ws, base, ranked)) best = base;
   if (!best) return { note: `no symbol named ${target}` };
+  const others = ranked.filter((s) => s !== best);
   return { symbol: best, note: others.length ? `also named so: ${others.map((s) => s.id).join(', ')}` : '' };
+}
+
+// Among [candidates], the member that [member] overrides: its class's header names the other's class.
+function baseOf(ws: Workspace, member: CodeSymbol, candidates: CodeSymbol[]): CodeSymbol | undefined {
+  const owner = member.parent ? ws.index.get(member.parent) : undefined;
+  const heritage = owner ? names(/\b(?:extends|implements|with)\b(.*)$/.exec(owner.signature)?.[1] ?? '') : [];
+  return candidates.find((c) => c !== member && c.parent && heritage.includes(ws.index.get(c.parent)?.name ?? ''));
 }

@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { sourceExtensions } from '../index/parse.ts';
+import { codeExtensions } from '../index/parse.ts';
 import { hookedExtensions, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
 
 const root = mkdtempSync(join(tmpdir(), 'csyk-hooks-'));
@@ -10,8 +10,8 @@ writeFileSync(join(root, 'big.ts'), 'const x = 1;\n'.repeat(500));
 writeFileSync(join(root, 'small.ts'), 'const x = 1;\n');
 
 describe('hookedExtensions', () => {
-  it('are the extensions the index reads', () => {
-    expect([...hookedExtensions].sort()).toEqual([...sourceExtensions].sort());
+  it('are the extensions of the code the index parses', () => {
+    expect([...hookedExtensions].sort()).toEqual([...codeExtensions].sort());
   });
 });
 
