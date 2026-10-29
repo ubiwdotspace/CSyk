@@ -3,6 +3,9 @@ import { statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+// Tokens of answers after which a session counts as long.
+const longSession = 6000;
+
 /** How long a shown body stays "already shown" for hosts that compact without telling us. */
 const ledgerTtl = 30 * 60 * 1000;
 
@@ -28,6 +31,7 @@ export function bodyHash(text: string): string {
  */
 export class Session {
   private calls = 0;
+  private given = 0;
   private readonly shownAt = new Map<string, { hash: string; call: number; at: number }>();
   private readonly hinted = new Set<string>();
   private resetAt: number;
@@ -54,6 +58,21 @@ export class Session {
     return entry.call;
   }
 
+  /** Notes that an answer of [tokens] went into the agent's context. */
+  spend(tokens: number): void {
+    this.given += tokens;
+  }
+
+  /**
+   * Whether this session's answers already fill much of the agent's context:
+   * a long exploration, where every token added now is re-read on each of
+   * its many later turns, so answers should stay short.
+   */
+  get long(): boolean {
+    this.checkReset();
+    return this.given > longSession;
+  }
+
   /** Notes that the current call showed this body of [id] in full. */
   record(id: string, hash: string): void {
     this.shownAt.set(id, { hash, call: this.calls, at: this.now() });
@@ -78,5 +97,6 @@ export class Session {
     this.resetAt = touched;
     this.shownAt.clear();
     this.hinted.clear();
+    this.given = 0;
   }
 }
