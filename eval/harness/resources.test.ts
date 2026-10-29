@@ -10,6 +10,8 @@ describe('resources', () => {
 
   it('counts the CPU a busy loop spends and this process memory', async () => {
     const watch = watchResources();
+    // The first sample is the starting point; a busy loop must not block it.
+    await new Promise((done) => setTimeout(done, 300));
     const end = Date.now() + 600;
     while (Date.now() < end);
     const used = await watch.stop();
