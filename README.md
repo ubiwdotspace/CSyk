@@ -50,36 +50,44 @@ tokens per session; see [Public benchmarks](#public-benchmarks-finding-the-code-
 ```sh
 npm install -g csyk          # or from a clone: npm install && npm run build && npm install -g .
 cd your-project
-csyk setup --write           # writes .mcp.json and the hooks into .claude/settings.json
+csyk setup --write           # writes .mcp.json, .claude/settings.json, CLAUDE.md and the csyk skill
 ```
 
 `csyk setup` without `--write` prints what it would write: the MCP server entry (equivalent to
-`claude mcp add csyk -- csyk serve`), the hooks, and a short note for `CLAUDE.md` that tells the
-agent when to use which tool. Start Claude Code in the project and the `csyk` tools are there.
+`claude mcp add csyk -- csyk serve`), a rule in `.claude/settings.json` that takes Claude Code's
+built-in `Grep` away in favour of CSyk's `grep`, a short note for `CLAUDE.md` that tells the agent
+when to use which tool, and a `csyk` skill with the detail. `--user` writes them for every project
+(the note as `~/.claude/rules/csyk.md`). Start Claude Code in the project and the `csyk` tools are
+there.
+
+Why take `Grep` away: CSyk's `grep` searches the same way (ripgrep, a regex, `path`, `glob`) and
+names the function each hit is in. With both, agents use both, and `Grep`'s description alone costs
+more tokens on every turn than all six CSyk tools. To keep it, delete `"Grep"` from
+`permissions.deny`.
 
 For Go, install `gopls` (`go install golang.org/x/tools/gopls@latest`); for Dart, the Dart or
-Flutter SDK. TypeScript and Python support is bundled. `csyk status` (the `status` tool) shows what
-is indexed and which language servers run.
+Flutter SDK. TypeScript and Python support is bundled.
 
 Other MCP clients: run `csyk serve [workspace]` as a stdio server.
 
 ## Tools
 
-Ten tools, listed in under 1,000 tokens. Every answer fits a token budget (2,000 by default,
-`budget` to change it) and says what it left out and how to narrow the call.
+Six tools, listed in 539 tokens: the tool list is re-read on every turn of every session, so each
+tool and argument has to earn its place. Every answer fits a token budget of 2,000 tokens and says
+what it left out and how to narrow the call.
 
 | Tool | Question | Answer |
 |---|---|---|
-| `find` | Where is a symbol, by name or part of one? | one line per symbol: id, kind, line, signature |
-| `outline` | What is in this file or folder? | symbols with line ranges |
-| `read` | Show me this one symbol | its exact source, or its signature |
+| `find` | Where is a symbol, by name or part of one? | one line per symbol: id, kind, line, signature; the source too when one symbol has exactly that name and is short |
+| `grep` | Where does this text appear? | matches, each with the symbol that contains it, and the source of up to three small ones; over many files, a per-file summary |
+| `read` | Show me this | a symbol's exact source (`file#Name`, `file:Name`, `Class.method` or a name); a short file whole, a longer one or a folder as its symbols; `file:line` or `file:start-end` as lines |
 | `refs` | Who uses this symbol? | every reference the compiler resolves, per file, with the enclosing symbol |
 | `calls` | Who calls it, or what does it call? | callers (`in`) or callees (`out`), up to three levels |
 | `impact` | What does my change touch? | changed symbols, their callers two levels up, the test files among them |
-| `def` | Where is the name at this position declared? | the declaration |
-| `grep` | Where does this text appear? | matches, each with the symbol that contains it |
-| `status` | What does CSyk know? | index size, watcher, each language's server |
-| `batch` | Several of the above | up to eight calls in one round trip |
+
+Answers are built so the agent needs no second call: `grep` that misses in the folder it was given
+searches everywhere and says so, a `read` of a path that does not exist names files of that name,
+and the first `grep` after a large checkout answers in about a second while the index still fills.
 
 What the agent sees, from the excalidraw repository:
 
@@ -155,11 +163,14 @@ servers to resolve imports into them; CSyk's answers stay inside the workspace e
 
 ## Hooks
 
-`csyk setup` wires three Claude Code hooks. Each acts only while a CSyk server serves the folder,
-and lets the call through on any error. A hook starts and answers in about 80 ms.
+`csyk setup` wires `session-reset`; `csyk setup --hooks` adds `pre-read` and `pre-grep`, which
+turn calls down. They are opt-in: a turned-down call costs the agent a turn, and on the public
+benchmarks below the setup without them used fewer tokens. Each hook acts only while a CSyk server
+serves the folder, and lets the call through on any error. A hook starts and answers in about
+80 ms.
 
 - `pre-read` turns down a whole-file `Read` of a source file over 400 lines and points at
-  `outline` and `read`. A read with an offset or a limit always passes.
+  `read` with the file's path. A read with an offset or a limit always passes.
 - `pre-grep` turns down `Grep`, `rg` or recursive `grep` for a bare identifier and points at `find`
   and `refs`. Phrases, regexes and searches outside the workspace pass; shell commands are lexed
   (quotes, pipes, `cd`, redirections), and anything the lexer cannot follow passes.

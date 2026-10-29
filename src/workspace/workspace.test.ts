@@ -36,6 +36,16 @@ describe('Workspace', () => {
     await ws.close();
   });
 
+  it('greps with the lines around hits in a large function', async () => {
+    const body = Array.from({ length: 150 }, (_, i) => (i === 99 ? '  const needle = 1;' : `  const x${i} = ${i};`));
+    const root = folder({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
+    const ws = await Workspace.open(root);
+    const answer = await runTool(ws, 'grep', { pattern: 'needle' }, new Session());
+    expect(answer.text).toContain('big.ts:101  big');
+    expect(answer.text).toContain('big.ts · lines 96-111\n  const x94 = 94;');
+    await ws.close();
+  });
+
   // File system events can lag on a busy machine; the test retries rather than wait longer.
   it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });

@@ -51,6 +51,30 @@ export async function find(
   };
 }
 
+// Tokens a grep may add to its budget for the source around its hits.
+const sourceExtra = 1000;
+
+/** The lines around [hits], merged per file, as far as [budget] allows. */
+async function excerpts(ws: Workspace, hits: { file: string; line: number }[], budget: number): Promise<string[]> {
+  const parts: string[] = [];
+  for (const file of new Set(hits.map((h) => h.file))) {
+    const lines = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+    const windows: [number, number][] = [];
+    for (const { line } of hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line)) {
+      const [from, to] = [Math.max(1, line - 5), Math.min(lines.length, line + 10)];
+      const last = windows.at(-1);
+      if (last && from <= last[1] + 1) last[1] = Math.max(last[1], to);
+      else windows.push([from, to]);
+    }
+    for (const [from, to] of windows) {
+      const part = [`${file} · lines ${from}-${to}`, ...lines.slice(from - 1, to)];
+      if (estimateTokens([...parts, ...part].join('\n')) > budget) return parts;
+      parts.push(...part);
+    }
+  }
+  return parts;
+}
+
 /**
  * The source of [symbols] when they come to at most [maxLines] lines and
  * fit [budget]: reading them would cost the agent a whole turn of context,
@@ -339,9 +363,14 @@ export async function grep(
       total: hits.length,
     },
   );
-  // Hits in a few small symbols bring their source: grep then read would take two turns.
-  const homes = [...new Map(shown.slice(0, fitted.shown).flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
-  const body = homes.length <= 3 ? await bodies(ws, homes, session, 120, (options.budget ?? defaultBudget) - estimateTokens(fitted.text)) : [];
+  // Hits in a few small symbols bring their source, hits in a few files the
+  // lines around them: after a grep without them, agents read the place next
+  // more often than not, and that turn re-reads the whole context.
+  const listed = shown.slice(0, fitted.shown);
+  const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
+  const room = (options.budget ?? defaultBudget) + sourceExtra - estimateTokens(fitted.text);
+  let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
+  if (body.length === 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
   return {
     text: [fitted.text, ...body].join('\n'),
     locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),
