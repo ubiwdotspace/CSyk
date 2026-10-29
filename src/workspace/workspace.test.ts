@@ -36,6 +36,17 @@ describe('Workspace', () => {
     await ws.close();
   });
 
+  it('greps every hit in one function when all of them fit', async () => {
+    const lines = Array.from({ length: 12 }, (_, i) => `  const v${i} = 'needle ${i}';`);
+    const root = folder({ 'one.ts': ['export function one() {', ...lines, '}'].join('\n') });
+    const ws = await Workspace.open(root);
+    const answer = await runTool(ws, 'grep', { pattern: 'needle' }, new Session());
+    expect(answer.text).toMatch(/^12 hits in 1 place · text/);
+    expect(answer.text.match(/^one\.ts:\d+ {2}one/gm)).toHaveLength(12);
+    expect(answer.text).not.toContain('more;');
+    await ws.close();
+  });
+
   it('greps with the lines around hits in a large function, unless the session is long', async () => {
     const body = Array.from({ length: 150 }, (_, i) => (i === 99 ? '  const needle = 1;' : `  const x${i} = ${i};`));
     const root = folder({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
