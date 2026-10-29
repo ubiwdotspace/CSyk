@@ -48,7 +48,7 @@ export type ServerSpec = {
 };
 
 // The first of [names] found on PATH or in Go's install folder.
-function onPath(...names: string[]): string | undefined {
+export function onPath(...names: string[]): string | undefined {
   const dirs = [...(process.env.PATH ?? '').split(delimiter), join(process.env.GOPATH ?? join(homedir(), 'go'), 'bin')];
   for (const name of names) {
     for (const dir of dirs) {

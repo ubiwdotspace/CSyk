@@ -10,7 +10,7 @@
   <a href="https://github.com/ubiwdotspace/CSyk/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ubiwdotspace/CSyk/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-blue">
   <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-339933">
-  <img alt="Works with Claude Code" src="https://img.shields.io/badge/works%20with-Claude%20Code-d97757">
+  <img alt="Works with Claude Code, Codex and Antigravity" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity-d97757">
   <img alt="TypeScript, JavaScript, Python, Go, Dart" src="https://img.shields.io/badge/languages-TypeScript%20%C2%B7%20JavaScript%20%C2%B7%20Python%20%C2%B7%20Go%20%C2%B7%20Dart-555">
 </p>
 
@@ -36,13 +36,14 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 ```sh
 npm install -g csyk
 cd your-project
-csyk setup --write
+csyk setup
 ```
 
-Start Claude Code in the project and the six CSyk tools are there. `csyk setup` adds the MCP
-server, a short note in `CLAUDE.md` and a skill, and turns off the built-in `Grep`, which CSyk's
-`grep` replaces. For Go, install `gopls`; for Dart, the Dart or Flutter SDK. Details, hooks and
-other agents: [docs/setup.md](docs/setup.md).
+`csyk setup` asks which agents to set up (Claude Code, Codex, Antigravity) and for which projects,
+then adds the MCP server, a short note the agent always reads and a skill. If Go or Dart support
+needs a language server you do not have, it offers to install it. Start your agent and the six
+CSyk tools are there. Options for scripts, every file it writes, and hooks:
+[docs/setup.md](docs/setup.md).
 
 ## Before and after
 
