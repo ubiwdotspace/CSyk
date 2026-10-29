@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 // Tokens of answers after which a session counts as long.
-const longSession = 6000;
+const longSession = 3000;
 
 /** How long a shown body stays "already shown" for hosts that compact without telling us. */
 const ledgerTtl = 30 * 60 * 1000;

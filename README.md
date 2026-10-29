@@ -96,9 +96,9 @@ around its matches) and says what it left out and how to narrow the question.
 Answers are built so the agent does not need to ask again. A `grep` that finds nothing in the
 folder it was given searches the whole project and says so. A `read` of a path that does not exist
 lists files with the same name. Right after starting on a large project, the first `grep` answers
-in about a second while the index is still being built. Once CSyk's answers in a session pass 6,000 tokens, `grep`
-and `find` stop showing code and `grep` lists half as much: in a long session, everything added is
-re-read on every later turn.
+in about a second while the index is still being built. Once CSyk's answers in a session pass 3,000 tokens, `grep`
+and `find` stop showing code and `grep` lists less: in a long session, everything added is re-read
+on every later turn.
 
 What the agent sees, in the excalidraw repository:
 

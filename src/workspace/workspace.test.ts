@@ -45,7 +45,7 @@ describe('Workspace', () => {
     expect(answer.text).toContain('big.ts · lines 96-111\n  const x94 = 94;');
     expect(answer.text.split('const needle = 1;')).toHaveLength(2);
     const long = new Session();
-    long.spend(7000);
+    long.spend(4000);
     expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text\nbig.ts:101  big  const needle = 1;');
     await ws.close();
   });
