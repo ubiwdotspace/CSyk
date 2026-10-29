@@ -1,0 +1,20 @@
+name: Feature request
+description: A question agents ask that CSyk answers badly or not at all.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: The question
+      description: What the agent was trying to find out, and how it went without the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: >-
+        What CSyk should answer. CSyk keeps few tools and short answers, so say what it would save:
+        turns, tokens or wrong answers.
+    validations:
+      required: true
