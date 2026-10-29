@@ -60,12 +60,12 @@ Antigravity. Any other agent that supports MCP works too, set up by hand.
 
 | | Language | What you need | Also recognises |
 |:---:|---|---|---|
-| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg" alt="TypeScript" width="28"> | TypeScript | nothing more | React components and hooks, NestJS routes and providers |
-| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/javascript/javascript-original.svg" alt="JavaScript" width="28"> | JavaScript | nothing more | React components and hooks |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg" alt="TypeScript" width="28"> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/javascript/javascript-original.svg" alt="JavaScript" width="28"> | TypeScript and JavaScript | nothing more | React components and hooks, NestJS routes and providers |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/python/python-original.svg" alt="Python" width="28"> | Python | nothing more | FastAPI routes |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/go/go-original.svg" alt="Go" width="28"> | Go | `gopls`, Go's language server | |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/dart/dart-original.svg" alt="Dart" width="28"> | Dart and Flutter | the Dart or Flutter SDK | Flutter widgets |
 
+A project can mix these languages: each file is read with its own language's parser and compiler.
 TypeScript, JavaScript and Python work as soon as CSyk is installed: their compilers come with it.
 For Go and Dart, CSyk uses the compiler you install for those languages. If `csyk setup` does not
 find it, it offers to install it for you, or says how. Without it, CSyk still finds names and text
