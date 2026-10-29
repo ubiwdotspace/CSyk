@@ -1,5 +1,5 @@
 /** The languages CSyk reads. */
-export type Lang = 'ts' | 'js' | 'py' | 'go' | 'dart';
+export type Lang = 'ts' | 'js' | 'py' | 'go' | 'dart' | 'md';
 
 /** What a symbol is, framework roles included so they rank and filter. */
 export type SymbolKind =
@@ -16,7 +16,9 @@ export type SymbolKind =
   | 'route'
   | 'provider'
   | 'field'
-  | 'namespace';
+  | 'namespace'
+  // A heading of a Markdown doc or spec.
+  | 'section';
 
 export const symbolKinds: readonly SymbolKind[] = [
   'function',
@@ -33,6 +35,7 @@ export const symbolKinds: readonly SymbolKind[] = [
   'provider',
   'field',
   'namespace',
+  'section',
 ];
 
 /** A declaration found in the index. Lines are 1-based and inclusive. */
