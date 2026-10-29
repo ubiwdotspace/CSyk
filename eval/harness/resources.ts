@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
@@ -39,7 +40,7 @@ export function watchResources(pid: number = process.pid, everyMs = 250): { stop
       .trim()
       .split('\n')
       .map((line) => line.trim().split(/\s+/))
-      .map(([p, pp, rss, time]) => ({ pid: Number(p), ppid: Number(pp), kb: Number(rss), cpu: seconds(time ?? '') }));
+      .map(([p, pp, rss, time]) => ({ pid: Number(p), ppid: Number(pp), kb: Number(rss), cpu: procCpu(Number(p)) ?? seconds(time ?? '') }));
     const children = new Map<number, number[]>();
     for (const row of rows) children.set(row.ppid, [...(children.get(row.ppid) ?? []), row.pid]);
     const tree = new Set<number>();
@@ -97,6 +98,22 @@ export function watchResources(pid: number = process.pid, everyMs = 250): { stop
       };
     },
   };
+}
+
+/**
+ * A process's CPU time from /proc on Linux, in hundredths of a second where
+ * `ps` gives whole seconds: user and system ticks, at Linux's fixed 100 a second.
+ */
+function procCpu(pid: number): number | undefined {
+  if (process.platform !== 'linux') return undefined;
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+    const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+    return (Number(fields[11]) + Number(fields[12])) / 100;
+  } catch {
+    // The process has already exited.
+    return undefined;
+  }
 }
 
 /** `ps` CPU time: `M:SS.ss` on macOS, `[D-]HH:MM:SS` on Linux. */
