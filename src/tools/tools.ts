@@ -124,7 +124,7 @@ export function outline(ws: Workspace, path: string, options: { budget?: number 
   const names = (file: string) => ws.index.symbolsIn(file).filter((s) => !s.parent).map((s) => s.name);
   const fitted = fit(`${clean || '.'}/ · ${plural(files.length, 'file')}`, files.map((f) => `${f}  ${names(f).join(', ')}`), {
     budget,
-    narrow: 'outline a deeper folder',
+    narrow: 'read a deeper folder',
     compact: files,
   });
   return { text: fitted.text, locations: [] };
@@ -190,7 +190,7 @@ export async function read(
     return { text: [header, ...body].join('\n'), locations: location };
   }
   // A cut body is not recorded: the agent has not seen all of it.
-  const rest = `… ${body.length - kept} more lines; raise budget or read a smaller symbol`;
+  const rest = `… ${body.length - kept} more lines; read ${symbol.file}:${start + kept}-${end} for them`;
   return { text: [header, ...body.slice(0, kept), rest].join('\n'), locations: location };
 }
 
@@ -227,7 +227,7 @@ export async function refs(
   }
   const fitted = fit(header, rows, {
     budget: options.budget ?? defaultBudget,
-    narrow: 'raise limit or budget',
+    narrow: 'grep the name with a path to see them',
     compact: files.map(([file, numbers]) => `${file}  ${numbers.join(', ')}`),
     total: options.code ? found.length : new Set(found.map((p) => p.file)).size,
   });

@@ -62,7 +62,7 @@ you need to be sure of, then \`calls direction=in\` if the fix may belong in a c
 - The header ends with where the answer came from: \`lsp\` (the compiler), \`index\` (syntax only) or
   \`text\`, when a language has no server installed.
 - \`partial: N of M mentions resolved in time\`: a very common name; narrow with an id or a path.
-- \`… N more; <how>\`: the answer was cut to its token budget; follow the hint or pass \`budget\`.
+- \`… N more; <how>\`: the answer was cut to its token budget; the hint says how to see the rest.
 - \`[unchanged: <id>, shown at call #n]\`: you saw that source earlier in this session; reuse it.
 
 ## When to use Read instead
