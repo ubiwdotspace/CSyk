@@ -9,7 +9,7 @@ import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--model sonnet] [--max-turns 40]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
@@ -64,6 +64,7 @@ async function main(): Promise<void> {
       dataset: { type: 'string', default: 'polybench' },
       count: { type: 'string', default: '10' },
       seed: { type: 'string', default: '1' },
+      run: { type: 'string' },
       model: { type: 'string', default: 'sonnet' },
       'max-turns': { type: 'string', default: '40' },
       help: { type: 'boolean', short: 'h' },
@@ -83,7 +84,8 @@ async function main(): Promise<void> {
   // One file per setup, dataset, language and seed, written after every issue:
   // a run that stops resumes where it was, without paying for an issue twice.
   const name = values.dataset === 'polybench' ? values.language : `${values.dataset}-${values.language}`;
-  const out = join(root, 'eval/results', `loc-${values.setup}-${name}-seed${values.seed}.json`);
+  // --run names a repeat of the same setup, so runs side by side keep their own results.
+  const out = join(root, 'eval/results', `loc-${values.setup}-${name}-seed${values.seed}${values.run ? `.${values.run}` : ''}.json`);
   const results: Result[] = existsSync(out) ? (JSON.parse(await readFile(out, 'utf8')) as { results: Result[] }).results : [];
   const save = () =>
     writeFile(
