@@ -1,59 +1,45 @@
-# CSyk
+<p align="center">
+  <img src="docs/logo.png" alt="CSyk, the one who knows where the code is" width="200">
+</p>
 
-Code search for AI coding agents such as Claude Code: exact answers in a few lines.
+<h1 align="center">CSyk</h1>
 
-When an agent looks for code with plain text search and whole-file reads, most of what it reads is
-text it does not need, and it still gets things wrong: a comment, a string, an import and a
-function that happens to share a name all look the same to text search. CSyk answers the questions
-an agent actually asks (where is this defined, who uses it, who calls it, what does my change
-touch) from a parsed index of the code and from the language's own compiler, one line per answer.
+<p align="center"><em>He doesn't read the file. He knows the line.</em></p>
 
-It works with TypeScript and JavaScript (React, Node, NestJS), Python (FastAPI, Django), Go and
-Dart (Flutter). It plugs into the agent as an MCP server (Model Context Protocol, the standard way
-to give an agent extra tools).
+<p align="center">
+  <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-blue">
+  <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-339933">
+  <img alt="Works with Claude Code" src="https://img.shields.io/badge/works%20with-Claude%20Code-d97757">
+  <img alt="TypeScript, JavaScript, Python, Go, Dart" src="https://img.shields.io/badge/languages-TypeScript%20%C2%B7%20JavaScript%20%C2%B7%20Python%20%C2%B7%20Go%20%C2%B7%20Dart-555">
+</p>
 
-**Answers to single questions**, measured on twelve public repositories (three per language, small
-to large), against plain text search plus reading the file:
+Code search for AI coding agents. Your agent asks where something is defined, who uses it, who
+calls it, or what an edit touches. CSyk answers in a few lines, from an index of the code and from
+the language's own compiler, instead of a pile of text-search hits and whole files. It plugs
+into the agent as an MCP server (Model Context Protocol, the standard way to give an agent extra
+tools).
 
-| | Text search and file reads | **CSyk** |
-|---|---|---|
-| Finding a definition by its exact name: first answer right | 33.1% | **98.6%** |
-| Finding a definition by part of its name: first answer right | 7.6% | **99.5%** |
-| Finding uses of a symbol: share of answers that really are uses | 64.1% | **99.2%** |
-| Tokens the agent reads to answer the same questions | 16,899 | **240 (98.6% fewer)** |
-| Time per answer (median) | 75 ms | **8 ms** |
+| **98.6%** | **240 tokens** | **7% fewer tokens** | **8 ms** |
+|:---:|:---:|:---:|:---:|
+| first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, and faster, in all four languages measured | per answer, median |
 
-**Whole agent sessions** on real GitHub issues (SWE-bench Verified, SWE-PolyBench Verified and
-Multi-SWE-bench, 30 random issues each): Claude Code with CSyk used 8–10% fewer tokens per issue and
-finished about 0.6 seconds sooner in Python, JavaScript and Go, and found the right code as often or
-more often. In TypeScript, accuracy and the typical issue were about level, but tokens were 9%
-higher on average, from a few very long sessions. See
-[Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
+<p align="center">
+  <b><a href="#install">Install</a> · <a href="#before-and-after">Before and after</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a> · <a href="#how-it-works">How it works</a> · <a href="#contributing">Contributing</a></b>
+</p>
 
-- Runs on your machine. Code never leaves it, and nothing is sent anywhere.
-- macOS and Linux, Node 22.18 or later.
-- Apache-2.0 licence.
+Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS and Linux.
 
-## Contents
+---
 
-- [Quick start](#quick-start)
-- [Tools](#tools)
-- [How it works](#how-it-works)
-- [Languages and frameworks](#languages-and-frameworks)
-- [Hooks](#hooks)
-- [Results on single questions](#results-on-single-questions)
-- [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed)
-- [Limitations](#limitations)
-- [Evaluation](#evaluation)
-- [Development](#development)
-
-## Quick start
+## Install
 
 ```sh
 npm install -g csyk          # or from a clone: npm install && npm run build && npm install -g .
 cd your-project
 csyk setup --write           # sets up Claude Code for this project
 ```
+
+That's it. Start Claude Code in the project and the six CSyk tools are there.
 
 `csyk setup --write` writes four things:
 
@@ -76,6 +62,61 @@ Flutter SDK. TypeScript and Python support comes bundled.
 
 Other agents that support MCP: run `csyk serve [folder]`, which talks over standard input and
 output.
+
+## Before and after
+
+The question an agent asks all day: who uses this? Here, `restoreElements` in the excalidraw
+repository.
+
+**Text search** (`rg -n -w restoreElements`): 100 lines and 3,094 tokens, from 13 files. Imports,
+tests and every other line where the name is written, for the agent to sort out:
+
+```text
+./excalidraw-app/data/firebase.ts:8:import { restoreElements } from "@excalidraw/excalidraw/data/restore";
+./excalidraw-app/data/firebase.ts:222:      restoreElements(await decryptElements(prevStoredScene, roomKey), null),
+./excalidraw-app/data/firebase.ts:244:    restoreElements(await decryptElements(storedScene, roomKey), null),
+./excalidraw-app/data/firebase.ts:265:    restoreElements(await decryptElements(storedScene, roomKey), null, {
+./packages/excalidraw/data/restore.ts:960:export const restoreElements = <T extends ExcalidrawElement>(
+… 95 more lines
+```
+
+**CSyk** (`refs restoreElements`): 8 lines and 281 tokens. The uses the compiler confirms, one line
+per file, with the function each one is in:
+
+```text
+packages/excalidraw/data/restore.ts#restoreElements · 75 refs in 9 files · lsp
+packages/excalidraw/components/App.tsx  305, 3621·initializeScene, 4625·addElementsFromPasteOrLibrary
+packages/excalidraw/data/blob.ts  26, 163·loadSceneOrLibraryFromBlob
+packages/excalidraw/data/restore.ts  1390·restoreLibraryItem
+packages/excalidraw/index.tsx  420
+packages/excalidraw/scene/export.ts  61, 572·configExportDimension, 1325·exportToBlob, 1398·exportToClipboard
+packages/excalidraw/tests/data/restore.test.ts  58, 77, 89, 97, 112, 118, 123, 128, 140, 149, 166, …
+… 3 more; grep the name with a path to see them
+```
+
+Same question, a tenth of the tokens, and the agent can act on it without opening a file.
+
+## Numbers
+
+Two kinds of measurement, both reproducible from this repository.
+
+**Single questions**, on twelve public repositories (three per language, small to large), against
+plain text search plus reading the file:
+
+| | Text search and file reads | **CSyk** |
+|---|---|---|
+| Finding a definition by its exact name: first answer right | 33.1% | **98.6%** |
+| Finding a definition by part of its name: first answer right | 7.6% | **99.5%** |
+| Finding uses of a symbol: share of answers that really are uses | 64.1% | **99.2%** |
+| Tokens the agent reads to answer the same questions | 16,899 | **240 (98.6% fewer)** |
+| Time per answer (median) | 75 ms | **8 ms** |
+
+**Whole agent sessions** on four benchmarks of real GitHub issues: Claude Code with CSyk used
+fewer tokens in every language (10% fewer in JavaScript, 9% in Python, 7% in Go, 1% in
+TypeScript), finished 0.8 to 2.8 seconds sooner per issue, and named more of the functions the fix
+changed in TypeScript, Go and Python. Details in
+[Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed) and
+[Results on single questions](#results-on-single-questions).
 
 ## Tools
 
@@ -130,6 +171,94 @@ If the agent asks again for code it has already seen and that has not changed, C
 `[unchanged: <id>, shown at call #n]` instead of sending it again.
 
 ## How it works
+
+CSyk is one process per project. Claude Code starts it and talks to it over standard input and
+output (MCP). Inside, every answer comes from three sources: an index of the code that CSyk keeps
+itself, ripgrep for plain text, and the language's own compiler, run as a language server.
+
+```mermaid
+flowchart LR
+    agent["Claude Code<br/>(or another agent)"]
+    subgraph csyk["CSyk server"]
+        tools["Six tools<br/>find · grep · read · refs · calls · impact"]
+        session["Session memory<br/>code already shown, tokens given"]
+        index["Symbol index<br/>tree-sitter, in memory"]
+        servers["Language servers<br/>TypeScript, pyright, gopls, Dart"]
+    end
+    files[("Project files")]
+    cache[("~/.cache/csyk<br/>saved index")]
+    rg["ripgrep"]
+    agent -->|"tool call (MCP)"| tools
+    tools -->|"short answer"| agent
+    tools <--> session
+    tools --> index
+    tools --> rg
+    tools --> servers
+    index -->|parses| files
+    index <-->|"loads and saves"| cache
+    rg -->|searches| files
+    servers -->|read| files
+    files -.->|"file watcher: changed files are parsed again"| index
+```
+
+**One question, step by step.** `refs` (who uses this symbol?) shows how the three sources work
+together: the index finds the symbol, ripgrep finds every place its name is written, and the
+compiler says which of those places really mean it.
+
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant T as refs
+    participant I as Symbol index
+    participant R as ripgrep
+    participant L as Language server
+    A->>T: refs calculateTotal
+    T->>I: which symbol is "calculateTotal"?
+    I-->>T: calculateTotal in src/cart/total.ts
+    T->>R: every whole-word "calculateTotal" in code files
+    R-->>T: 12 mentions
+    loop nearest mentions first, for up to five seconds
+        T->>L: what does the name at this file and line point to?
+        L-->>T: its declaration
+    end
+    Note over T: keep the mentions that point to this symbol,<br/>drop comments, strings and other symbols of the same name,<br/>name the function each one is in (from the index)
+    T-->>A: 4 refs in 2 files, one line per file
+```
+
+**What `grep` sends back.** Most of an agent's tokens are its context, re-read on every turn, so
+`grep` tries to answer in a way that saves the agent its next turn without filling its context:
+
+```mermaid
+flowchart TD
+    start["grep pattern"] --> search["ripgrep over the project<br/>(index the files it hit first, if the index is still being built)"]
+    search --> found{"any match?"}
+    found -->|"no, in the folder given"| wider["search the whole project<br/>and say so"]
+    found -->|yes| many{"matches in more than 8 files<br/>and too many to list?"}
+    many -->|yes| summary["count per file, files with most matches first,<br/>with the functions they are in"]
+    many -->|no| list["each match: file:line, the function it is in, the line"]
+    list --> long{"session already long?<br/>(answers over 3,000 tokens)"}
+    long -->|yes| short["short list only (600 tokens)"]
+    long -->|no| small{"matches in up to 3 small functions?"}
+    small -->|yes| bodies["add those functions' code"]
+    small -->|no| few{"matches in up to 3 files?"}
+    few -->|yes| around["add the lines around each match"]
+    few -->|no| plain["list only"]
+```
+
+**Where things are in the code.**
+
+| Part | File | What it does |
+|---|---|---|
+| Command line | `src/cli.ts` | `csyk serve`, `csyk setup`, `csyk hook` |
+| Server | `src/server/server.ts` | registers the six tools with MCP, counts what each answer costs |
+| Tool routing | `src/tools/dispatch.ts` | the tools' descriptions and arguments, checks them, picks the tool |
+| Tools | `src/tools/tools.ts`, `src/tools/calls.ts` | `find`, `grep`, `read`, `refs`; `calls` and `impact` |
+| Index | `src/index/symbol-index.ts`, `src/index/parse.ts`, `src/index/extract/*.ts` | parsing with tree-sitter, one extractor per language, name search |
+| Compiler | `src/precision/lsp-service.ts`, `src/precision/lsp-client.ts` | starting language servers, resolving each mention |
+| Project | `src/workspace/workspace.ts` | the index, the file watcher, starting and stopping servers |
+| Answer size | `src/token/budget.ts`, `src/token/session.ts` | cutting answers to a token budget, remembering what was shown |
+| Hooks | `src/hooks/hooks.ts` | the optional Claude Code hooks |
+| Agent guide | `src/guide.ts` | the note and the skill `csyk setup` writes |
 
 **Index.** On start, CSyk parses every source file with tree-sitter (a fast parser, about 1 ms per
 file) and keeps the symbols in memory: functions, classes, methods, fields, constants, types and
@@ -241,7 +370,8 @@ compared with the fix that was actually merged:
 - **All changed files in first five**: every file the fix changed is among the first five it names.
 - **Changed functions named**: the share of the functions and methods the fix changed that it
   names.
-- **Median time**: time per issue, from start to answer; the median of all runs.
+- **Median time**: time per issue, from start to answer; the median, from the round where both
+  setups ran at the same moment.
 - **Tokens per issue**: everything the model read and wrote in the session, including the context
   it re-reads on every turn; the mean and the median over the 30 issues.
 
@@ -252,32 +382,34 @@ Two setups answer the same issues. **Claude Code alone** has its own `Read`, `Gr
 Each benchmark contributes 30 issues drawn at random from the whole dataset (a fixed seed, no
 filter on difficulty). Each setup ran the same 30 issues several times, and the table shows the
 average of those runs: two runs of the same setup can differ by several points, so differences of
-one to three points are within that noise. Measured on 2026-10-29; the 660 sessions in the table
-cost about $30.
+one to three points are within that noise. The model's response time changes over the day, so
+times come from one round where both setups ran at the same moment. Measured on 2026-10-29; the 930
+sessions in the table cost about $50.
 
-| Benchmark | Language | Setup | Runs | First file right | All changed files in first five | Changed functions named | Median time | Tokens per issue, mean | Tokens per issue, median | Issues where CSyk used fewer tokens |
+| Benchmark | Language | Setup | Runs | First file right | All changed files in first five | Changed functions named | Median time, run side by side | Tokens per issue, mean | Tokens per issue, median | Issues where CSyk used fewer tokens |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | Claude Code alone | 4 | 93.3% | 45.0% | 55.3% | 12.1 s | 71,192 | 57,975 | |
-| | | with CSyk | 2 | 90.0% | 38.3% | 54.0% | 12.8 s | 77,928 (+9%) | 55,874 (−4%) | 19 of 30 |
-|  | JavaScript | Claude Code alone | 3 | 82.2% | 50.0% | 56.7% | 13.9 s | 80,667 | 73,658 | |
-| | | with CSyk | 2 | 85.0% | 53.3% | 55.7% | 13.3 s | 73,586 (−9%) | 67,538 (−8%) | 18 of 30 |
-| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | Claude Code alone | 4 | 92.5% | 85.0% | 66.0% | 9.2 s | 47,358 | 43,147 | |
-| | | with CSyk | 2 | 95.0% | 86.7% | 64.2% | 8.6 s | 42,391 (−10%) | 34,671 (−20%) | 22 of 30 |
-| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | Claude Code alone | 3 | 91.1% | 60.0% | 63.2% | 11.3 s | 60,535 | 54,242 | |
-| | | with CSyk | 2 | 96.7% | 60.0% | 68.1% | 10.7 s | 55,458 (−8%) | 54,071 (0%) | 17 of 30 |
+| [SWE-PolyBench Verified](https://github.com/amazon-science/SWE-PolyBench) (Amazon) | TypeScript | Claude Code alone | 5 | 94.0% | 45.3% | 55.5% | 14.8 s | 70,394 | 58,530 | |
+| | | with CSyk | 4 | 91.7% | 42.5% | 63.1% | 14.0 s | 69,554 (−1%) | 55,836 (−5%) | 23 of 30 |
+|  | JavaScript | Claude Code alone | 4 | 83.3% | 50.0% | 57.9% | 18.0 s | 82,193 | 75,008 | |
+| | | with CSyk | 3 | 85.6% | 48.9% | 56.6% | 15.2 s | 73,823 (−10%) | 65,445 (−13%) | 21 of 30 |
+| [SWE-bench Verified](https://www.swebench.com) (Princeton, OpenAI) | Python | Claude Code alone | 5 | 93.3% | 85.3% | 66.7% | 12.3 s | 47,178 | 44,637 | |
+| | | with CSyk | 3 | 92.2% | 85.6% | 68.0% | 10.7 s | 43,011 (−9%) | 35,496 (−20%) | 24 of 30 |
+| [Multi-SWE-bench mini](https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench_mini) (ByteDance) | Go | Claude Code alone | 4 | 90.8% | 60.8% | 63.3% | 13.9 s | 60,691 | 54,742 | |
+| | | with CSyk | 3 | 90.0% | 60.0% | 69.9% | 11.8 s | 56,201 (−7%) | 53,625 (−2%) | 20 of 30 |
 
 What this shows:
 
-- **Python, JavaScript and Go: fewer tokens, sooner, as accurate or more.** 8–10% fewer tokens per
-  issue on average (20% fewer on the median Python issue), about 0.6 seconds sooner, and the first
-  file right 2.5 to 5.6 points more often. The share of changed functions named is within two
-  points in Python and JavaScript, and 4.9 points higher in Go.
-- **TypeScript: level on the typical issue, more tokens on a few long ones.** The median issue uses
-  4% fewer tokens, and 19 of the 30 fewer, but the average is 9% higher. Three of the issues are
-  in VS Code, a very large repository where the agent sometimes searches for 20 to 30 turns, and
-  those long sessions cost more with CSyk. The first file was right 3 points less often and all
-  changed files were in the first five 7 points less often (one and two issues of 30), the share
-  of changed functions named was level, and the median time was 0.7 seconds longer.
+- **Fewer tokens in every language.** 1% to 10% fewer per issue on average, 2% to 20% fewer on the
+  median issue, and fewer on 20 to 24 of the 30 issues.
+- **Sooner.** 0.8 to 2.8 seconds less per issue at the median, with both setups running at the
+  same time.
+- **As accurate, and more on functions.** The share of changed functions named is 7.6 points higher
+  in TypeScript, 6.6 in Go and 1.3 in Python, and 1.3 lower in JavaScript. The first file and the
+  first five files stay within three points either way: less than one issue in 30.
+- **TypeScript saves least.** Three of its issues are in VS Code, a very large repository where the
+  agent sometimes searches for 10 to 30 turns. Every answer added in such a session is re-read on
+  every later turn, so once a session's CSyk answers pass 3,000 tokens, CSyk keeps them short.
+  Before that change, those sessions made TypeScript's average 9% higher than Claude Code alone.
 - **Where the savings come from.** Almost all of an agent's tokens are its context, re-read on
   every turn, so a tool saves tokens by saving turns, not by giving shorter answers. CSyk's `grep`
   names the function around each match and shows the code around matches in a few files, so the
@@ -288,8 +420,8 @@ To reproduce:
 `npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-lean> --count 30 --seed 1`,
 where `b0` is Claude Code alone and `csyk-lean` is with CSyk, then `npm run loc:report`. Each run
 writes its results to a file in `eval/results/` named after the setup, dataset and language;
-rename it before running the same setup again. Set `CSYK_LOC_DIR` to give a run its own copies of the repositories, so two setups
-can run at the same time. Where a dataset does not list the changed functions (SWE-bench,
+`--run <name>` keeps repeats of the same setup apart. Set `CSYK_LOC_DIR` to give a run its own
+copies of the repositories, so two setups can run at the same time. Where a dataset does not list the changed functions (SWE-bench,
 Multi-SWE-bench), each changed line of the fix is mapped to the function around it. Dart has no
 public benchmark of this kind; its numbers are the single-question ones above.
 
@@ -306,10 +438,29 @@ public benchmark of this kind; its numbers are the single-question ones above.
   default.
 - A name used thousands of times (Django's `Model.save`) gets a partial answer after the time
   limit, and the answer says so.
-- In very large repositories, a long search session (20 turns and more) can use more tokens with
-  CSyk than without it; see the TypeScript results above.
+- In very large repositories, long search sessions save little: TypeScript, with three VS Code
+  issues, is only 1% lower on average.
 
-## Evaluation
+## Contributing
+
+Start with [How it works](#how-it-works): the diagrams and the table of files say where each part
+lives. Then:
+
+```sh
+npm install
+npm run typecheck
+npm test
+npm run build                       # JavaScript into dist/, for the npm package
+node src/cli.ts serve <folder>      # run from source (Node removes the types itself)
+```
+
+The design, its phases and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md).
+
+Every change to what an agent sees (a tool, its description, an answer's shape) should be measured
+on the public benchmarks before it is merged: smaller answers do not always mean fewer tokens for a
+whole session, and the numbers have surprised us more than once.
+
+### Evaluation
 
 ```sh
 npm install
@@ -344,18 +495,6 @@ reads.
   time, cost and passes.
 - **Public benchmarks**: see the command at the end of
   [Public benchmarks](#public-benchmarks-finding-the-code-an-issue-needs-changed).
-
-## Development
-
-```sh
-npm install
-npm run typecheck
-npm test
-npm run build                       # JavaScript into dist/, for the npm package
-node src/cli.ts serve <folder>      # run from source (Node removes the types itself)
-```
-
-The design, its phases and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md).
 
 ## Licence
 
