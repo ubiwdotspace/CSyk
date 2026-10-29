@@ -23,7 +23,7 @@ export const hookedExtensions: ReadonlySet<string> = new Set([
   '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.dart',
 ]);
 
-// Files longer than this are worth an outline before a whole read.
+// Files longer than this are worth a list of their symbols before a whole read.
 const largeFile = 400;
 const identifier = /^[A-Za-z_]\w{2,}$/;
 const servingDir = () => join(tmpdir(), 'csyk', 'serving');
