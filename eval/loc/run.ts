@@ -9,7 +9,7 @@ import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
@@ -65,6 +65,7 @@ async function main(): Promise<void> {
       count: { type: 'string', default: '10' },
       seed: { type: 'string', default: '1' },
       run: { type: 'string' },
+      only: { type: 'string' },
       model: { type: 'string', default: 'sonnet' },
       'max-turns': { type: 'string', default: '40' },
       help: { type: 'boolean', short: 'h' },
@@ -76,7 +77,11 @@ async function main(): Promise<void> {
     return;
   }
   const all = (await load()).filter((i) => i.language === values.language);
-  const sample = shuffle(all, seeded(Number(values.seed))).slice(0, Number(values.count));
+  // --only runs the named issues of the sample, to look into them.
+  const only = values.only?.split(',');
+  const sample = shuffle(all, seeded(Number(values.seed)))
+    .slice(0, Number(values.count))
+    .filter((i) => !only || only.includes(i.instance_id));
   console.log(`${values.dataset} ${values.language}: ${sample.length} of ${all.length} issues, seed ${values.seed}`);
   console.log(`  repositories: ${tally(sample, (i) => i.repo)} (dataset: ${tally(all, (i) => i.repo)})`);
   if (all.some((i) => i.difficulty)) console.log(`  difficulty: ${tally(sample, (i) => i.difficulty ?? '?')} (dataset: ${tally(all, (i) => i.difficulty ?? '?')})`);
