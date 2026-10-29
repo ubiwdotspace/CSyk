@@ -3,7 +3,21 @@
   "version": "0.0.0",
   "description": "Code-search MCP server for AI agents: compiler-grade precision, minimal tokens.",
   "license": "Apache-2.0",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ubiwdotspace/CSyk.git"
+  },
+  "homepage": "https://github.com/ubiwdotspace/CSyk#readme",
+  "bugs": "https://github.com/ubiwdotspace/CSyk/issues",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "code-search",
+    "claude-code",
+    "ai-agents",
+    "lsp",
+    "tree-sitter"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22.18"

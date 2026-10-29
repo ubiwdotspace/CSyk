@@ -1,0 +1,38 @@
+name: Bug report
+description: A wrong, missing or too long answer, a crash, or a setup problem.
+labels: [bug]
+body:
+  - type: textarea
+    id: call
+    attributes:
+      label: Tool call and answer
+      description: The CSyk tool call and what it answered. Shorten long answers.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected answer
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Public repository and commit
+      description: Where the answer can be reproduced, if it can.
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language of the project
+      options: [TypeScript or JavaScript, Python, Go, Dart, Other]
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: CSyk version or commit, agent and its version, OS, Node version.
+      placeholder: csyk 0.1.0, Claude Code 2.x, macOS 26, Node 22.18
+    validations:
+      required: true
