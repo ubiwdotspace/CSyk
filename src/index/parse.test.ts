@@ -67,6 +67,24 @@ describe('extractSymbols for TypeScript', () => {
 });
 
 describe('extractSymbols for JavaScript', () => {
+  it('finds functions written as assignments, as CommonJS and prototype code do', async () => {
+    const source = [
+      'var Cloud = {};',
+      'Cloud.beforeSave = function (name, handler) {',
+      '  return register(name, handler);',
+      '};',
+      'exports.handler = async (req) => req;',
+      'function Store() {}',
+      'Store.prototype.get = function (key) {',
+      '  return key;',
+      '};',
+      'module.exports.version = "1";',
+    ].join('\n');
+    const found = (await extractSymbols('cloud.js', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}`);
+    expect(found).toEqual(expect.arrayContaining(['function Cloud.beforeSave 2-4', 'function handler 5-5', 'function Store.get 7-9']));
+    expect(found.some((f) => f.includes('version'))).toBe(false);
+  });
+
   it('reads JavaScript with type annotations, as Babel takes it', async () => {
     const source = [
       '// @flow',
