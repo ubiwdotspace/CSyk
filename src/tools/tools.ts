@@ -121,7 +121,8 @@ export function outline(ws: Workspace, path: string, options: { budget?: number 
   const budget = options.budget ?? defaultBudget;
   const clean = path.replace(/^\.\//, '').replace(/\/$/, '');
   if (ws.index.has(clean)) {
-    const symbols = ws.index.symbolsIn(clean);
+    // Functions inside functions are found and followed, not listed in an outline.
+    const symbols = ws.index.symbolsIn(clean).filter((s) => !s.nested);
     const indent = (s: CodeSymbol) => (s.parent ? '  ' : '');
     const fitted = fit(
       `${clean} · ${plural(symbols.length, 'symbol')}`,

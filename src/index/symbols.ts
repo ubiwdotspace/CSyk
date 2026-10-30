@@ -57,6 +57,8 @@ export type CodeSymbol = {
   isTest: boolean;
   /** In a Go file the default build on this machine leaves out (see go-build.ts). */
   otherBuild?: true;
+  /** Declared inside a function: a closure, a factory's helper, a test's helper. */
+  nested?: true;
 };
 
 const testFile =

@@ -22,7 +22,7 @@ export class SymbolSink {
    * Adds the symbol named by [name], declared by [node] (or the span from
    * the first node to the last, for a signature and its separate body).
    */
-  add(name: Node, kind: SymbolKind, node: Node | [Node, Node], exported: boolean, parent?: CodeSymbol): CodeSymbol {
+  add(name: Node, kind: SymbolKind, node: Node | [Node, Node], exported: boolean, parent?: CodeSymbol, nested = false): CodeSymbol {
     const [first, last] = Array.isArray(node) ? node : [node, node];
     const qualified = parent ? `${parent.name}.${name.text}` : name.text;
     let id = `${this.file}#${qualified}`;
@@ -41,6 +41,7 @@ export class SymbolSink {
       exported,
       isTest: this.test,
       ...(this.otherBuild ? { otherBuild: true as const } : {}),
+      ...(nested ? { nested: true as const } : {}),
     };
     this.symbols.push(symbol);
     return symbol;
