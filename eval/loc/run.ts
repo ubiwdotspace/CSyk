@@ -38,7 +38,7 @@ type Instance = {
 };
 
 /** What the real fix changed. */
-type Gold = { files: string[]; nodes: { file: string; name: string }[] };
+type Gold = { files: string[]; nodes: { file: string; name: string; isClass: boolean }[] };
 type Score = { fileAt1: number; fileAt5: number; fileRecall5: number; nodeRecall?: number };
 type Result = Omit<ClaudeRun, 'answer'> & Score & { id: string; files: string[]; functions: string[] };
 
@@ -244,20 +244,22 @@ async function goldOf(instance: Instance, repo: string): Promise<Gold> {
   if (instance.modified_nodes) {
     const nodes = (JSON.parse(instance.modified_nodes) as string[]).map((node) => {
       const parts = node.split('->');
-      return { file: parts[0] ?? '', name: (parts.at(-1) ?? '').split(':').at(-1) ?? '' };
+      const [kind = '', name = ''] = (parts.at(-1) ?? '').split(':');
+      return { file: parts[0] ?? '', name, isClass: /class|interface/.test(kind) };
     });
     return { files, nodes };
   }
-  const nodes = new Map<string, { file: string; name: string }>();
+  const nodes = new Map<string, Gold['nodes'][number]>();
   for (const [file, lines] of changedOldLines(instance.patch)) {
     const path = join(repo, file);
     if (!existsSync(path)) continue;
-    const symbols = (await extractSymbols(file, await readFile(path, 'utf8'))).filter((s) => changeable.has(s.kind));
+    // A nested function counts as the one around it, as in PolyBench's nodes.
+    const symbols = (await extractSymbols(file, await readFile(path, 'utf8'))).filter((s) => changeable.has(s.kind) && !s.nested);
     for (const line of lines) {
       const home = symbols
         .filter((s) => s.range[0] <= line && line <= s.range[1])
         .sort((a, b) => a.range[1] - a.range[0] - (b.range[1] - b.range[0]))[0];
-      if (home) nodes.set(`${file}#${home.name}`, { file, name: home.name });
+      if (home) nodes.set(`${file}#${home.name}`, { file, name: home.name, isClass: home.kind === 'class' || /\bclass\b/.test(home.signature) });
     }
   }
   return { files, nodes: [...nodes.values()] };
@@ -321,9 +323,13 @@ export function scoreAnswer(gold: Gold, files: string[], functions: string[]): S
   if (gold.nodes.length === 0) return score;
   const named = functions.map((f) => {
     const at = f.lastIndexOf(':');
-    return { file: f.slice(0, at), name: f.slice(at + 1).split('.').at(-1) ?? '' };
+    return { file: f.slice(0, at), path: f.slice(at + 1).split('.') };
   });
-  const hit = gold.nodes.filter((n) => named.some((m) => m.file === n.file && m.name === n.name)).length;
+  // A function named inside a changed one is in it: `useAutocomplete.handleBlur`
+  // for `useAutocomplete`, whose nested arrow functions are no node of their
+  // own. A method named in a changed class is another node, so not that.
+  const names = (n: Gold['nodes'][number], path: string[]) => path.at(-1) === n.name || (!n.isClass && path.slice(0, -1).includes(n.name));
+  const hit = gold.nodes.filter((n) => named.some((m) => m.file === n.file && names(n, m.path))).length;
   return { ...score, nodeRecall: hit / gold.nodes.length };
 }
 
