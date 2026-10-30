@@ -8,7 +8,9 @@ const httpDecorator = /^@(Get|Post|Put|Patch|Delete|Options|Head|All|Sse)\b/;
 
 /**
  * TS/JS declarations: top-level functions, classes, interfaces, types,
- * enums, bindings and namespaces (with what they declare), and class methods. React components and hooks, and
+ * enums, bindings and namespaces (with what they declare), class methods,
+ * and the functions in an object literal (`module.exports = { … }`,
+ * `const api = { … }`, `export default { … }`). React components and hooks, and
  * NestJS controllers' routes and injectable providers, get their own kinds.
  * Functions declared inside functions (a factory's helpers, a hook's
  * handlers, a test's) are kept, marked nested, under the function around
@@ -44,6 +46,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         const value = node.childForFieldName('value');
         const named = value ? namedFunctionIn(value) : undefined;
         const namedName = named?.childForFieldName('name');
+        if (value?.type === 'object') return members(value, true, parent);
         if (named && namedName) {
           const owner = sink.add(namedName, named.type.includes('class') ? 'class' : functionKind(namedName.text, jsx), named, true, parent);
           if (!named.type.includes('class')) inside(named, owner);
@@ -96,7 +99,8 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           if (binding.type === 'identifier') {
             const value = declarator.childForFieldName('value');
             const bound = sink.add(binding, bindingKind(binding.text, value, jsx), declarator, exported, parent);
-            if (value) inside(value, bound);
+            if (value?.type === 'object') members(value, exported, bound);
+            else if (value) inside(value, bound);
             continue;
           }
           for (const bound of boundNames(binding)) sink.add(bound, 'const', declarator, exported, parent);
@@ -112,12 +116,38 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
   const assigned = (statement: Node, assignment: Node) => {
     const left = assignment.childForFieldName('left');
     const value = assignment.childForFieldName('right');
+    // `module.exports = { … }` exports its functions; `Store.prototype = { … }` holds Store's methods.
+    if (value?.type === 'object') {
+      const prototype = /^(\w+)\.prototype$/.exec(left?.text ?? '')?.[1];
+      const owner = prototype ? sink.symbols.find((s) => s.name === prototype && !s.parent) : undefined;
+      if (owner || /^(module\.)?exports$/.test(left?.text ?? '')) members(value, true, owner);
+      return;
+    }
     const property = left?.type === 'member_expression' ? left.childForFieldName('property') : null;
     if (!value || !functionValues.has(value.type) || property?.type !== 'property_identifier') return;
     const object = left?.childForFieldName('object')?.text.replace(/\.prototype$/, '') ?? '';
     const owner = sink.symbols.find((s) => s.name === object && !s.parent);
     const exported = /^(module\.)?exports$/.test(object) || owner?.exported === true;
     inside(value, sink.add(property, functionKind(property.text, jsx), statement, exported, owner));
+  };
+
+  // The functions an object literal holds, `m() {…}`, `m: function () {…}` or
+  // `m: () => …`, under [owner] as its methods, or as functions without one;
+  // those of an object it holds too, as Vue's `methods: { … }`.
+  const members = (object: Node, exported: boolean, owner?: CodeSymbol): void => {
+    for (const member of object.namedChildren) {
+      if (!member) continue;
+      const key = member.childForFieldName(member.type === 'pair' ? 'key' : 'name');
+      const value = member.type === 'pair' ? member.childForFieldName('value') : member;
+      if (key?.type !== 'property_identifier' || !value) {
+        inside(member, owner);
+        continue;
+      }
+      if (member.type === 'method_definition' || functionValues.has(value.type)) {
+        inside(value, sink.add(key, owner ? 'method' : functionKind(key.text, jsx), member, exported, owner));
+      } else if (value.type === 'object') members(value, exported, owner);
+      else inside(value, owner);
+    }
   };
 
   // The named functions declared anywhere in [node], under [owner]: a

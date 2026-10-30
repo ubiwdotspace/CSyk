@@ -102,6 +102,32 @@ describe('extractSymbols for JavaScript', () => {
     expect(found.some((f) => f.includes('version'))).toBe(false);
   });
 
+  it('finds the functions an object literal holds, not its other values', async () => {
+    const source = [
+      'module.exports = {',
+      '  compileMethods() {',
+      '    return 1;',
+      '  },',
+      '  validate: function () {},',
+      '  limit: 3,',
+      '};',
+      'const api = { get: (id) => id, [dynamic]: () => 0 };',
+      'function Store() {}',
+      'Store.prototype = { save() {} };',
+      'export default { methods: { onClick() {} } };',
+    ].join('\n');
+    const found = (await extractSymbols('lib.js', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}`);
+    expect(found).toEqual([
+      'function compileMethods 2-4',
+      'function validate 5-5',
+      'const api 8-8',
+      'method api.get 8-8',
+      'function Store 9-9',
+      'method Store.save 10-10',
+      'function onClick 11-11',
+    ]);
+  });
+
   it('reads JavaScript with type annotations, as Babel takes it', async () => {
     const source = [
       '// @flow',
