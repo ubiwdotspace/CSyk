@@ -35,3 +35,22 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # The single questions on a few TypeScript and JavaScript corpora, held to
+  # eval/gate.json: a pull request that answers worse fails here. One
+  # system is enough; the answers do not depend on it.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run corpora -- --only zustand,parse-server
+      - run: npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server --limit 30
+      - run: npm run gate

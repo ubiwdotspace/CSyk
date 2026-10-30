@@ -42,6 +42,16 @@ as the change is clearly worse; a release is measured at 50. The agent sessions 
 Claude account (about $0.05 an issue); `--skip agents` runs only the single questions, which are
 free.
 
+CI also holds the single questions on mini-ts, zustand and parse-server to `eval/gate.json`, and
+fails a pull request when one kind of question falls by more than a point there. When a change
+moves those scores on purpose, rerun them and write the new baseline in the same pull request:
+
+```sh
+npm run corpora -- --only zustand,parse-server
+npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server --limit 30
+npm run gate -- --write
+```
+
 [docs/benchmarks.md](docs/benchmarks.md#reproduce) lists the corpora and the kinds of
 question. Tool descriptions are re-read by the agent on every turn, so a longer description needs
 a measured reason.
