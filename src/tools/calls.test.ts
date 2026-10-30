@@ -139,10 +139,14 @@ describe('calls across a project that cannot read JavaScript', () => {
     // The default import is the module's default, not the function of the same name.
     writeFileSync(join(dir, 'log.js'), 'function log() {\n  return {};\n}\nexport default { error() {} };\n');
     writeFileSync(join(dir, 'fail.ts'), "import log from './log';\n\nexport function fail() {\n  log.error();\n}\n");
+    writeFileSync(join(dir, 'config.js'), 'export default class Config {\n  static check() {\n    return true;\n  }\n}\n');
+    writeFileSync(join(dir, 'boot.ts'), "import Settings from './config';\n\nexport function boot() {\n  return Settings.check();\n}\n");
     const repo = await Workspace.open(dir);
     try {
       expect((await calls(repo, 'router.js#build')).text.split('\n').slice(1)).toEqual(['main.ts#start  4']);
       expect((await calls(repo, 'log.js#log')).text.split('\n').slice(1)).toEqual([]);
+      // A static method, written on the class as the file imports it.
+      expect((await calls(repo, 'config.js#Config.check')).text.split('\n').slice(1)).toEqual(['boot.ts#boot  4']);
     } finally {
       await repo.close();
     }
