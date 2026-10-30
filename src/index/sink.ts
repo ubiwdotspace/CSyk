@@ -7,13 +7,15 @@ export class SymbolSink {
   readonly file: string;
   readonly lang: Lang;
   private readonly test: boolean;
+  private readonly otherBuild: boolean;
   private readonly ids = new Set<string>();
   private lines: string[] | undefined;
 
-  constructor(file: string, lang: Lang) {
+  constructor(file: string, lang: Lang, otherBuild = false) {
     this.file = file;
     this.lang = lang;
     this.test = isTestFile(file);
+    this.otherBuild = otherBuild;
   }
 
   /**
@@ -38,6 +40,7 @@ export class SymbolSink {
       ...(parent ? { parent: parent.id } : {}),
       exported,
       isTest: this.test,
+      ...(this.otherBuild ? { otherBuild: true as const } : {}),
     };
     this.symbols.push(symbol);
     return symbol;
