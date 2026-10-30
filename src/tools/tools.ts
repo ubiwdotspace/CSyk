@@ -58,13 +58,22 @@ export async function find(
 // source costs more on every later turn than the reads it saves.
 const sourceBudget = 1000;
 
-/** The lines around [hits], merged per file, as far as [budget] allows. */
-async function excerpts(ws: Workspace, hits: { file: string; line: number }[], budget: number): Promise<string[]> {
+/**
+ * The lines around [hits], merged per file, as far as [budget] allows, and
+ * the hits they cover (as `file:line`).
+ */
+async function excerpts(
+  ws: Workspace,
+  hits: { file: string; line: number }[],
+  budget: number,
+): Promise<{ parts: string[]; covered: Set<string> }> {
   const parts: string[] = [];
+  const covered = new Set<string>();
   for (const file of new Set(hits.map((h) => h.file))) {
     const lines = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+    const inFile = hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line);
     const windows: [number, number][] = [];
-    for (const { line } of hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line)) {
+    for (const { line } of inFile) {
       const [from, to] = [Math.max(1, line - 5), Math.min(lines.length, line + 10)];
       const last = windows.at(-1);
       if (last && from <= last[1] + 1) last[1] = Math.max(last[1], to);
@@ -72,11 +81,12 @@ async function excerpts(ws: Workspace, hits: { file: string; line: number }[], b
     }
     for (const [from, to] of windows) {
       const part = [`${file} · lines ${from}-${to}`, ...lines.slice(from - 1, to)];
-      if (estimateTokens([...parts, ...part].join('\n')) > budget) return parts;
+      if (estimateTokens([...parts, ...part].join('\n')) > budget) return { parts, covered };
       parts.push(...part);
+      for (const { line } of inFile) if (line >= from && line <= to) covered.add(`${file}:${line}`);
     }
   }
-  return parts;
+  return { parts, covered };
 }
 
 /**
@@ -390,10 +400,16 @@ export async function grep(
   const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
   const room = session.long || options.brief ? 0 : sourceBudget;
   let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
-  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
-  // With the source alongside, the hit lines need not repeat the code.
+  let inBody = (h: Hit) => h.home !== undefined;
+  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) {
+    const around = await excerpts(ws, listed, room);
+    body = around.parts;
+    inBody = (h) => around.covered.has(`${h.file}:${h.line}`);
+  }
+  // A hit the source alongside shows need not repeat its code; one past
+  // the source keeps it, or the agent reads the file for it.
   const list = fitted.text.split('\n');
-  if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
+  if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}${inBody(h) ? '' : `  ${h.code}`}`));
   return {
     text: [...groupByFile(list), ...body].join('\n'),
     locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),

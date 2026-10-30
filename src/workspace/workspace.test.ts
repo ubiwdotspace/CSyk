@@ -64,6 +64,16 @@ describe('Workspace', () => {
     await ws.close();
   });
 
+  it('greps the lines around the first hits, and the text of the hits past them', async () => {
+    const body = Array.from({ length: 400 }, (_, i) => (i % 20 === 0 ? `  const needle${i} = ${i};` : `  const x${i} = ${i};`));
+    const ws = await Workspace.open(folder({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') }));
+    const answer = (await runTool(ws, 'grep', { pattern: 'needle' }, new Session())).text;
+    expect(answer).toContain('big.ts · lines 1-12\nexport function big() {');
+    expect(answer).toMatch(/^ {2}2 {2}big$/m);
+    expect(answer).toContain('  382  big  const needle380 = 380;');
+    await ws.close();
+  });
+
   it('answers a miss in the given file with a brief list of the hits elsewhere, without source', async () => {
     const callers = Object.fromEntries(
       Array.from({ length: 20 }, (_, i) => [`c${i}.ts`, `export function c${i}() {\n  return 'needle ${i}';\n}`]),
