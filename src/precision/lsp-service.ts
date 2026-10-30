@@ -9,6 +9,7 @@ import { rgPath } from '@vscode/ripgrep';
 import type { Tree } from 'web-tree-sitter';
 import { inDocLink, isCodeAt, parseFile } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
+import { memoryBudget } from './memory.ts';
 import { listFiles } from '../workspace/files.ts';
 import { LspClient, type Position, type Span } from './lsp-client.ts';
 
@@ -34,6 +35,8 @@ export type ServerSpec = {
   settings?: Record<string, unknown>;
   /** Work done once it starts, such as loading every project. */
   warmup?: (lsp: LspClient, root: string) => Promise<void>;
+  /** A Go program (gopls): in low memory mode GOMEMLIMIT makes it collect sooner. */
+  goRuntime?: boolean;
   /** Interfaces name no implementations (Go): ask the server which a method satisfies. */
   implicitInterfaces?: boolean;
   /**
@@ -91,6 +94,7 @@ export const servers: readonly ServerSpec[] = [
   {
     name: 'gopls',
     extensions: new Set(['.go']),
+    goRuntime: true,
     implicitInterfaces: true,
     command: () => {
       const gopls = onPath('gopls');
@@ -120,8 +124,9 @@ export function serverFor(file: string): ServerSpec | undefined {
   return servers.find((s) => s.extensions.has(extname(file)));
 }
 
-// LSP requests in flight at once while resolving mentions.
-const concurrency = 16;
+// LSP requests in flight at once while resolving mentions; in low memory
+// mode fewer, since each may make the server load another package.
+const concurrency = () => (memoryBudget().mode === 'low' ? 4 : 16);
 // How long one search resolves mentions before answering with what it has.
 const searchMs = 5000;
 
@@ -161,7 +166,10 @@ export class LspService {
   static async start(root: string, spec: ServerSpec): Promise<LspService | undefined> {
     const launch = spec.command();
     if (!launch || !existsSync(launch.command)) return undefined;
-    const lsp = await LspClient.start(launch.command, launch.args, root, spec.settings);
+    // Its share of the budget: CSyk itself and another server hold the rest.
+    const { mode, mb } = memoryBudget();
+    const env = spec.goRuntime && mode === 'low' ? { ...process.env, GOMEMLIMIT: `${Math.round(mb * 0.6)}MiB` } : undefined;
+    const lsp = await LspClient.start(launch.command, launch.args, root, spec.settings, env);
     await spec.warmup?.(lsp, root);
     return new LspService(root, spec, lsp);
   }
@@ -217,7 +225,7 @@ export class LspService {
     // An overloaded function resolves to all its signatures; any of them will do.
     const deadline = options.deadline ?? Date.now() + searchMs;
     const resolved = (
-      await pool(candidates, concurrency, async (p) => ({ p, spans: await this.definition(p) }), deadline)
+      await pool(candidates, concurrency(), async (p) => ({ p, spans: await this.definition(p) }), deadline)
     ).filter((r) => r !== undefined);
     let partial = resolved.length < candidates.length ? { resolved: resolved.length, total: candidates.length } : undefined;
     const lines = (await readFile(join(this.root, symbol.file), 'utf8')).split('\n');
