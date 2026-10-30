@@ -129,7 +129,7 @@ export type References = { found: Position[]; partial?: { resolved: number; tota
 
 // How far apart two files are: 0 for the same file, then the folders that
 // do not share a path.
-function distance(from: string, to: string): number {
+export function distance(from: string, to: string): number {
   if (from === to) return 0;
   const a = from.split('/');
   const b = to.split('/');

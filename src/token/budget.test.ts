@@ -11,11 +11,13 @@ describe('fit', () => {
     expect(fitted.text.split('\n')).toHaveLength(4);
   });
 
-  it('cuts rows step by step and says how to narrow', () => {
+  it('shows as many rows as fit and says how to narrow', () => {
     const fitted = fit('40 symbols', rows, { budget: 200, narrow: 'pass path' });
-    expect(fitted.shown).toBe(10);
-    expect(fitted.text).toMatch(/… 30 more; pass path$/);
+    expect(fitted.shown).toBe(14);
+    expect(fitted.text).toMatch(/… 26 more; pass path$/);
     expect(estimateTokens(fitted.text)).toBeLessThanOrEqual(200);
+    // One row more would not fit.
+    expect(estimateTokens([fitted.text.split('\n').slice(0, 15).join('\n'), rows[14], '… 25 more; pass path'].join('\n'))).toBeGreaterThan(200);
   });
 
   it('falls back to compact rows, then to the count alone', () => {

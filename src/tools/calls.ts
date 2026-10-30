@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 import type { Tree } from 'web-tree-sitter';
 import { declaresFunctionAt, isCallAt, isImportAt, isMemberAt, isValueUseAt, parseFile } from '../index/parse.ts';
 import type { SymbolKind } from '../index/symbols.ts';
-import { pool, serverFor, textMentions } from '../precision/lsp-service.ts';
+import { distance, pool, serverFor, textMentions } from '../precision/lsp-service.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
@@ -17,8 +17,19 @@ const run = promisify(execFile);
 // factory, a fixture) has: the tests that use it are what a change reaches.
 const isTestCase = (s: CodeSymbol) => s.isTest && /^(test|Test|Benchmark|Fuzz|Example)/.test(s.name);
 
-// More callers than this at one level are listed, not followed further.
-const maxFanOut = 40;
+// The callers a level is followed further through, at most, the nearest
+// first: past this, or past the deadline, the answer says how many were
+// followed. A fixed 40 had dropped every second-level caller of a
+// much-used function (django's Model.save expects 257 places); the
+// deadline bounds the time, this the work.
+const maxFollow = 200;
+
+// [callers] to follow next, at most maxFollow: code before tests, then the
+// files nearest [from].
+function nearestFirst(callers: CodeSymbol[], from: string[]): CodeSymbol[] {
+  const near = (s: CodeSymbol) => Math.min(...from.map((f) => distance(f, s.file)));
+  return [...callers].sort((a, b) => Number(a.isTest) - Number(b.isTest) || near(a) - near(b)).slice(0, maxFollow);
+}
 // How long `calls` and `impact` resolve mentions in all before answering with
 // what they have. Accuracy comes first: at 6 seconds, impact on Prometheus
 // found 87.8% of what a change touches, as the language server was still
@@ -70,9 +81,9 @@ export async function calls(
     if (direction === 'in') {
       const found = await callersOf(ws, from, deadline);
       if (found.precision !== 'lsp') precision = found.precision;
-      // Following every caller of a much-used symbol takes long and shows little.
-      const deeper = level < depth && found.callers.length <= maxFanOut;
-      if ((level < depth && !deeper) || found.callers.length > limit) cut = true;
+      const homes = found.callers.flatMap((c) => (c.home && !isTestCase(c.home) ? [c.home] : []));
+      const followed = new Set(level < depth ? nearestFirst(homes, [from.file]).map((s) => s.id) : []);
+      if ((level < depth && followed.size < homes.length) || found.callers.length > limit) cut = true;
       for (const caller of found.callers.slice(0, limit)) {
         const id = caller.home?.id ?? `${caller.file} (top level)`;
         rows.push({
@@ -80,7 +91,7 @@ export async function calls(
           compact: `${indent}${id}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
-        if (deeper && caller.home && !isTestCase(caller.home) && !seen.has(caller.home.id)) {
+        if (caller.home && followed.has(caller.home.id) && !seen.has(caller.home.id)) {
           seen.add(caller.home.id);
           await visit(caller.home, level + 1);
         }
@@ -139,13 +150,15 @@ export async function impact(
   let level = [...changed.values()];
   let precision = 'lsp';
   const deadline = Date.now() + toolMs;
-  let stoppedAt = 0;
+  // What a level left out, by time or by maxFollow.
+  const notes: string[] = [];
   for (let step = 1; step <= depth && level.length > 0; step++) {
     const next: CodeSymbol[] = [];
     // A level's searches run a few at a time; their answers are read in order.
     const searches = (await pool(level, 4, async (symbol) => ({ symbol, found: await callersOf(ws, symbol, deadline) }))).filter(
       (s) => s !== undefined,
     );
+    if (searches.length < level.length) notes.push(`callers of ${searches.length} of ${level.length} at level ${step} searched in time`);
     for (const { symbol, found } of searches) {
       if (found.precision !== 'lsp') precision = found.precision;
       for (const caller of found.callers) {
@@ -172,18 +185,15 @@ export async function impact(
         if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
       }
     }
-    if (step < depth && next.length > maxFanOut) {
-      stoppedAt = step;
-      break;
-    }
-    level = next;
+    if (step < depth && next.length > maxFollow) notes.push(`${maxFollow} of ${next.length} callers at level ${step} followed, nearest first`);
+    level = nearestFirst(next, [...files]);
   }
   rows.push(...[...tests].sort().map((file) => ({ text: `test  ${file}`, compact: `test  ${file}`, locations: [] })));
-  const stopped = stoppedAt ? ` · stopped at caller level ${stoppedAt}: ${maxFanOut}+ callers to follow; run calls on one` : '';
+  const stopped = notes.length > 0 ? ` · ${notes.join('; ')}; run calls on one for the rest` : '';
   const header =
     `impact · since ${since} · ${plural(changed.size, 'symbol')} changed in ${plural(files.size, 'file')}` +
     ` · ${plural(tests.size, 'test file')} · ${precision}${stopped}`;
-  return shown(header, rows, budget, !stoppedAt && precision === 'lsp');
+  return shown(header, rows, budget, notes.length === 0 && precision === 'lsp');
 }
 
 /** A row of `calls` or `impact`, the same without its lines, and the places it names. */
