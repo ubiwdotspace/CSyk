@@ -114,9 +114,10 @@ the symbols the change touches and follows their callers two levels up, stopping
 symbols with more than 40 callers.
 
 **Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
-mentions first and stops after five seconds (six for `calls` and `impact`); when it stops early,
-the answer says how much it covered. Language servers start when first needed and stop after ten
-minutes without use.
+mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
+two levels up and may wait for a language server still loading a large project; when it stops
+early, the answer says how much it covered. Language servers start when first needed and stop
+after ten minutes without use.
 
 ## Answers
 
@@ -164,8 +165,10 @@ If the agent asks again for code it has already seen and that has not changed, C
 - Dart's compiler counts hidden `super(...)` constructor calls and calls through Flutter's base
   classes (`State`, `Diagnosticable`) as calls; CSyk does not, which is most of the gap on provider
   and flame for edit impact.
-- pyright misses some calls through module aliases that CSyk finds, so CSyk's "correct" score
-  against pyright on Python callers and edit impact is lower than it really is.
+- pyright's answers miss calls that CSyk finds: decorators applied with arguments
+  (`@condition(...)`), calls from test files and calls through module aliases. CSyk's "correct"
+  score against pyright on Python callers and edit impact (47% on django) is lower than it really
+  is.
 - A Go function declared twice under different build tags resolves to the one `gopls` builds by
   default.
 - A name used thousands of times (Django's `Model.save`) gets a partial answer after the time

@@ -158,6 +158,32 @@ export function isImportAt(tree: Tree, line: number, column: number): boolean {
   return false;
 }
 
+// Node types of a function, across the grammars: `function_declaration`,
+// `arrow_function`, `function_definition`, `lambda`, `func_literal`, …
+const functionType = /function|arrow|lambda|method|func_literal|closure/;
+
+/**
+ * Whether the name at the 0-based [line] and [column] of [tree] declares a
+ * function: `function f`, `def f`, a method, or a variable holding one
+ * (`const f = () => …`, `f = lambda: …`, `f := func() {…}`). A parameter,
+ * a destructured name or a variable holding anything else does not.
+ */
+export function declaresFunctionAt(tree: Tree, line: number, column: number): boolean {
+  const node = tree.rootNode.descendantForPosition({ row: line, column });
+  const parent = node?.parent;
+  if (!node || !parent) return false;
+  if (functionType.test(parent.type) && parent.childForFieldName('name')?.id === node.id) return true;
+  // A constructor's name, in Dart's many forms: `C._()`, `factory C.of() = D`.
+  for (let at: Node | null = parent, up = 0; at && up < 3 && !at.type.includes('parameter'); at = at.parent, up++) {
+    if (at.type.includes('constructor')) return true;
+  }
+  // Go names its variables in a list: `f, g := …`.
+  const declaration = parent.type.endsWith('list') ? parent.parent : parent;
+  const value = declaration?.childForFieldName('value') ?? declaration?.childForFieldName('right');
+  if (!value || value.id === parent.id) return false;
+  return functionType.test(value.type) || (value.type.endsWith('list') && value.namedChildren.some((c) => c !== null && functionType.test(c.type)));
+}
+
 // Parents through which a callee's own name is reached: `a.b`, `pkg.F`,
 // Dart's `.b` selector.
 const memberTypes = new Set(['member_expression', 'attribute', 'selector_expression', 'unconditional_assignable_selector']);
