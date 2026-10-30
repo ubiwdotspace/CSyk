@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
 import { isCallAt, isCodeAt, isImportAt, isMemberAt, parseFile } from '../../src/index/parse.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
-import { resolvesTo, servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
+import { importAliases, resolvesTo, servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
 
 const run = promisify(execFile);
 
@@ -186,14 +186,22 @@ export class LspOracle {
     const lines = (await this.text(declaration.file)).split('\n');
     const declared = { ...declaration, name };
     const refs: Position[] = [];
-    for (const mention of await this.mentions(name)) {
+    // Uses under a name it is imported as (`import { a as b }`) are its uses too.
+    const named = await this.mentions(name);
+    const texts = await Promise.all(named.map(async (m) => ({ file: m.file, text: (await this.text(m.file)).split('\n')[m.line] ?? '' })));
+    const renamed = await Promise.all(
+      importAliases(name, texts).map(async ({ alias, file }) => (await this.mentions(alias)).filter((m) => !file || m.file === file)),
+    );
+    for (const mention of [...named, ...renamed.flat()]) {
       const own = mention.file === declaration.file && mention.line === declaration.nameLine;
       if (own) continue;
       // An overloaded function resolves to all its signatures.
       const spans = await this.lsp.definition(mention);
       if (spans.some((span) => resolvesTo(span, declared, lines))) refs.push(mention);
     }
-    return refs;
+    // One per line, in file order: a renamed import names the symbol twice on its line.
+    const byLine = new Map(refs.map((r) => [`${r.file}:${String(r.line).padStart(8, '0')}`, r]));
+    return [...byLine.keys()].sort().map((key) => byLine.get(key) as Position);
   }
 
   /** The innermost function, method, class or binding enclosing [line]. */
