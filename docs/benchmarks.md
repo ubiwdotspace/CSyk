@@ -38,6 +38,14 @@ The six kinds of question:
 | pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 95.1% / 93.4% |
 | prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 92.7% / 97.2% |
 
+Callers and calls are scored against each compiler's call hierarchy, which counts less as a call
+than CSyk does. CSyk also counts a function passed as a callback (`hits.sort(pointDistanceSq)`),
+a component rendered in JSX, a decorator on a parameter, a call of a constant holding a function,
+`super.m()` from a subclass, and, as what a function calls, the calls in the closures it declares
+and in arrow functions held by class properties. On nest and excalidraw, every caller and call
+scored as not correct is of these kinds. The one nest question CSyk finds nothing for imports
+`@nestjs/common`, which the benchmark's checkout, without its packages installed, cannot resolve.
+
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
 
