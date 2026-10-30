@@ -16,7 +16,11 @@ const run = promisify(execFile);
 
 // A test has no callers worth following; a helper in a test file (a
 // factory, a fixture) has: the tests that use it are what a change reaches.
-const isTestCase = (s: CodeSymbol) => s.isTest && /^(test|Test|Benchmark|Fuzz|Example)/.test(s.name);
+// Python's runners take any name starting test; Go's take TestXxx (and
+// Benchmark, Fuzz, Example), so its testXxx is a helper, as pocketbase's
+// testDefaultFieldIdValidation, which thirteen tests call.
+const isTestCase = (s: CodeSymbol) =>
+  s.isTest && (s.lang === 'py' ? /^(test|Test)/ : /^(Test|Benchmark|Fuzz|Example)(?![a-z])/).test(s.name);
 
 // The callers a level is followed further through, at most, the nearest
 // first: past this, or past the deadline, the answer says how many were
