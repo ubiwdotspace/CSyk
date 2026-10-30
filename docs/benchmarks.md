@@ -25,9 +25,9 @@ The six kinds of question:
 
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
-| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 96.7% / 91.8% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 96.6% |
-| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 98.4% / 96.9% |
+| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 97.4% / 91.8% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 94.7% | 100% | 90.9% / 97.5% |
+| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 93.3% / 96.9% |
 | provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 94.3% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
 | flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
@@ -197,17 +197,25 @@ kind, against text search (ripgrep and a read of the first matching file):
 | Exact name: first answer right | **93.3%** | 50% | **100%** | 23.3% |
 | Part of a name: first answer right | **100%** | 10% | **100%** | 3.3% |
 | Uses: found / correct | **97.5% / 100%** | 100% / 67.6% | **100% / 100%** | 100% / 56% |
-| Callers and calls: found / correct | **96.7% / 96%** | 100% / 66.9% | **100% / 93%** | 100% / 52.6% |
+| Callers and calls: found / correct | **96.7% / 96%** | 100% / 66.9% | **100% / 94.8%** | 100% / 52.6% |
 | Message: in the first five | **100%** | 100% | **100%** | 100% |
-| Edit impact: found / correct | **100% / 79.9%** | – | **89% / 93.3%** | – |
+| Edit impact: found / correct | **96.9% / 94.5%** | – | **82.4% / 96.7%** | – |
 | Tokens per message answer | **227** | 7426 | **254** | 9535 |
 
 Text search answers callers only, for the 15 questions about them; it has no answer for edit
 impact. The annotated JavaScript was why parse-server first scored 86.7% on uses and on parts of
 names: the JavaScript grammar dropped declarations it could not read, which are now read with the
-TSX grammar. jitsi-meet's edit impact is the weakest result here: 79.9% of what it names is right.
+TSX grammar. jitsi-meet's edit impact first scored 79.9% correct: most of the rest were real calls
+the TypeScript server's call hierarchy did not see in a repository with no tsconfig.json over all
+its files, which the answers now include (see below).
 
 ### Accuracy and tokens
+
+The TypeScript answers for callers and edit impact add, like Python's, the calls the server's
+references find to what its call hierarchy gives: the hierarchy sees only the projects the server
+has open, which leaves out files in a repository with no tsconfig.json over all of them
+(jitsi-meet), or with one that only references others (Vite's and Nx's). Every old answer is
+kept.
 
 Means over the twelve repositories, everything started cold. CSyk's accuracy is the mean of the
 table above, measured again after fixes to callees, to Go functions declared once per build, to
@@ -222,7 +230,7 @@ scored against the answers before.
 | Exact name: first answer right | **99.5%** | 85.1% | 79.9% |
 | Part of a name: first answer right | **100.0%** | 17.0% | 31.6% |
 | Uses: found / correct | **99.4% / 99.5%** | 76.5% / 81.2% | 28.6% / 41.6% |
-| Callers and calls: found / correct | **99.5% / 97.0%** | 77.5% / 75.0% | 47.7% / 53.8% |
+| Callers and calls: found / correct | **99.5% / 97.1%** | 77.5% / 75.0% | 47.7% / 53.8% |
 | Message: in the first five | **100%** | – | 11.9% |
 | Tokens per answer | **115** | 243 | 719 |
 | Tool calls per question | **1.0** | 1.5 | 1.2 |
