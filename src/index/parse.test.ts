@@ -171,6 +171,12 @@ describe('isCodeAt and inDocLink', () => {
     expect(isCodeAt(tree, 1, 16)).toBe(true);
     expect(inDocLink(lines[2]!, 17)).toBe(true);
     expect(inDocLink(lines[0]!, 15)).toBe(false);
+    // A JSDoc tag's type and what @augments names, not a tag's description.
+    expect(inDocLink(' * @returns {?Styles} the styles', 14)).toBe(true);
+    expect(inDocLink(' * @param {Array<Styles>} list', 17)).toBe(true);
+    expect(inDocLink(' * @augments BaseButton', 13)).toBe(true);
+    expect(inDocLink(' * @param {Object} styles - the Styles to use', 34)).toBe(false);
+    expect(inDocLink('const s = 1; // @returns {Styles}', 26)).toBe(false);
     // A string keying an element access names a member.
     expect(isCodeAt(tree, 3, 8)).toBe(true);
     tree.delete();
