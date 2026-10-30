@@ -60,7 +60,7 @@ describe('Workspace', () => {
     expect(answer.text.split('const needle = 1;')).toHaveLength(2);
     const long = new Session();
     long.spend(4000);
-    expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text\nbig.ts:101  big  const needle = 1;');
+    expect((await runTool(ws, 'grep', { pattern: 'needle' }, long)).text).toBe('1 hit in 1 place · text · complete\nbig.ts:101  big  const needle = 1;');
     await ws.close();
   });
 
@@ -83,11 +83,11 @@ describe('Workspace', () => {
     };
     const long = `'needle ${'x'.repeat(100)}'`;
     const listed = await grepIn(Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`f${i}.ts`, `export const n${i} = 'needle';`])));
-    expect(listed).toMatch(/^40 hits in 40 places · text\n/);
+    expect(listed).toMatch(/^40 hits in 40 places · text · complete\n/);
     expect(listed).toContain("f39.ts:1  n39  export const n39 = 'needle';");
     const body = Array.from({ length: 150 }, (_, i) => `  const v${i} = ${long};`);
     const lines = await grepIn({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
-    expect(lines).toMatch(/^150 hits in 1 place · text · lines per symbol\nbig\.ts {2}big 2, 3, 4, /);
+    expect(lines).toMatch(/^150 hits in 1 place · text · lines per symbol · complete\nbig\.ts {2}big 2, 3, 4, /);
     const summed = await grepIn(Object.fromEntries(Array.from({ length: 600 }, (_, i) => [`feature${i}_module.ts`, `export const n${i} = ${long};`])));
     expect(summed).toMatch(/^600 hits in 600 files · text · files with the most hits first/);
   });
@@ -99,11 +99,11 @@ describe('Workspace', () => {
     const lone = "export function one() {\n  return 'lonely';\n}";
     const ws = await Workspace.open(folder({ ...callers, 'one.ts': lone, 'other.ts': 'export const other = 1;' }));
     const answer = (await runTool(ws, 'grep', { pattern: 'needle', path: 'other.ts' }, new Session())).text;
-    expect(answer).toMatch(/^no match in other\.ts; everywhere: 20 hits in 20 places · text\n/);
+    expect(answer).toMatch(/^no match in other\.ts; everywhere: 20 hits in 20 places · text · complete\n/);
     expect(estimateTokens(answer)).toBeLessThanOrEqual(400);
     // A hit in one small function, which a grep there would bring the source of.
     expect((await runTool(ws, 'grep', { pattern: 'lonely', path: 'other.ts' }, new Session())).text).toBe(
-      "no match in other.ts; everywhere: 1 hit in 1 place · text\none.ts:2  one  return 'lonely';",
+      "no match in other.ts; everywhere: 1 hit in 1 place · text · complete\none.ts:2  one  return 'lonely';",
     );
     await ws.close();
   });

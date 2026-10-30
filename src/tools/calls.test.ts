@@ -80,7 +80,7 @@ describe('impact', () => {
     writeFileSync(join(root, 'total.ts'), 'export function total(xs: number[]) {\n  return xs.reduce((a, b) => a + b, 1);\n}\n');
     const result = await impact(ws);
     expect(result.text.split('\n')).toEqual([
-      'impact · since HEAD · 1 symbol changed in 1 file · 1 test file · lsp',
+      'impact · since HEAD · 1 symbol changed in 1 file · 1 test file · lsp · complete',
       'changed  total.ts#total  1',
       'caller 1  checkout.ts#checkout  4  ← total',
       'caller 2  checkout.test.ts (top level)  3  ← checkout',

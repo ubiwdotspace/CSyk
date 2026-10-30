@@ -22,16 +22,17 @@ export type Fitted = { text: string; shown: number; truncated: boolean };
 const steps = [30, 10, 5, 3];
 
 /**
- * Lays out [header] and [rows] within the budget, always well-formed: rows
- * are cut step by step (30, 10, 5, 3), then the compact rows are tried the
- * same way, and last the header stands alone with the count. Whatever is
- * left out is said, with the way to narrow the call.
+ * Lays out [header] and [rows] within the budget, always well-formed: every
+ * row, then every compact row, then fewer of each (30, 10, 5, 3), and last
+ * the header alone with the count. A list cut short hides what is past it,
+ * and the agent searches again for that, so less on each row comes first.
+ * Whatever is left out is said, with the way to narrow the call.
  */
 export function fit(header: string, rows: readonly string[], options: FitOptions): Fitted {
   const total = Math.max(options.total ?? rows.length, rows.length);
   const counts = [rows.length, ...steps.filter((n) => n < rows.length)];
-  for (const variant of [rows, options.compact].filter((v) => v !== undefined)) {
-    for (const count of counts) {
+  for (const count of counts) {
+    for (const variant of [rows, options.compact].filter((v) => v !== undefined)) {
       const lines = [header, ...variant.slice(0, count)];
       if (count < total) lines.push(`… ${total - count} more; ${options.narrow}`);
       const text = lines.join('\n');

@@ -25,6 +25,12 @@ describe('fit', () => {
     expect(counts.text).toBe('40 symbols\n… 40 not shown within the budget; pass path');
   });
 
+  it('shows every compact row before fewer full rows', () => {
+    const fitted = fit('40 symbols', rows, { budget: 300, narrow: 'pass path', compact });
+    expect(fitted).toMatchObject({ shown: 40, truncated: false });
+    expect(fitted.text).toContain('src/file-39.ts#symbol39');
+  });
+
   it('counts results beyond the rows it was given', () => {
     expect(fit('9 refs', rows.slice(0, 2), { budget: 2000, narrow: 'raise limit', total: 9 }).text).toMatch(/… 7 more; raise limit$/);
   });
