@@ -246,9 +246,11 @@ export class LspService {
     // symbol wrapped (React's memo, connect, withStyles), and a use of it
     // renders or calls the symbol; the server resolves that use to the export.
     const wrapped = new Set(symbol.parent ? [] : wrappedDefault(lines, symbol.name));
+    const statics = symbol.parent ? await staticUses(this.root, symbol, text, resolved.filter((r) => r.spans.length === 0).map((r) => r.p)) : new Set<string>();
     // `super.m()`, and Python's `super().m()` or `super(C, self).m()`.
     const viaSuper = (p: Mention) => /\bsuper(\([^)]*\))?\.$/.test(p.text.slice(0, p.character));
     const isOurs = (p: Mention, spans: Span[]) =>
+      statics.has(`${p.file}:${p.line}:${p.character}`) ||
       spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`)))) ||
       spans.some((span) => imports.has(`${span.file}:${span.nameLine}`) || (span.file === symbol.file && wrapped.has(span.nameLine)));
     const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
@@ -555,6 +557,46 @@ async function defaultAliases(symbol: CodeSymbol, text: string, mentionsOf: (nam
     if (!match?.[1] || !match[2] || match[1] === symbol.name) continue;
     const imported = join(dirname(m.file), match[2]).replace(/\.[cm]?[jt]sx?$/, '');
     if (imported === target || `${imported}/index` === target) found.push({ alias: match[1], file: m.file });
+  }
+  return found;
+}
+
+/**
+ * Of [unresolved] mentions of the member [symbol], those written on its
+ * class as imported from the class's file, as `file:line:character`:
+ * parse-server's `Config.validateOptions(options)` in ParseServer.ts,
+ * whose project (`allowJs: false`) cannot read Config.js. By name when
+ * the class is exported so, as the default when it is the default export.
+ */
+async function staticUses(root: string, symbol: CodeSymbol, text: string, unresolved: Mention[]): Promise<Set<string>> {
+  const found = new Set<string>();
+  const owner = symbol.parent?.slice(symbol.parent.indexOf('#') + 1) ?? '';
+  if (!owner || owner.includes('.') || unresolved.length === 0) return found;
+  const escaped = owner.replace(/[$]/g, '\\$');
+  const byName = new RegExp(`\\bexport\\s+(?:abstract\\s+)?class\\s+${escaped}\\b|\\bexport\\s*\\{[^}]*\\b${escaped}\\b`).test(text);
+  const asDefault = isDefaultExport(text, owner);
+  const target = symbol.file.replace(/\.[^./]+$/, '');
+  const receivers = new Map<string, Set<string>>();
+  for (const m of unresolved) {
+    const receiver = /([A-Za-z_$][\w$]*)\s*\.\s*$/.exec(m.text.slice(0, m.character))?.[1];
+    if (!receiver) continue;
+    if (!receivers.has(m.file)) {
+      // The names this file imports the class under, from its file.
+      const names = new Set<string>();
+      const source = await readFile(join(root, m.file), 'utf8').catch(() => '');
+      for (const [, clause = '', from = ''] of source.matchAll(/\bimport\s+([^;'"]*?)\s*from\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
+        const module = join(dirname(m.file), from).replace(/\.[cm]?[jt]sx?$/, '');
+        if (module !== target && `${module}/index` !== target) continue;
+        const local = /^\s*(?:type\s+)?([A-Za-z_$][\w$]*)\s*(?:,|$)/.exec(clause)?.[1];
+        if (asDefault && local) names.add(local);
+        for (const part of /\{([^}]*)\}/.exec(clause)?.[1]?.split(',') ?? []) {
+          const [imported, as] = part.trim().split(/\s+as\s+/);
+          if (byName && imported === owner) names.add(as ?? imported);
+        }
+      }
+      receivers.set(m.file, names);
+    }
+    if (receivers.get(m.file)?.has(receiver)) found.add(`${m.file}:${m.line}:${m.character}`);
   }
   return found;
 }
