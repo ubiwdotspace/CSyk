@@ -33,7 +33,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const kindsOf: Record<string, string[]> = { find: ['A', 'B'], read: ['A'], grep: ['E'], refs: ['C'], calls: ['D'], impact: ['G'] };
 // Each language's repositories (eval/corpora.yaml) and benchmarks of issues.
 const languages: Record<string, { corpora: string[]; issues: string[] }> = {
-  ts: { corpora: ['mini-ts', 'zustand', 'excalidraw', 'nest'], issues: ['TypeScript', 'JavaScript'] },
+  ts: { corpora: ['mini-ts', 'zustand', 'excalidraw', 'nest', 'jitsi-meet', 'parse-server'], issues: ['TypeScript', 'JavaScript'] },
   py: { corpora: ['fastapi-template', 'dispatch', 'django'], issues: ['Python'] },
   go: { corpora: ['chi', 'pocketbase', 'prometheus'], issues: ['Go'] },
   dart: { corpora: ['provider', 'wonderous', 'flame'], issues: [] },

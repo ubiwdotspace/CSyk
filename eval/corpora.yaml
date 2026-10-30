@@ -25,6 +25,18 @@ nest:
   commit: 95dd6b0edbccb608e92a78cc7cec3e25b62f9a71
   path: eval/corpora/nest
 
+# TypeScript and JavaScript apps, not libraries: a large React frontend (Apache-2.0).
+jitsi-meet:
+  git: https://github.com/jitsi/jitsi-meet.git
+  commit: bcad5613c3d5346021d45e1184af627ec5d1deec
+  path: eval/corpora/jitsi-meet
+
+# A Node.js backend, mostly JavaScript: the Parse server (Apache-2.0).
+parse-server:
+  git: https://github.com/parse-community/parse-server.git
+  commit: 3b5b9f813c04dcd29f2d766b4ef1fe9888783b65
+  path: eval/corpora/parse-server
+
 # Python, small: the FastAPI full-stack template (MIT).
 fastapi-template:
   git: https://github.com/fastapi/full-stack-fastapi-template.git
