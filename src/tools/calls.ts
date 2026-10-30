@@ -133,6 +133,9 @@ export async function impact(
   }));
   const tests = new Set([...files].filter(isTestFile));
   const seen = new Set(changed.keys());
+  // A caller reached again through another callee keeps the lines of both:
+  // the top level of a file is one caller however many functions it calls.
+  const callerRows = new Map<string, { step: number; lines: number[]; callees: string[]; row: Row }>();
   let level = [...changed.values()];
   let precision = 'lsp';
   const deadline = Date.now() + toolMs;
@@ -148,13 +151,24 @@ export async function impact(
       for (const caller of found.callers) {
         if (isTestFile(caller.file)) tests.add(caller.file);
         const id = caller.home?.id ?? `${caller.file} (top level)`;
+        const again = callerRows.get(id);
+        if (again) {
+          const lines = caller.lines.filter((line) => !again.lines.includes(line));
+          again.lines.push(...lines);
+          if (!again.callees.includes(symbol.name)) again.callees.push(symbol.name);
+          again.row.locations.push(...lines.map((line) => ({ file: caller.file, line })));
+          again.row.text = `caller ${again.step}  ${id}  ${again.lines.join(', ')}  ← ${again.callees.join(', ')}`;
+          continue;
+        }
         if (seen.has(id)) continue;
         seen.add(id);
-        rows.push({
+        const row: Row = {
           text: `caller ${step}  ${id}  ${caller.lines.join(', ')}  ← ${symbol.name}`,
           compact: `caller ${step}  ${id}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
-        });
+        };
+        callerRows.set(id, { step, lines: [...caller.lines], callees: [symbol.name], row });
+        rows.push(row);
         if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
       }
     }

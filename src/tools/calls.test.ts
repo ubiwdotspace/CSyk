@@ -107,6 +107,24 @@ describe('calls', () => {
 });
 
 describe('impact', () => {
+  it('lists a caller reached through two changed callees once, with the lines of both', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "include": ["*.ts"] }');
+    writeFileSync(join(dir, 'jobs.ts'), 'export function one() {\n  return 1;\n}\nexport function two() {\n  return 2;\n}\n');
+    writeFileSync(join(dir, 'main.ts'), "import { one, two } from './jobs';\n\none();\ntwo();\n");
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    git('init', '-q');
+    git('add', '.');
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
+    writeFileSync(join(dir, 'jobs.ts'), 'export function one() {\n  return 3;\n}\nexport function two() {\n  return 4;\n}\n');
+    const jobs = await Workspace.open(dir);
+    try {
+      expect((await impact(jobs)).text.split('\n')).toContain('caller 1  main.ts (top level)  3, 4  ← one, two');
+    } finally {
+      await jobs.close();
+    }
+  }, 30_000);
+
   it('names the changed symbol, its callers and the tests among them', async () => {
     writeFileSync(join(root, 'total.ts'), 'export function total(xs: number[]) {\n  return xs.reduce((a, b) => a + b, 1);\n}\n');
     const result = await impact(ws);

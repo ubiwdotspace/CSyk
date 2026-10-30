@@ -19,8 +19,11 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
     const name = node.childForFieldName('name');
     switch (node.type) {
       case 'expression_statement':
-        // `namespace A { … }` at the top level is an expression statement.
-        for (const child of node.namedChildren) if (child?.type === 'internal_module') declare(child, exported, [], parent);
+        for (const child of node.namedChildren) {
+          // `namespace A { … }` at the top level is an expression statement.
+          if (child?.type === 'internal_module') declare(child, exported, [], parent);
+          if (child?.type === 'assignment_expression') assigned(node, child);
+        }
         return;
       case 'internal_module': {
         // `namespace A.B` is named by its last part.
@@ -93,6 +96,21 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         }
         return;
     }
+  };
+
+  // A function written as an assignment, as CommonJS and prototype code do:
+  // `Cloud.beforeSave = function () {…}`, `exports.handler = () => {…}`,
+  // `Store.prototype.get = function () {…}`. It belongs to the object's
+  // symbol when the file declares it.
+  const assigned = (statement: Node, assignment: Node) => {
+    const left = assignment.childForFieldName('left');
+    const value = assignment.childForFieldName('right');
+    const property = left?.type === 'member_expression' ? left.childForFieldName('property') : null;
+    if (!value || !functionValues.has(value.type) || property?.type !== 'property_identifier') return;
+    const object = left?.childForFieldName('object')?.text.replace(/\.prototype$/, '') ?? '';
+    const owner = sink.symbols.find((s) => s.name === object && !s.parent);
+    const exported = /^(module\.)?exports$/.test(object) || owner?.exported === true;
+    sink.add(property, functionKind(property.text, jsx), statement, exported, owner);
   };
 
   const declareClass = (node: Node, name: Node, exported: boolean, outer: string[], parent?: CodeSymbol) => {
