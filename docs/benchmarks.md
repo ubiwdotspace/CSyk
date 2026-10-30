@@ -185,6 +185,28 @@ same twelve repositories, through their own MCP servers, each asked the way its 
 
 Queries are passed as the questions are written, the same for every tool.
 
+### TypeScript and JavaScript apps
+
+The twelve repositories are libraries and frameworks. Two apps join them, both Apache-2.0: jitsi-meet,
+a large React frontend (2,106 TypeScript and 126 JavaScript files), and parse-server, a Node backend
+written mostly in JavaScript, with Flow and TypeScript-style annotations. Same questions, 30 of each
+kind, against text search (ripgrep and a read of the first matching file):
+
+| | jitsi-meet: CSyk | text search | parse-server: CSyk | text search |
+|---|---|---|---|---|
+| Exact name: first answer right | **93.3%** | 50% | **100%** | 23.3% |
+| Part of a name: first answer right | **100%** | 10% | **100%** | 3.3% |
+| Uses: found / correct | **97.5% / 100%** | 100% / 67.6% | **100% / 100%** | 100% / 56% |
+| Callers and calls: found / correct | **96.7% / 96%** | 100% / 66.9% | **100% / 93%** | 100% / 52.6% |
+| Message: in the first five | **100%** | 100% | **100%** | 100% |
+| Edit impact: found / correct | **100% / 79.9%** | – | **89% / 93.3%** | – |
+| Tokens per message answer | **227** | 7426 | **254** | 9535 |
+
+Text search answers callers only, for the 15 questions about them; it has no answer for edit
+impact. The annotated JavaScript was why parse-server first scored 86.7% on uses and on parts of
+names: the JavaScript grammar dropped declarations it could not read, which are now read with the
+TSX grammar. jitsi-meet's edit impact is the weakest result here: 79.9% of what it names is right.
+
 ### Accuracy and tokens
 
 Means over the twelve repositories, everything started cold. CSyk's accuracy is the mean of the

@@ -66,6 +66,26 @@ describe('extractSymbols for TypeScript', () => {
   });
 });
 
+describe('extractSymbols for JavaScript', () => {
+  it('reads JavaScript with type annotations, as Babel takes it', async () => {
+    const source = [
+      '// @flow',
+      'export type Options = { uri: string };',
+      'export class Adapter {',
+      '  _uri: string;',
+      '  constructor(options: Options) {',
+      '    this._uri = options.uri;',
+      '  }',
+      '  _connect(): Promise<void> {',
+      '    return Promise.resolve();',
+      '  }',
+      '}',
+    ].join('\n');
+    const names = (await extractSymbols('src/adapter.js', source)).map((s) => `${s.kind} ${s.name}`);
+    expect(names).toEqual(expect.arrayContaining(['type Options', 'class Adapter', 'method _connect']));
+  });
+});
+
 describe('isCodeAt and inDocLink', () => {
   it('tells code from comments and strings, and keeps JSDoc links and element keys', async () => {
     const lines = ['run(total); // total', 'log("total", `${total}`);', '/** See {@link total}. */', "client['total'](1);"];

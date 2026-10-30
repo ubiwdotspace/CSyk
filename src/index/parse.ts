@@ -81,7 +81,19 @@ async function parserFor(dialect: Dialect): Promise<Parser> {
 export async function parseFile(file: string, text: string): Promise<Tree | undefined> {
   const dialect = dialects[extname(file)];
   if (!dialect) return undefined;
-  return (await parserFor(dialect)).parse(text) ?? undefined;
+  const tree = (await parserFor(dialect)).parse(text) ?? undefined;
+  // JavaScript with type annotations (Flow's, or TypeScript's, which Babel
+  // takes: `_uri: string;`, `export type`): the JavaScript grammar fails on
+  // them and its declarations go missing; the TSX grammar reads them.
+  if (dialect !== javascript || !tree?.rootNode.hasError) return tree;
+  const typed = (await parserFor(tsx)).parse(text);
+  const errors = (t: Tree) => t.rootNode.descendantsOfType('ERROR').length;
+  if (!typed || errors(typed) >= errors(tree)) {
+    typed?.delete();
+    return tree;
+  }
+  tree.delete();
+  return typed;
 }
 
 /** The declarations of [file]; see each language's extractor for which. */
