@@ -5,11 +5,12 @@ import { promisify } from 'node:util';
 import type { Tree } from 'web-tree-sitter';
 import { declaresFunctionAt, isCallAt, isImportAt, isMemberAt, isValueUseAt, parseFile } from '../index/parse.ts';
 import type { SymbolKind } from '../index/symbols.ts';
+import type { Position } from '../precision/lsp-client.ts';
 import { distance, pool, serverFor, textMentions } from '../precision/lsp-service.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
-import { plural, references, resolve, type Location, type ToolResult } from './tools.ts';
+import { classKinds, plural, references, resolve, type Location, type ToolResult } from './tools.ts';
 
 const run = promisify(execFile);
 
@@ -147,6 +148,9 @@ export async function impact(
   // A caller reached again through another callee keeps the lines of both:
   // the top level of a file is one caller however many functions it calls.
   const callerRows = new Map<string, { step: number; lines: number[]; callees: string[]; row: Row }>();
+  // Constructors followed only on the class reached (see receiverOf); one
+  // reached otherwise as well is followed on its own class.
+  const receivers = new Map<string, CodeSymbol | undefined>();
   let level = [...changed.values()];
   let precision = 'lsp';
   const deadline = Date.now() + toolMs;
@@ -155,9 +159,9 @@ export async function impact(
   for (let step = 1; step <= depth && level.length > 0; step++) {
     const next: CodeSymbol[] = [];
     // A level's searches run a few at a time; their answers are read in order.
-    const searches = (await pool(level, 4, async (symbol) => ({ symbol, found: await callersOf(ws, symbol, deadline) }))).filter(
-      (s) => s !== undefined,
-    );
+    const searches = (
+      await pool(level, 4, async (symbol) => ({ symbol, found: await callersOf(ws, symbol, deadline, receivers.get(symbol.id)) }))
+    ).filter((s) => s !== undefined);
     if (searches.length < level.length) notes.push(`callers of ${searches.length} of ${level.length} at level ${step} searched in time`);
     for (const { symbol, found } of searches) {
       if (found.precision !== 'lsp') precision = found.precision;
@@ -166,6 +170,7 @@ export async function impact(
         const id = caller.home?.id ?? `${caller.file} (top level)`;
         const again = callerRows.get(id);
         if (again) {
+          if (receivers.get(id) !== (await receiverOf(ws, symbol, caller))) receivers.set(id, undefined);
           const lines = caller.lines.filter((line) => !again.lines.includes(line));
           again.lines.push(...lines);
           if (!again.callees.includes(symbol.name)) again.callees.push(symbol.name);
@@ -181,6 +186,7 @@ export async function impact(
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         };
         callerRows.set(id, { step, lines: [...caller.lines], callees: [symbol.name], row });
+        receivers.set(id, await receiverOf(ws, symbol, caller));
         rows.push(row);
         if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
       }
@@ -213,12 +219,13 @@ async function callersOf(
   ws: Workspace,
   symbol: CodeSymbol,
   deadline: number,
+  receiver?: CodeSymbol,
 ): Promise<{ callers: Caller[]; precision: string }> {
   // Dispatch matters here: a call through an interface reaches its implementations.
   // Only uses as a value are resolved, which spares imports, exports and types.
   const { found, precision } = await references(ws, symbol, { viaSupertypes: true, where: isValueUseAt, deadline });
   const byHome = new Map<string, Caller>();
-  for (const site of found) {
+  for (const site of [...found, ...(await constructorCalls(ws, symbol, deadline, receiver))]) {
     const home = ws.index.containing(site.file, site.line + 1);
     const key = home?.id ?? site.file;
     const caller = byHome.get(key) ?? { file: site.file, ...(home ? { home } : {}), lines: [] };
@@ -231,6 +238,61 @@ async function callersOf(
   }
   const callers = [...byHome.values()].sort((a, b) => a.file.localeCompare(b.file) || (a.lines[0] ?? 0) - (b.lines[0] ?? 0));
   return { callers, precision };
+}
+
+// Where the TS or JS constructor [symbol] runs: on [receiver] and its
+// subclasses when given, else on its own class's. Its name is in no call,
+// so its own references are none: `new` on its class calls it, and so does
+// `new` on a subclass that declares no constructor, which runs the base's;
+// one that declares its own calls it through `super()`.
+async function constructorCalls(ws: Workspace, symbol: CodeSymbol, deadline: number, receiver?: CodeSymbol): Promise<Position[]> {
+  const base = symbol.parent ? ws.index.get(symbol.parent) : undefined;
+  if (symbol.name !== 'constructor' || !base || (symbol.lang !== 'ts' && symbol.lang !== 'js')) return [];
+  const files = new Map<string, string[]>();
+  const linesOf = async (file: string) => {
+    if (!files.has(file)) files.set(file, (await readFile(join(ws.root, file), 'utf8')).split('\n'));
+    return files.get(file) ?? [];
+  };
+  const calls: Position[] = [];
+  let classes = [receiver ?? base];
+  const seen = new Set(classes.map((c) => c.id));
+  for (let depth = 0; depth < 4 && classes.length > 0; depth++) {
+    const next: CodeSymbol[] = [];
+    for (const type of classes) {
+      const own = type === base ? undefined : ws.index.symbolsIn(type.file).find((s) => s.parent === type.id && s.name === 'constructor');
+      if (own) {
+        const lines = await linesOf(own.file);
+        for (let n = own.range[0]; n <= own.range[1]; n++) {
+          const at = /(?:^|[^.\w$])super\s*\(/.exec(lines[n - 1] ?? '');
+          if (at) calls.push({ file: own.file, line: n - 1, character: at.index });
+        }
+        continue;
+      }
+      for (const site of (await references(ws, type, { where: isValueUseAt, deadline })).found) {
+        const before = ((await linesOf(site.file))[site.line] ?? '').slice(0, site.character);
+        if (/\bnew\s+(?:[\w$]+\s*\.\s*)*$/.test(before)) calls.push(site);
+        if (!/\bextends\s+$/.test(before)) continue;
+        // A one-line class contains its methods on the same line.
+        let sub = ws.index.containing(site.file, site.line + 1);
+        while (sub && !classKinds.has(sub.kind)) sub = sub.parent ? ws.index.get(sub.parent) : undefined;
+        if (!sub || seen.has(sub.id)) continue;
+        seen.add(sub.id);
+        next.push(sub);
+      }
+    }
+    classes = next;
+  }
+  return calls;
+}
+
+// The class whose instances alone run [symbol] from [caller]: a base
+// constructor calling it as `this.m()` reaches a subclass's override only on
+// that subclass, so only `new` on it or below runs the changed code.
+async function receiverOf(ws: Workspace, symbol: CodeSymbol, caller: Caller): Promise<CodeSymbol | undefined> {
+  if (caller.home?.name !== 'constructor' || !symbol.parent || caller.home.parent === symbol.parent) return undefined;
+  const lines = (await readFile(join(ws.root, caller.file), 'utf8')).split('\n');
+  const self = new RegExp(`\\bthis\\s*\\.\\s*${symbol.name.replace(/\$/g, '\\$')}\\s*\\(`);
+  return caller.lines.every((n) => self.test(lines[n - 1] ?? '')) ? ws.index.get(symbol.parent) : undefined;
 }
 
 // The subclasses of the Dart class [symbol], whose constructors call its

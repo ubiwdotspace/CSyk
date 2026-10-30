@@ -89,6 +89,30 @@ describe('calls', () => {
     expect((await calls(ws, 'items.ts#Base.label')).text.split('\n').slice(1)).toEqual(['items.ts#Item.render  3']);
   }, 30_000);
 
+  it("counts new on a subclass without a constructor, and super() in one with, as calls of the base's", async () => {
+    const routers = [
+      'export class Router {',
+      '  constructor() { this.mount(); }',
+      '  mount() {}',
+      '}',
+      'export class Logs extends Router { mount() {} }',
+      'export class Pages extends Router {',
+      '  constructor() { super(); }',
+      '}',
+      'export class Deep extends Logs {}',
+      'export function build() { return [new Logs(), new Deep()]; }',
+      'export function pages() { return new Pages(); }',
+      'export function plain() { return new Router(); }',
+    ];
+    writeFileSync(join(root, 'routers.ts'), `${routers.join('\n')}\n`);
+    await ws.index.update('routers.ts');
+    expect((await calls(ws, 'routers.ts#Router.constructor')).text.split('\n').slice(1)).toEqual([
+      'routers.ts#Pages.constructor  7',
+      'routers.ts#build  10',
+      'routers.ts#plain  12',
+    ]);
+  }, 30_000);
+
   it('lists a local function as a callee, not a parameter or a destructured name', async () => {
     const run = [
       'export function run(cb: () => void, { done }: { done: () => void }) {',
@@ -122,6 +146,40 @@ describe('impact', () => {
       expect((await impact(jobs)).text.split('\n')).toContain('caller 1  main.ts (top level)  3, 4  ← one, two');
     } finally {
       await jobs.close();
+    }
+  }, 30_000);
+
+  it("follows a base constructor's this.m() only to new on the subclass whose override changed", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "include": ["*.ts"] }');
+    const routers = (log: string) => [
+      'export class Router {',
+      '  constructor() { this.mount(); }',
+      '  mount() {}',
+      '}',
+      'export class Logs extends Router {',
+      `  mount() { ${log} }`,
+      '}',
+      'export class Pages extends Router {}',
+      'export class Deep extends Logs {}',
+      'export function build() { return [new Logs(), new Deep()]; }',
+      'export function pages() { return [new Pages(), new Router()]; }',
+    ];
+    writeFileSync(join(dir, 'routers.ts'), `${routers('').join('\n')}\n`);
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    git('init', '-q');
+    git('add', '.');
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
+    writeFileSync(join(dir, 'routers.ts'), `${routers('return 1;').join('\n')}\n`);
+    const repo = await Workspace.open(dir);
+    try {
+      expect((await impact(repo)).text.split('\n').slice(1)).toEqual([
+        'changed  routers.ts#Logs.mount  6',
+        'caller 1  routers.ts#Router.constructor  2  ← mount',
+        'caller 2  routers.ts#build  10  ← constructor',
+      ]);
+    } finally {
+      await repo.close();
     }
   }, 30_000);
 
