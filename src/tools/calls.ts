@@ -15,8 +15,11 @@ const run = promisify(execFile);
 
 // More callers than this at one level are listed, not followed further.
 const maxFanOut = 40;
-// How long `calls` and `impact` resolve mentions in all before answering with what they have.
-const toolMs = 6000;
+// How long `calls` and `impact` resolve mentions in all before answering with
+// what they have. Accuracy comes first: at 6 seconds, impact on Prometheus
+// found 87.8% of what a change touches, as the language server was still
+// loading; at 30, 91.5%, for 28% more CPU.
+const toolMs = 30000;
 
 // Kinds a member access calls when it reaches them.
 const callableKinds: ReadonlySet<SymbolKind> = new Set(['function', 'method', 'hook', 'component', 'route']);
