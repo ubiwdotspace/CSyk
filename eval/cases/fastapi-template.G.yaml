@@ -22,8 +22,19 @@ cases:
     expect:
       - { file: "backend/app/crud.py", lines: [63, 68] }
       - { file: "backend/app/crud.py", lines: [20, 31] }
+      - { file: "backend/tests/utils/item.py", lines: [9, 16] }
       - { file: "backend/app/api/routes/login.py", lines: [77, 97] }
       - { file: "backend/app/api/routes/users.py", lines: [182, 211] }
+      - { file: "backend/tests/crud/test_user.py", lines: [80, 93] }
+      - { file: "backend/tests/utils/user.py", lines: [30, 49] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [27, 40] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [55, 65] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [68, 79] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [82, 97] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [114, 126] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [129, 139] }
+      - { file: "backend/tests/api/routes/test_items.py", lines: [154, 164] }
+      - { file: "backend/tests/conftest.py", lines: [38, 42] }
   - id: G05
     query: "scripts/prepare_release.py:94"
     expect:
@@ -39,6 +50,7 @@ cases:
     expect:
       - { file: "backend/app/core/db.py", lines: [15, 33] }
       - { file: "backend/app/initial_data.py", lines: [11, 13] }
+      - { file: "backend/tests/conftest.py", lines: [15, 24] }
       - { file: "backend/app/initial_data.py", lines: [16, 19] }
   - id: G08
     query: "backend/app/utils.py:63"
