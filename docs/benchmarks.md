@@ -30,10 +30,10 @@ The six kinds of question:
 | nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 93.3% / 96.9% |
 | provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 94.3% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
-| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
+| flame (Dart, large) | 100% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
 | fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 100% |
 | dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 97.8% / 95.6% |
-| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 96.7% / 84.6% |
+| django (Python, large) | 100% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 96.7% / 84.6% |
 | chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 98.8% |
 | pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 95.1% / 93.4% |
 | prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 92.7% / 97.2% |
@@ -194,7 +194,7 @@ kind, against text search (ripgrep and a read of the first matching file):
 
 | | jitsi-meet: CSyk | text search | parse-server: CSyk | text search |
 |---|---|---|---|---|
-| Exact name: first answer right | **93.3%** | 50% | **100%** | 23.3% |
+| Exact name: first answer right | **100%** | 50% | **100%** | 23.3% |
 | Part of a name: first answer right | **100%** | 10% | **100%** | 3.3% |
 | Uses: found / correct | **97.5% / 100%** | 100% / 67.6% | **100% / 100%** | 100% / 56% |
 | Callers and calls: found / correct | **96.7% / 96%** | 100% / 66.9% | **100% / 94.8%** | 100% / 52.6% |
@@ -227,7 +227,7 @@ scored against the answers before.
 
 | | **CSyk** | Serena | Graphify |
 |---|---|---|---|
-| Exact name: first answer right | **99.5%** | 85.1% | 79.9% |
+| Exact name: first answer right | **100%** | 85.1% | 79.9% |
 | Part of a name: first answer right | **100.0%** | 17.0% | 31.6% |
 | Uses: found / correct | **99.4% / 99.5%** | 76.5% / 81.2% | 28.6% / 41.6% |
 | Callers and calls: found / correct | **99.5% / 97.1%** | 77.5% / 75.0% | 47.7% / 53.8% |

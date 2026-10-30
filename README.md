@@ -19,7 +19,7 @@ calls it, or what an edit touches. CSyk answers in a few lines, from an index of
 the language's own compiler, instead of a pile of text-search hits and whole files. It plugs
 into the agent as an MCP server.
 
-| **99.5%** | **240 tokens** | **7% fewer tokens** | **8 ms** |
+| **100%** | **240 tokens** | **7% fewer tokens** | **8 ms** |
 |:---:|:---:|:---:|:---:|
 | first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, over 120 issues in four languages, and faster | per answer, median |
 
@@ -128,7 +128,7 @@ Code on the first ten issues of four public benchmarks of real GitHub issues:
 
 | | Text search | **CSyk** | Serena | Graphify |
 |---|---|---|---|---|
-| Definition by name: first answer right | 33.1% | **99.5%** | 85.1% | 79.9% |
+| Definition by name: first answer right | 33.1% | **100%** | 85.1% | 79.9% |
 | Uses of a symbol: answers that really are uses | 64.1% | **99.5%** | 81.2% | 41.6% |
 | Tokens per answer | 3,400 | **115** | 243 | 719 |
 | CPU for the same questions on all twelve, from cold | – | **205 s** | 2,764 s | 353 s |
