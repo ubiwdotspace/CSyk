@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
-import { isCodeAt, isImportAt, parseFile } from '../../src/index/parse.ts';
+import { isCallAt, isCodeAt, isImportAt, isMemberAt, parseFile } from '../../src/index/parse.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
 import { resolvesTo, servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
 
@@ -46,6 +46,9 @@ const containerKinds: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Constant,
   SymbolKind.Property,
 ]);
+
+// Symbols a call is made from: not a local variable it is assigned to.
+const callerKinds: ReadonlySet<SymbolKind> = new Set([SymbolKind.Function, SymbolKind.Method, SymbolKind.Constructor, SymbolKind.Class]);
 
 /**
  * Answers for cases from a language server itself (`tsc --lsp`, pyright,
@@ -122,6 +125,13 @@ export class LspOracle {
           : { ...span, startLine: 0, endLine: lastLine },
       );
     }
+    // pyright's incoming calls miss most files it has not opened: on django,
+    // all but 2 of condition()'s 13 callers. Its references, kept to calls
+    // and grouped by the function each is in, add the rest.
+    if (direction === 'in' && this.spec.name === 'pyright') {
+      const have = new Set(spans.map((s) => `${s.file}:${s.startLine}`));
+      for (const span of await this.callersByReference(at)) if (!have.has(`${span.file}:${span.startLine}`)) spans.push(span);
+    }
     return spans;
   }
 
@@ -187,12 +197,37 @@ export class LspOracle {
   }
 
   /** The innermost function, method, class or binding enclosing [line]. */
-  async containing(file: string, line: number): Promise<DocumentSymbol | undefined> {
+  // The functions (or the module) whose code calls the declaration at [at].
+  private async callersByReference(at: Position): Promise<Span[]> {
+    const declaration = await this.resolve(at);
+    const name = /^[A-Za-z_]\w*/.exec((await this.text(at.file)).split('\n')[at.line]?.slice(at.character) ?? '')?.[0];
+    if (!declaration || !name) return [];
+    // Reading a property (`@property`, `@cached_property`) runs it.
+    const above = (await this.text(declaration.file)).split('\n').slice(0, declaration.nameLine).reverse();
+    const decorators = above.slice(0, Math.max(above.findIndex((l) => !l.trim().startsWith('@')), 0));
+    const property = decorators.some((l) => /@(?:[\w.]*\.)?(?:cached_)?property\b/.test(l));
+    const callers = new Map<string, Span>();
+    for (const ref of await this.references(name, declaration)) {
+      const text = await this.text(ref.file);
+      const tree = await parseFile(ref.file, text);
+      const called = tree ? isCallAt(tree, ref.line, ref.character) || (property && isMemberAt(tree, ref.line, ref.character)) : false;
+      tree?.delete();
+      if (!called) continue;
+      const home = await this.containing(ref.file, ref.line, callerKinds);
+      const span = home
+        ? { file: ref.file, startLine: home.range.start.line, endLine: home.range.end.line, nameLine: home.selectionRange.start.line, nameColumn: home.selectionRange.start.character }
+        : { file: ref.file, startLine: 0, endLine: text.split('\n').length - 1, nameLine: 0, nameColumn: 0 };
+      callers.set(`${span.file}:${span.startLine}`, span);
+    }
+    return [...callers.values()];
+  }
+
+  async containing(file: string, line: number, kinds = containerKinds): Promise<DocumentSymbol | undefined> {
     let best: DocumentSymbol | undefined;
     const visit = (symbols: DocumentSymbol[]) => {
       for (const symbol of symbols) {
         if (symbol.range.start.line > line || symbol.range.end.line < line) continue;
-        if (containerKinds.has(symbol.kind)) best = symbol;
+        if (kinds.has(symbol.kind)) best = symbol;
         visit(symbol.children ?? []);
       }
     };

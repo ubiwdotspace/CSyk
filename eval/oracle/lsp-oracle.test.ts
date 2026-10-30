@@ -1,3 +1,6 @@
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -45,4 +48,28 @@ describe('LspOracle on mini-ts', () => {
     const home = await oracle.containing('src/auth/token-store.ts', 31);
     expect(home?.name).toBe('refreshAccessToken');
   });
+});
+
+describe('LspOracle with pyright', () => {
+  it('finds callers in every file, decorators and tests included', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'csyk-oracle-py-'));
+    const files = {
+      'shop.py': 'def checkout(f=None):\n    return f\n',
+      'views.py': 'from shop import checkout\n\n\n@checkout(1)\ndef index():\n    pass\n\n\ndef page():\n    return checkout()\n',
+      'tests/test_shop.py': 'from shop import checkout\n\n\ndef test_checkout():\n    assert checkout() is None\n',
+    };
+    mkdirSync(join(root, 'tests'));
+    for (const [file, text] of Object.entries(files)) writeFileSync(join(root, file), text);
+    // The oracle reads the files git tracks.
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    execFileSync('git', ['add', '.'], { cwd: root });
+    const py = await LspOracle.start(root, 'py');
+    try {
+      const callers = await py.calls({ file: 'shop.py', line: 0, character: 4 }, 'in');
+      // The decorator's call is the module's to pyright's call hierarchy (line 1) and index's to its references.
+      expect(callers.map((s) => `${s.file}:${s.startLine + 1}`).sort()).toEqual(['tests/test_shop.py:4', 'views.py:1', 'views.py:4', 'views.py:9']);
+    } finally {
+      await py.stop();
+    }
+  }, 60_000);
 });

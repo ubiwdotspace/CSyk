@@ -1,21 +1,24 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
 import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
-import { callCases, impactCases } from './oracle/call-cases.ts';
+import { parseCaseFile } from './harness/cases.ts';
+import { answerAgain, callCases, impactCases, type CallCase } from './oracle/call-cases.ts';
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force] [--answer-again]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
 language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
 to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
-Review the cases before trusting them.`;
+Review the cases before trusting them. --answer-again keeps the D or G
+questions of the existing file and answers them again, as after a fix to
+how answers are found.`;
 
 type Generated = { query: string; direction?: 'in' | 'out'; expect: { file: string; lines: [number, number] }[] };
 
@@ -36,6 +39,7 @@ async function main(): Promise<void> {
       count: { type: 'string', default: '30' },
       seed: { type: 'string', default: '1' },
       force: { type: 'boolean', default: false },
+      'answer-again': { type: 'boolean', default: false },
       lang: { type: 'string', default: 'ts' },
       help: { type: 'boolean', short: 'h' },
     },
@@ -53,7 +57,7 @@ async function main(): Promise<void> {
   if (!corpus) throw new Error(`Corpus ${values.corpus} is not in eval/corpora*.yaml`);
   assertPinned(corpus);
   const out = join(root, 'eval/cases', corpus.private ? 'private' : '', `${corpus.name}.${category}.yaml`);
-  if (!values.force && (await exists(out))) {
+  if (!values.force && !values['answer-again'] && (await exists(out))) {
     throw new Error(`${out} exists; pass --force to replace it`);
   }
 
@@ -63,6 +67,16 @@ async function main(): Promise<void> {
   const oracle = await LspOracle.start(corpus.root, values.lang);
   try {
     const sources = oracle.files.filter(isSource);
+    if (values['answer-again']) {
+      if (category !== 'D' && category !== 'G') throw new Error('--answer-again is for D and G cases');
+      const text = await readFile(out, 'utf8');
+      const seed = Number(/seed (\d+)\./.exec(text)?.[1] ?? values.seed);
+      const asked = parseCaseFile(out, `${corpus.name}.${category}.yaml`, text).cases as CallCase[];
+      const cases = await answerAgain(oracle, category, asked);
+      await writeFile(out, render(corpus, oracleServers[values.lang] ?? values.lang, category, seed, cases));
+      console.log(`${cases.length} of ${asked.length} case(s) answered again in ${out.slice(root.length + 1)}`);
+      return;
+    }
     const cases =
       category === 'E'
         ? await stringCases(oracle, count, random)

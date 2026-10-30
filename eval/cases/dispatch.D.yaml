@@ -27,14 +27,14 @@ cases:
     query: "get_organization_role"
     direction: in
     expect:
-      - { file: "src/dispatch/auth/service.py", lines: [283, 287] }
       - { file: "src/dispatch/auth/models.py", lines: [83, 86] }
-      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [2672, 2756] }
-      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [3037, 3079] }
       - { file: "src/dispatch/auth/permissions.py", lines: [73, 106] }
+      - { file: "src/dispatch/auth/service.py", lines: [283, 287] }
       - { file: "src/dispatch/auth/views.py", lines: [91, 125] }
       - { file: "src/dispatch/auth/views.py", lines: [153, 200] }
       - { file: "src/dispatch/auth/views.py", lines: [304, 311] }
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [2672, 2756] }
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [3037, 3079] }
   - id: D06
     query: "remove_user"
     direction: out
@@ -74,10 +74,10 @@ cases:
     query: "is_bot"
     direction: in
     expect:
-      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [1383, 1409] }
-      - { file: "src/dispatch/plugins/dispatch_slack/incident/interactive.py", lines: [1062, 1079] }
       - { file: "src/dispatch/plugins/dispatch_slack/middleware.py", lines: [147, 161] }
       - { file: "src/dispatch/plugins/dispatch_slack/middleware.py", lines: [223, 306] }
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [1383, 1409] }
+      - { file: "src/dispatch/plugins/dispatch_slack/incident/interactive.py", lines: [1062, 1079] }
   - id: D12
     query: "add_case_participants"
     direction: out
@@ -114,7 +114,6 @@ cases:
     query: "update_group"
     direction: in
     expect:
-      - { file: "src/dispatch/plugins/dispatch_slack/incident/interactive.py", lines: [2889, 2927] }
       - { file: "src/dispatch/case/flows.py", lines: [80, 160] }
       - { file: "src/dispatch/case/flows.py", lines: [163, 232] }
       - { file: "src/dispatch/case/flows.py", lines: [281, 387] }
@@ -124,6 +123,7 @@ cases:
       - { file: "src/dispatch/incident/flows.py", lines: [1020, 1038] }
       - { file: "src/dispatch/incident/flows.py", lines: [1041, 1145] }
       - { file: "src/dispatch/incident/flows.py", lines: [1148, 1250] }
+      - { file: "src/dispatch/plugins/dispatch_slack/incident/interactive.py", lines: [2889, 2927] }
   - id: D18
     query: "resolve_button_click"
     direction: out
