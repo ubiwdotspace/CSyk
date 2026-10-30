@@ -220,6 +220,11 @@ export class LspService {
     return this.lsp.alive;
   }
 
+  /** Whether the server has said it finished analyzing the workspace (Dart); false for one that never says. */
+  get idle(): boolean {
+    return this.lsp.idle;
+  }
+
   private async search(symbol: CodeSymbol, options: ReferenceOptions): Promise<References> {
     const group = [symbol, ...(options.overloads ?? [])];
     const own = (p: Position) => group.some((s) => p.file === s.file && p.line === s.line - 1);

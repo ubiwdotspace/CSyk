@@ -381,7 +381,9 @@ reads.
 - **Repositories** are listed in `eval/corpora.yaml` (`path`, `commit`, `git`); a
   question file refuses to run against any other commit. Run `go mod download` in the Go
   repositories and `flutter pub get` in the Dart ones (`packages/*` for provider) so their
-  compilers can follow imports. Private repositories go in `eval/corpora.local.yaml` and their
+  compilers can follow imports. The eval starts each repository's language servers, and lets
+  Dart's finish analyzing, before its first question: it measures answers, not a cold start, which
+  on a slower machine makes the first Dart search partial (as its answer says). Private repositories go in `eval/corpora.local.yaml` and their
   questions in `eval/cases/private/`; both are ignored by git.
 - **Questions** live in `eval/cases/<repository>.<letter>.yaml`: an `id`, a `query`, the expected
   locations (`file`, optional `lines`) and, for callers and calls, a `direction`.
