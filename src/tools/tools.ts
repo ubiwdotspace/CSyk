@@ -455,7 +455,7 @@ export async function references(
     options.viaSupertypes === true && (symbol.lang === 'go' || (related.length > 0 && (symbol.lang !== 'dart' || closed)));
   if (service) {
     const group = [...overloads, ...related];
-    const { found, partial } = await service.references(symbol, { ...options, viaSupertypes, overloads: group });
+    const { found, partial } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
     // A server still loading the project resolves nothing in time: its unconfirmed mentions beat none.
     if (found.length === 0 && partial?.resolved === 0) {
       const mentions = (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]), options.where)).filter(
