@@ -229,10 +229,12 @@ export class LspService {
       endLine: s.range[1] - 1,
     }));
     const bases = new Set(options.bases?.map((s) => `${s.file}:${s.line - 1}`));
+    const imports = symbol.parent ? new Set<string>() : await importsOf(this.root, symbol, resolved.flatMap((r) => r.spans));
     // `super.m()`, and Python's `super().m()` or `super(C, self).m()`.
     const viaSuper = (p: Mention) => /\bsuper(\([^)]*\))?\.$/.test(p.text.slice(0, p.character));
     const isOurs = (p: Mention, spans: Span[]) =>
-      spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`))));
+      spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`)))) ||
+      spans.some((span) => imports.has(`${span.file}:${span.nameLine}`));
     const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
     const key = (p: Position) => `${p.file}:${p.line}:${p.character}`;
     const direct = (spans: Span[]) => spans.some((span) => declared.some((d) => !bases.has(`${d.file}:${d.nameLine}`) && resolvesTo(span, d, lines)));
@@ -468,6 +470,47 @@ export function resolvesTo(
   if (span.nameLine === declared.nameLine) return true;
   const inside = span.nameLine > declared.startLine && span.nameLine <= declared.endLine;
   return inside && (lines[span.nameLine] ?? '').startsWith(declared.name, span.nameColumn);
+}
+
+/**
+ * Of [spans], those that stop at an import of [symbol] from a relative path
+ * to its file, as `file:line`: by its name when it is exported, or as the
+ * default when it is the file's default export. A server stops there when it
+ * cannot read the module: a TS project with `allowJs: false` importing JS
+ * (parse-server's `import { LogsRouter } from './Routers/LogsRouter'`).
+ */
+async function importsOf(root: string, symbol: CodeSymbol, spans: Span[]): Promise<Set<string>> {
+  const found = new Set<string>();
+  const target = symbol.file.replace(/\.[^./]+$/, '');
+  const files = new Map<string, string[]>();
+  const linesOf = async (file: string) => {
+    if (!files.has(file)) files.set(file, (await readFile(join(root, file), 'utf8').catch(() => '')).split('\n'));
+    return files.get(file) ?? [];
+  };
+  const name = symbol.name.replace(/[$]/g, '\\$');
+  const isDefault = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${name}\\b|\\b${name}\\s+as\\s+default\\b`).test(
+    (await linesOf(symbol.file)).join('\n'),
+  );
+  for (const span of spans) {
+    if (span.file === symbol.file || found.has(`${span.file}:${span.nameLine}`)) continue;
+    const lines = await linesOf(span.file);
+    // The import statement around the span: from its `import` line to its `from '…'`.
+    let start = span.nameLine;
+    while (start > 0 && span.nameLine - start < 30 && !/^\s*import\b/.test(lines[start] ?? '')) start--;
+    let end = start;
+    while (end < lines.length - 1 && end - start < 30 && !/\bfrom\s*['"]/.test(lines[end] ?? '')) end++;
+    if (!/^\s*import\b/.test(lines[start] ?? '') || end < span.nameLine) continue;
+    const statement = lines.slice(start, end + 1).join(' ');
+    const from = /\bfrom\s*['"](\.{1,2}\/[^'"]+)['"]/.exec(statement)?.[1];
+    const module = from ? join(dirname(span.file), from).replace(/\.[cm]?[jt]sx?$/, '') : '';
+    if (module !== target && `${module}/index` !== target) continue;
+    const local = /^[\w$]+/.exec((lines[span.nameLine] ?? '').slice(span.nameColumn))?.[0];
+    const named = (/\{([^}]*)\}/.exec(statement)?.[1] ?? '').split(',').map((part) => part.trim().split(/\s+as\s+/));
+    const byName = symbol.exported && named.some(([imported, as]) => imported?.replace(/^type\s+/, '') === symbol.name && (as ?? imported) === local);
+    const asDefault = isDefault && new RegExp(`^\\s*import\\s+(?:type\\s+)?${local}\\s*(?:,|from\\b)`).test(statement);
+    if (byName || asDefault) found.add(`${span.file}:${span.nameLine}`);
+  }
+  return found;
 }
 
 // Declarations without a body: methods of a Go or TS interface, abstract methods.
