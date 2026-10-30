@@ -10,7 +10,9 @@ const httpDecorator = /^@(Get|Post|Put|Patch|Delete|Options|Head|All|Sse)\b/;
  * TS/JS declarations: top-level functions, classes, interfaces, types,
  * enums, bindings and namespaces (with what they declare), and class methods. React components and hooks, and
  * NestJS controllers' routes and injectable providers, get their own kinds.
- * Function locals are left out; nobody searches for them by name.
+ * Functions declared inside functions (a factory's helpers, a hook's
+ * handlers, a test's) are kept, marked nested, under the function around
+ * them; other locals are left out.
  */
 export function extractTypeScript(root: Node, sink: SymbolSink): void {
   const jsx = /\.[jt]sx$/.test(sink.file);
@@ -22,7 +24,9 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         for (const child of node.namedChildren) {
           // `namespace A { … }` at the top level is an expression statement.
           if (child?.type === 'internal_module') declare(child, exported, [], parent);
-          if (child?.type === 'assignment_expression') assigned(node, child);
+          else if (child?.type === 'assignment_expression') assigned(node, child);
+          // `describe('…', () => { const run = … })`: helpers in a callback.
+          else if (child) inside(child, parent);
         }
         return;
       case 'internal_module': {
@@ -41,7 +45,8 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         const named = value ? namedFunctionIn(value) : undefined;
         const namedName = named?.childForFieldName('name');
         if (named && namedName) {
-          sink.add(namedName, named.type.includes('class') ? 'class' : functionKind(namedName.text, jsx), named, true, parent);
+          const owner = sink.add(namedName, named.type.includes('class') ? 'class' : functionKind(namedName.text, jsx), named, true, parent);
+          if (!named.type.includes('class')) inside(named, owner);
           return;
         }
         for (const child of node.namedChildren) if (child) declare(child, true, decorators, parent);
@@ -53,7 +58,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
       case 'function_declaration':
       case 'generator_function_declaration':
       case 'function_signature':
-        if (name) sink.add(name, functionKind(name.text, jsx), node, exported, parent);
+        if (name) inside(node, sink.add(name, functionKind(name.text, jsx), node, exported, parent));
         return;
       case 'class_declaration':
       case 'abstract_class_declaration':
@@ -89,7 +94,9 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           const binding = declarator?.childForFieldName('name');
           if (declarator?.type !== 'variable_declarator' || !binding) continue;
           if (binding.type === 'identifier') {
-            sink.add(binding, bindingKind(binding.text, declarator.childForFieldName('value'), jsx), declarator, exported, parent);
+            const value = declarator.childForFieldName('value');
+            const bound = sink.add(binding, bindingKind(binding.text, value, jsx), declarator, exported, parent);
+            if (value) inside(value, bound);
             continue;
           }
           for (const bound of boundNames(binding)) sink.add(bound, 'const', declarator, exported, parent);
@@ -110,7 +117,27 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
     const object = left?.childForFieldName('object')?.text.replace(/\.prototype$/, '') ?? '';
     const owner = sink.symbols.find((s) => s.name === object && !s.parent);
     const exported = /^(module\.)?exports$/.test(object) || owner?.exported === true;
-    sink.add(property, functionKind(property.text, jsx), statement, exported, owner);
+    inside(value, sink.add(property, functionKind(property.text, jsx), statement, exported, owner));
+  };
+
+  // The named functions declared anywhere in [node], under [owner]: a
+  // function, or a binding holding one. Classes declared in a function
+  // are left out, as are other locals.
+  const inside = (node: Node, owner?: CodeSymbol): void => {
+    for (const child of node.namedChildren) {
+      if (!child || child.type.includes('class')) continue;
+      const name = child.childForFieldName('name');
+      if ((child.type === 'function_declaration' || child.type === 'generator_function_declaration') && name) {
+        inside(child, sink.add(name, functionKind(name.text, jsx), child, false, owner, true));
+        continue;
+      }
+      const value = child.type === 'variable_declarator' ? child.childForFieldName('value') : null;
+      if (name?.type === 'identifier' && value && functionValues.has(value.type)) {
+        inside(value, sink.add(name, functionKind(name.text, jsx), child, false, owner, true));
+        continue;
+      }
+      inside(child, owner);
+    }
   };
 
   const declareClass = (node: Node, name: Node, exported: boolean, outer: string[], parent?: CodeSymbol) => {
@@ -129,12 +156,13 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
       if (memberName && isMethod) {
         const own = [...pending, ...member.namedChildren.filter((c) => c?.type === 'decorator').map((c) => c?.text ?? '')];
         const route = controller && own.some((d) => httpDecorator.test(d));
-        sink.add(memberName, route ? 'route' : 'method', member, exported, owner);
+        inside(member, sink.add(memberName, route ? 'route' : 'method', member, exported, owner));
       }
       // `handle = () => {…}` is a method written as a field.
       if (memberName?.type === 'property_identifier' && fieldTypes.has(member.type)) {
         const value = member.childForFieldName('value');
-        sink.add(memberName, value && functionValues.has(value.type) ? 'method' : 'field', member, exported, owner);
+        const field = sink.add(memberName, value && functionValues.has(value.type) ? 'method' : 'field', member, exported, owner);
+        if (value && functionValues.has(value.type)) inside(value, field);
       }
       pending = [];
     }

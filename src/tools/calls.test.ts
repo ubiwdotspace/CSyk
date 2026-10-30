@@ -102,7 +102,7 @@ describe('calls', () => {
     ];
     writeFileSync(join(root, 'local.ts'), `${run.join('\n')}\n`);
     await ws.index.update('local.ts');
-    expect((await calls(ws, 'run', { direction: 'out' })).text.split('\n').slice(1)).toEqual(['local.ts:3 helper  3']);
+    expect((await calls(ws, 'run', { direction: 'out' })).text.split('\n').slice(1)).toEqual(['local.ts#run.helper  3']);
   }, 30_000);
 });
 

@@ -67,6 +67,23 @@ describe('extractSymbols for TypeScript', () => {
 });
 
 describe('extractSymbols for JavaScript', () => {
+  it('finds functions inside functions, under the one around them, marked nested', async () => {
+    const source = [
+      'export function jobStatusHandler(config) {',
+      '  const setMessage = function (message) {',
+      '    return message;',
+      '  };',
+      '  function complete() {',
+      '    return setMessage("done");',
+      '  }',
+      '  const total = 3;',
+      '  return { complete, total };',
+      '}',
+    ].join('\n');
+    const found = (await extractSymbols('status.js', source)).map((s) => `${s.id.split('#')[1]}${s.nested ? ' nested' : ''}`);
+    expect(found).toEqual(['jobStatusHandler', 'jobStatusHandler.setMessage nested', 'jobStatusHandler.complete nested']);
+  });
+
   it('finds functions written as assignments, as CommonJS and prototype code do', async () => {
     const source = [
       'var Cloud = {};',

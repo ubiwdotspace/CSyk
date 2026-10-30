@@ -257,6 +257,9 @@ export function isValueUseAt(tree: Tree, line: number, column: number): boolean 
   if (!node) return false;
   if (isCallAt(tree, line, column)) return true;
   if (node.type === 'type_identifier' || node.parent?.type === 'export_statement') return false;
+  // A function's own name where it is declared: an object literal's
+  // `catch(exception, host) {…}` resolves to the interface it implements.
+  if (declaresFunctionAt(tree, line, column)) return false;
   for (let n = node.parent; n; n = n.parent) {
     if (importTypes.has(n.type) || n.type === 'export_specifier' || typeContexts.has(n.type)) return false;
   }
