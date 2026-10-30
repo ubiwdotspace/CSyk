@@ -114,9 +114,10 @@ the symbols the change touches and follows their callers two levels up, stopping
 symbols with more than 40 callers.
 
 **Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
-mentions first and stops after five seconds (six for `calls` and `impact`); when it stops early,
-the answer says how much it covered. Language servers start when first needed and stop after ten
-minutes without use.
+mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
+two levels up and may wait for a language server still loading a large project; when it stops
+early, the answer says how much it covered. Language servers start when first needed and stop
+after ten minutes without use.
 
 ## Answers
 
