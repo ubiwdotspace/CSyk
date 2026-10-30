@@ -44,6 +44,22 @@ describe('calls', () => {
     const result = await calls(ws, 'checkout', { direction: 'out' });
     expect(result.text.split('\n').slice(1)).toEqual(['total.ts#total  1']);
   }, 30_000);
+
+  it('lists a local function as a callee, not a parameter or a destructured name', async () => {
+    const run = [
+      'export function run(cb: () => void, { done }: { done: () => void }) {',
+      '  const [, set] = [0, (n: number) => n];',
+      '  const helper = () => 1;',
+      '  cb();',
+      '  done();',
+      '  set(1);',
+      '  return helper();',
+      '}',
+    ];
+    writeFileSync(join(root, 'local.ts'), `${run.join('\n')}\n`);
+    await ws.index.update('local.ts');
+    expect((await calls(ws, 'run', { direction: 'out' })).text.split('\n').slice(1)).toEqual(['local.ts:3 helper  3']);
+  }, 30_000);
 });
 
 describe('impact', () => {
