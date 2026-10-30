@@ -4,8 +4,8 @@ import { changedOldLines, parseAnswer, scoreAnswer } from './run.ts';
 const gold = {
   files: ['src/a.ts', 'src/b.ts'],
   nodes: [
-    { file: 'src/a.ts', name: 'save' },
-    { file: 'src/b.ts', name: 'load' },
+    { file: 'src/a.ts', name: 'save', isClass: false },
+    { file: 'src/b.ts', name: 'load', isClass: false },
   ],
 };
 
@@ -23,6 +23,14 @@ describe('localization scoring', () => {
       nodeRecall: 0.5,
     });
     expect(scoreAnswer({ files: gold.files, nodes: [] }, ['src/c.ts', 'src/a.ts'], [])).toEqual({ fileAt1: 0, fileAt5: 0, fileRecall5: 0.5 });
+  });
+
+  it('counts a function named inside a changed function, not a method named in a changed class', () => {
+    const nodes = [
+      { file: 'src/a.ts', name: 'useList', isClass: false },
+      { file: 'src/b.ts', name: 'Store', isClass: true },
+    ];
+    expect(scoreAnswer({ files: ['src/a.ts', 'src/b.ts'], nodes }, ['src/a.ts'], ['src/a.ts:useList.onBlur', 'src/b.ts:Store.save']).nodeRecall).toBe(0.5);
   });
 
   it('finds the base lines a patch removes or adds next to', () => {
