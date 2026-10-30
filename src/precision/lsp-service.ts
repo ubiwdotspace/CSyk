@@ -30,6 +30,8 @@ export type ServerSpec = {
   extensions: ReadonlySet<string>;
   /** The command to start it, or undefined when it is not installed. */
   command: () => { command: string; args: string[] } | undefined;
+  /** Its settings, by section, for the server to ask for. */
+  settings?: Record<string, unknown>;
   /** Work done once it starts, such as loading every project. */
   warmup?: (lsp: LspClient, root: string) => Promise<void>;
   /** Interfaces name no implementations (Go): ask the server which a method satisfies. */
@@ -67,6 +69,9 @@ export const servers: readonly ServerSpec[] = [
     extensions: tsExtensions,
     hierarchyReferences: true,
     command: () => packageCommand('typescript', 'tsc', ['--lsp', '--stdio']),
+    // Left on, it runs `npm install` for the @types a JavaScript project lacks:
+    // 100 MB more, and the network, for answers that need none.
+    settings: { 'js/ts': { disableAutomaticTypeAcquisition: true, tsserver: { automaticTypeAcquisition: { enabled: false } } } },
     // A symbol request in one file of each tsconfig project makes the server load it.
     warmup: async (lsp, root) => {
       const sources = await listFiles(root, tsExtensions);
@@ -156,7 +161,7 @@ export class LspService {
   static async start(root: string, spec: ServerSpec): Promise<LspService | undefined> {
     const launch = spec.command();
     if (!launch || !existsSync(launch.command)) return undefined;
-    const lsp = await LspClient.start(launch.command, launch.args, root);
+    const lsp = await LspClient.start(launch.command, launch.args, root, spec.settings);
     await spec.warmup?.(lsp, root);
     return new LspService(root, spec, lsp);
   }
