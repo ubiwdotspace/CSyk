@@ -142,6 +142,24 @@ more. TypeScript rests on one issue, `microsoft__vscode-173585`, whose sessions 
 turns in either setup: 817k tokens with CSyk against 192k without in one run, 74k against 363k in
 another. Without it, each run used 14.0% to 15.5% fewer tokens.
 
+### Issues never used to tune
+
+Every change above was measured on the first 20 issues of each benchmark, so it may fit those
+issues more than issues in general. Issues 31 to 50 of the same samples were never run before (21
+to 30 were, in the 120-issue round), and the version whose `grep` gives the most complete of three
+forms that fits its budget ran on them once, side by side with Claude Code alone:
+
+| | Issues 1–20, tuned on | Issues 31–50, never seen |
+|---|---|---|
+| Tokens per issue, mean | 12.5% fewer (95% interval: 5.0% to 19.4% fewer) | **12.6% fewer** (5.7% to 18.8% fewer) |
+| Turns per issue | 3.61 against 4.49 | **3.59** against 4.34 |
+| Changed functions named | 6.9 points more | 4.1 points more |
+| First file right | 3.8 points fewer | 2.5 points fewer |
+| Languages with fewer tokens | all four | all four (TypeScript 7.0%, JavaScript 23.7%, Python 10.9%, Go 3.8%) |
+
+Where CSyk's first file was wrong and Claude Code alone's right, the right file was in CSyk's
+answer too, second or third, in all but one issue: the agent's ordering, not a missing file.
+
 ## Against Serena and Graphify
 
 [Serena](https://github.com/oraios/serena) (2.1.1, commit `ede329a`) and
