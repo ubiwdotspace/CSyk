@@ -7,7 +7,7 @@ import { parseArgs } from 'node:util';
 import { buildCsyk } from './agent/claude.ts';
 import { mean } from './harness/metrics.ts';
 
-const usage = `Usage: npm run bench -- [--tier 5|10|20|30|50] [--only <tools>] [--setup csyk-lean] [--run <name>] [--skip questions|agents]
+const usage = `Usage: npm run bench -- [--tier 5|10|20|30|50] [--lang ts|py|go|dart] [--only <tools>] [--setup csyk-lean] [--run <name>] [--skip questions|agents]
 
 Measures a change at a chosen size: single questions on the twelve
 repositories, then Claude Code on public issues in TypeScript, JavaScript,
@@ -17,6 +17,9 @@ tier, so going up a tier only runs what is new.
 
   --tier   questions of each kind per repository, and issues per language
            (default 5). While optimizing: 5, 10, 20, 30; for a release: 50.
+  --lang   only the language a change touches: its repositories, and its
+           issues (ts: TypeScript and JavaScript; dart has none). Build and
+           measure a change on ts first, then on the others.
   --only   the tools a change touches (find, grep, read, refs, calls,
            impact): single questions then cover only their kinds
   --setup  the agent setup to measure (default csyk-lean)
@@ -28,7 +31,14 @@ Agent sessions are billed to your Claude account: about $0.05 an issue.`;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const kindsOf: Record<string, string[]> = { find: ['A', 'B'], read: ['A'], grep: ['E'], refs: ['C'], calls: ['D'], impact: ['G'] };
-const benchmarks = [
+// Each language's repositories (eval/corpora.yaml) and benchmarks of issues.
+const languages: Record<string, { corpora: string[]; issues: string[] }> = {
+  ts: { corpora: ['mini-ts', 'zustand', 'excalidraw', 'nest'], issues: ['TypeScript', 'JavaScript'] },
+  py: { corpora: ['fastapi-template', 'dispatch', 'django'], issues: ['Python'] },
+  go: { corpora: ['chi', 'pocketbase', 'prometheus'], issues: ['Go'] },
+  dart: { corpora: ['provider', 'wonderous', 'flame'], issues: [] },
+};
+const allBenchmarks = [
   ['polybench', 'TypeScript'],
   ['polybench', 'JavaScript'],
   ['swebench', 'Python'],
@@ -42,11 +52,13 @@ const { values } = parseArgs({
     setup: { type: 'string', default: 'csyk-lean' },
     run: { type: 'string' },
     skip: { type: 'string' },
+    lang: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 });
 const tier = Number(values.tier);
-if (values.help || !Number.isInteger(tier) || tier < 1) {
+const lang = values.lang ? languages[values.lang] : undefined;
+if (values.help || !Number.isInteger(tier) || tier < 1 || (values.lang && !lang)) {
   console.log(usage);
   process.exit(0);
 }
@@ -55,6 +67,7 @@ const unknown = tools.filter((t) => !kindsOf[t]);
 if (unknown.length > 0) throw new Error(`Unknown tool ${unknown.join(', ')}; known: ${Object.keys(kindsOf).join(', ')}`);
 if (!existsSync(join(root, 'eval/corpora'))) throw new Error('Fetch the repositories first: npm run corpora');
 const kinds = tools.length > 0 ? [...new Set(tools.flatMap((t) => kindsOf[t] ?? []))] : ['A', 'B', 'C', 'D', 'E', 'G'];
+const benchmarks = allBenchmarks.filter(([, language]) => !lang || lang.issues.includes(language));
 
 // Runs a node script of this repository, its output going to the console only when [loud].
 function node(script: string, args: string[], env: Record<string, string> = {}, loud = false): Promise<string> {
@@ -75,8 +88,9 @@ const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 type Score = { category: string; p1?: number; r5?: number; recall?: number; precision?: number; tokens: number };
 
 if (values.skip !== 'questions') {
-  console.log(`Single questions: kinds ${kinds.join(', ')}, ${tier} of each per repository`);
-  const out = await node('eval/run.ts', ['--adapter', 'csyk', `--category=${kinds.join(',')}`, `--limit=${tier}`]);
+  console.log(`Single questions: kinds ${kinds.join(', ')}, ${tier} of each per repository${lang ? `, ${lang.corpora.join(', ')}` : ''}`);
+  const only = lang ? [`--corpus=${lang.corpora.join(',')}`] : [];
+  const out = await node('eval/run.ts', ['--adapter', 'csyk', `--category=${kinds.join(',')}`, `--limit=${tier}`, ...only]);
   const path = /Scores written to (\S+)/.exec(out)?.[1];
   const run = JSON.parse(await readFile(join(root, path ?? ''), 'utf8')) as { results: Record<string, Score[]>; resources: Record<string, number> };
   console.log('| kind | score, mean over repositories | tokens |\n|---|---|---|');
@@ -91,7 +105,8 @@ if (values.skip !== 'questions') {
   console.log(`Resources: ${r.toolCpuSeconds} s CPU, ${r.toolPeakMb} MB peak memory, ${r.wallSeconds} s\n`);
 }
 
-if (values.skip !== 'agents') {
+if (values.skip !== 'agents' && benchmarks.length === 0) console.log(`Agent sessions: no benchmark of issues in ${values.lang}`);
+if (values.skip !== 'agents' && benchmarks.length > 0) {
   buildCsyk();
   console.log(`Agent sessions: ${tier} issues per language, ${values.setup} and Claude Code alone side by side`);
   const named = values.run ? ['--run', values.run] : [];
