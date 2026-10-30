@@ -58,13 +58,22 @@ export async function find(
 // source costs more on every later turn than the reads it saves.
 const sourceBudget = 1000;
 
-/** The lines around [hits], merged per file, as far as [budget] allows. */
-async function excerpts(ws: Workspace, hits: { file: string; line: number }[], budget: number): Promise<string[]> {
+/**
+ * The lines around [hits], merged per file, as far as [budget] allows, and
+ * the hits they cover (as `file:line`).
+ */
+async function excerpts(
+  ws: Workspace,
+  hits: { file: string; line: number }[],
+  budget: number,
+): Promise<{ parts: string[]; covered: Set<string> }> {
   const parts: string[] = [];
+  const covered = new Set<string>();
   for (const file of new Set(hits.map((h) => h.file))) {
     const lines = (await readFile(join(ws.root, file), 'utf8')).split('\n');
+    const inFile = hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line);
     const windows: [number, number][] = [];
-    for (const { line } of hits.filter((h) => h.file === file).sort((a, b) => a.line - b.line)) {
+    for (const { line } of inFile) {
       const [from, to] = [Math.max(1, line - 5), Math.min(lines.length, line + 10)];
       const last = windows.at(-1);
       if (last && from <= last[1] + 1) last[1] = Math.max(last[1], to);
@@ -72,11 +81,12 @@ async function excerpts(ws: Workspace, hits: { file: string; line: number }[], b
     }
     for (const [from, to] of windows) {
       const part = [`${file} · lines ${from}-${to}`, ...lines.slice(from - 1, to)];
-      if (estimateTokens([...parts, ...part].join('\n')) > budget) return parts;
+      if (estimateTokens([...parts, ...part].join('\n')) > budget) return { parts, covered };
       parts.push(...part);
+      for (const { line } of inFile) if (line >= from && line <= to) covered.add(`${file}:${line}`);
     }
   }
-  return parts;
+  return { parts, covered };
 }
 
 /**
@@ -272,19 +282,16 @@ export async function def(
 
 /**
  * `grep`: text matches (a literal, or a regex with [regex]) mapped to the
- * symbol that contains each, at most two per symbol. Source code ranks
- * before tests and tests before other files; a lower-case pattern ignores
- * case.
+ * symbol that contains each. Source code ranks before tests and tests before
+ * other files; a lower-case pattern ignores case.
  */
-// Hits spread over more files than this are summed up per file, not listed.
-const overviewFiles = 8;
 // The budget of a brief answer: a few lines, no source.
 const briefBudget = 400;
 
 export async function grep(
   ws: Workspace,
   pattern: string,
-  options: { literal?: boolean; path?: string; glob?: string; limit?: number; budget?: number; brief?: boolean } = {},
+  options: { literal?: boolean; path?: string; glob?: string; budget?: number; brief?: boolean } = {},
   session = new Session(),
 ): Promise<ToolResult> {
   // A long session gets a short list: on the public benchmarks, its context
@@ -315,7 +322,6 @@ export async function grep(
   }
   // Files hit while the index still fills are indexed first, for their symbols.
   await ws.indexNow([...new Set(stdout.split('\n').map((entry) => /^(?:\.\/)?(.+?):\d+:/.exec(entry)?.[1] ?? ''))].slice(0, 200));
-  type Hit = { file: string; line: number; code: string; home?: CodeSymbol; rank: number };
   const hits: Hit[] = [];
   for (const entry of stdout.split('\n')) {
     const match = /^(?:\.\/)?(.+?):(\d+):(.*)$/.exec(entry);
@@ -336,69 +342,76 @@ export async function grep(
     return { ...wider, text: `no match in ${options.path}; everywhere: ${wider.text}` };
   }
   hits.sort((a, b) => a.rank - b.rank);
-  // A few files' hits are all worth listing; the budget still caps them.
-  const limit = Math.max(options.limit ?? 30, 0);
-  const perPlace = new Map<string, number>();
-  const shown: Hit[] = [];
-  for (const hit of hits) {
-    const key = hit.home?.id ?? `${hit.file}:${hit.line}`;
-    const count = perPlace.get(key) ?? 0;
-    perPlace.set(key, count + 1);
-    // Two hits a place keep one long function from filling a long list;
-    // when every hit fits, all are shown, or the agent would grep again.
-    if ((count < 2 || hits.length <= limit) && shown.length < limit) shown.push(hit);
-  }
-  // Too many places in many files to list: the files with the most hits
-  // first, code before tests, each with the symbols its hits fall in, so one
-  // call shows where the text lives instead of the first lines in path order.
-  // Hits in a few files are listed line by line, which needs no second call.
-  // A brief answer sums up as soon as the hits span a few files.
   const byFile = new Map<string, Hit[]>();
   for (const hit of hits) byFile.set(hit.file, [...(byFile.get(hit.file) ?? []), hit]);
-  if (options.brief ? byFile.size > 3 : perPlace.size > limit && byFile.size > overviewFiles) {
-    const files = [...byFile.entries()].sort(
-      ([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b),
-    );
-    const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
-    const fitted = fit(
-      `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
-      files.map(([file, fileHits]) => {
-        const names = homes(fileHits);
-        return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
-      }),
-      { budget: listBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
-    );
-    return {
-      text: fitted.text,
-      locations: files.slice(0, fitted.shown).map(([file, fileHits]) => ({ file, line: fileHits[0]?.line ?? 1 })),
-    };
+  const places = new Map<string, Hit[]>();
+  for (const hit of hits) places.set(hit.home?.id ?? `${hit.file}:${hit.line}`, [...(places.get(hit.home?.id ?? `${hit.file}:${hit.line}`) ?? []), hit]);
+  // The most complete answer that fits: every hit with its text, else every
+  // place with its lines, else every file with its count. A rung shows all
+  // it covers or gives way to the next: a list cut short hid the files past
+  // it, and the agent grepped again for them.
+  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text`, ...hits.map(hitRow)]);
+  if (estimateTokens(rows.join('\n')) <= listBudget) return withSource(ws, hits, rows, session, options.brief);
+  const lines = [
+    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · lines per symbol`,
+    ...[...byFile].map(([file, fileHits]) => `${file}  ${linesPerPlace(fileHits)}`),
+  ];
+  if (estimateTokens(lines.join('\n')) <= listBudget) {
+    return { text: lines.join('\n'), locations: [...places.values()].map(([h]) => ({ file: h?.file ?? '', line: h?.line ?? 1 })) };
   }
+  // The files with the most hits first, code before tests, each with the
+  // symbols its hits fall in: where the text lives, not the first files in
+  // path order.
+  const files = [...byFile.entries()].sort(([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b));
+  const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
   const fitted = fit(
-    `${plural(hits.length, 'hit')} in ${plural(perPlace.size, 'place')} · text`,
-    shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.code}`),
-    {
-      budget: listBudget,
-      narrow: 'pass path or a longer pattern',
-      compact: shown.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`),
-      total: hits.length,
-    },
+    `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
+    files.map(([file, fileHits]) => {
+      const names = homes(fileHits);
+      return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
+    }),
+    { budget: listBudget, narrow: 'pass path, glob or a longer pattern to see lines', total: files.length },
   );
-  // Hits in a few small symbols bring their source, hits in a few files the
-  // lines around them: after a grep without them, agents read the place next
-  // more often than not, and that turn re-reads the whole context.
-  const listed = shown.slice(0, fitted.shown);
-  const homes = [...new Map(listed.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
-  const room = session.long || options.brief ? 0 : sourceBudget;
-  let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
-  if (body.length === 0 && room > 0 && new Set(listed.map((h) => h.file)).size <= 3) body = await excerpts(ws, listed, room);
-  // With the source alongside, the hit lines need not repeat the code.
-  const list = fitted.text.split('\n');
-  if (body.length) list.splice(1, listed.length, ...listed.map((h) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}`));
-  return {
-    text: [...groupByFile(list), ...body].join('\n'),
-    locations: shown.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })),
-  };
+  return { text: fitted.text, locations: files.slice(0, fitted.shown).map(([file, fileHits]) => ({ file, line: fileHits[0]?.line ?? 1 })) };
 }
+
+type Hit = { file: string; line: number; code: string; home?: CodeSymbol; rank: number };
+
+const hitRow = (h: Hit) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.code}`;
+
+// One file's hit lines, by the symbol they are in: `12 · render 40, 41`.
+function linesPerPlace(fileHits: Hit[]): string {
+  const byHome = new Map<string, number[]>();
+  for (const h of fileHits) byHome.set(h.home?.name ?? '', [...(byHome.get(h.home?.name ?? '') ?? []), h.line]);
+  return [...byHome].map(([name, at]) => `${name ? `${name} ` : ''}${at.join(', ')}`).join(' · ');
+}
+
+/**
+ * Every hit listed, with source when there is room: hits in a few small
+ * symbols bring their source, hits in a few files the lines around them.
+ * After a grep without them, agents read the place next more often than
+ * not, and that turn re-reads the whole context. A hit the source shows
+ * need not repeat its text; one past it keeps it, or the agent reads the
+ * file for it.
+ */
+async function withSource(ws: Workspace, hits: Hit[], rows: string[], session: Session, brief?: boolean): Promise<ToolResult> {
+  const locations = hits.map((h) => ({ file: h.file, line: h.line }));
+  const room = session.long || brief ? 0 : sourceBudget;
+  if (room === 0) return { text: rows.join('\n'), locations };
+  const homes = [...new Map(hits.flatMap((h) => (h.home ? [[h.home.id, h.home] as const] : []))).values()];
+  let body = homes.length <= 3 ? await bodies(ws, homes, session, 120, room) : [];
+  let shows = (h: Hit) => h.home !== undefined;
+  if (body.length === 0 && byFileCount(hits) <= 3) {
+    const around = await excerpts(ws, hits, room);
+    body = around.parts;
+    shows = (h) => around.covered.has(`${h.file}:${h.line}`);
+  }
+  if (body.length === 0) return { text: rows.join('\n'), locations };
+  const list = groupByFile([rows[0] ?? '', ...hits.map((h) => (shows(h) ? `${h.file}:${h.line}  ${h.home?.name ?? '-'}` : hitRow(h)))]);
+  return { text: [...list, ...body].join('\n'), locations };
+}
+
+const byFileCount = (hits: Hit[]) => new Set(hits.map((h) => h.file)).size;
 
 /**
  * A grep list with the rows of a file that has several hits under the
