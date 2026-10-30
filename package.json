@@ -34,7 +34,8 @@
     "agent:tasks": "node eval/agent/make-tasks.ts",
     "loc": "node eval/loc/run.ts",
     "loc:report": "node eval/loc/report.ts",
-    "bench": "node eval/bench.ts"
+    "bench": "node eval/bench.ts",
+    "gate": "node eval/gate.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
