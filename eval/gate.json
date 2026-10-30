@@ -1,4 +1,13 @@
 {
+  "chi A p1": 1,
+  "chi B p1": 1,
+  "chi C recall": 1,
+  "chi C precision": 1,
+  "chi D recall": 1,
+  "chi D precision": 1,
+  "chi E r5": 1,
+  "chi G recall": 0.99,
+  "chi G precision": 0.992,
   "mini-ts A p1": 1,
   "mini-ts B p1": 1,
   "mini-ts C recall": 1,
