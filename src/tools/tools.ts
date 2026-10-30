@@ -585,7 +585,7 @@ const heritageWords = new Set(['extends', 'implements', 'with', 'on']);
 
 const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widget', 'provider', 'type']);
 // Kinds a `this` belongs to: classes, React class components included.
-const classKinds: ReadonlySet<string> = new Set(['class', 'component', 'widget', 'provider']);
+export const classKinds: ReadonlySet<string> = new Set(['class', 'component', 'widget', 'provider']);
 
 /**
  * A symbol by id, or by name: an exact name with several declarations takes
