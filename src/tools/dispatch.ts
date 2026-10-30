@@ -74,7 +74,6 @@ export const toolSchemas = {
       literal: z.boolean().optional().describe('Match as written'),
       path: z.string().optional().describe('Under this path'),
       glob: z.string().optional().describe('File glob, like *.ts'),
-      limit: z.number().optional(),
       budget,
     },
   },
