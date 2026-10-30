@@ -47,6 +47,13 @@ const words = (text: string) =>
     .filter(Boolean);
 
 /**
+ * Files read and parsed at a time. Each tree lives in tree-sitter's
+ * WebAssembly memory, which grows to hold the most trees alive at once and
+ * never shrinks: 64 at a time kept twice the memory of 8, and were no faster.
+ */
+export const parsedAtOnce = 8;
+
+/**
  * The symbols of a workspace, held in memory and found by name.
  *
  * Name matching here is exact, squashed, prefix, substring and word-prefix;
@@ -88,9 +95,9 @@ export class SymbolIndex {
     const files = await listFiles(root, sourceExtensions);
     const saved = options.snapshot ? await readSnapshot(options.snapshot) : undefined;
     // Reading files a batch at a time keeps parsing from waiting on disk.
-    for (let i = 0; i < files.length; i += 64) {
+    for (let i = 0; i < files.length; i += parsedAtOnce) {
       await Promise.all(
-        files.slice(i, i + 64).map(async (file) => {
+        files.slice(i, i + parsedAtOnce).map(async (file) => {
           const entry = saved?.files[file];
           const info = entry && (await stat(join(root, file)).catch(() => undefined));
           if (!entry || info?.mtimeMs !== entry.mtimeMs || info.size !== entry.size) return index.update(file);

@@ -6,8 +6,8 @@ import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
 import { codeExtensions, sourceExtensions } from '../index/parse.ts';
-import { SymbolIndex } from '../index/symbol-index.ts';
-import { LspService, serverFor, servers } from '../precision/lsp-service.ts';
+import { parsedAtOnce, SymbolIndex } from '../index/symbol-index.ts';
+import { LspService, pool, serverFor, servers } from '../precision/lsp-service.ts';
 
 const run = promisify(execFile);
 
@@ -93,7 +93,7 @@ export class Workspace {
   async indexNow(files: string[]): Promise<void> {
     if (this.complete) return;
     const missing = files.filter((f) => !this.index.has(f) && sourceExtensions.has(extname(f)) && !f.endsWith('.d.ts'));
-    await Promise.all(missing.map((file) => this.index.update(file)));
+    await pool(missing, parsedAtOnce, (file) => this.index.update(file));
   }
 
   /**
@@ -116,7 +116,7 @@ export class Workspace {
       if ((error as { code?: unknown }).code !== 1) throw error;
     }
     const files = stdout.split('\n').map((f) => f.replace(/^\.\//, '')).filter((f) => f && !this.index.has(f) && !f.endsWith('.d.ts'));
-    await Promise.all(files.slice(0, 20).map((file) => this.index.update(file)));
+    await pool(files.slice(0, 20), parsedAtOnce, (file) => this.index.update(file));
   }
 
   /** The language server for [file], or undefined when none is installed. */

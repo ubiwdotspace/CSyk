@@ -7,8 +7,10 @@ import {
   CallHierarchyOutgoingCallsRequest,
   CallHierarchyPrepareRequest,
   CancellationTokenSource,
+  ConfigurationRequest,
   createProtocolConnection,
   DefinitionRequest,
+  DidChangeConfigurationNotification,
   DidChangeTextDocumentNotification,
   DidChangeWatchedFilesNotification,
   DidCloseTextDocumentNotification,
@@ -84,8 +86,11 @@ export class LspClient {
     return this.status.idle;
   }
 
-  /** Starts [command] in [root] and completes the initialize handshake. */
-  static async start(command: string, args: string[], root: string): Promise<LspClient> {
+  /**
+   * Starts [command] in [root] and completes the initialize handshake. With
+   * [settings], by section, the server gets them asked for or not.
+   */
+  static async start(command: string, args: string[], root: string, settings?: Record<string, unknown>): Promise<LspClient> {
     const child = spawn(command, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'] });
     if (!child.stdout || !child.stdin) throw new Error(`${command} has no stdio`);
     const connection = createProtocolConnection(
@@ -97,6 +102,7 @@ export class LspClient {
     connection.onNotification('$/analyzerStatus', (params: { isAnalyzing?: boolean }) => {
       if (params?.isAnalyzing === false) status.idle = true;
     });
+    if (settings) connection.onRequest(ConfigurationRequest.type, (params) => params.items.map((item) => settings[item.section ?? ''] ?? null));
     connection.listen();
     const rootUri = pathToFileURL(root).href;
     await connection.sendRequest(InitializeRequest.type, {
@@ -104,6 +110,7 @@ export class LspClient {
       rootUri,
       workspaceFolders: [{ uri: rootUri, name: 'root' }],
       capabilities: {
+        ...(settings ? { workspace: { configuration: true } } : {}),
         textDocument: {
           documentSymbol: { hierarchicalDocumentSymbolSupport: true },
           references: {},
@@ -114,6 +121,7 @@ export class LspClient {
       },
     });
     await connection.sendNotification(InitializedNotification.type, {});
+    if (settings) await connection.sendNotification(DidChangeConfigurationNotification.type, { settings });
     return new LspClient(root, child, connection, status);
   }
 
