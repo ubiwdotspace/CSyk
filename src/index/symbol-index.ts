@@ -196,6 +196,8 @@ export class SymbolIndex {
         const weight =
           kindWeight[symbol.kind] *
           (symbol.isTest ? 0.3 : 1) *
+          // Of a Go function declared once per build, gopls builds this machine's.
+          (symbol.otherBuild ? 0.9 : 1) *
           (symbol.exported ? 1 : 0.95) *
           // A leading underscore marks a private helper.
           (symbol.name.startsWith('_') ? 0.9 : 1);

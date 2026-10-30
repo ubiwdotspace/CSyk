@@ -55,6 +55,8 @@ export type CodeSymbol = {
   parent?: string;
   exported: boolean;
   isTest: boolean;
+  /** In a Go file the default build on this machine leaves out (see go-build.ts). */
+  otherBuild?: true;
 };
 
 const testFile =
