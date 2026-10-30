@@ -262,7 +262,7 @@ export class LspService {
     // A Go method whose type is declared in another file has no parent, but is a method.
     if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial, throughBase };
     const have = new Set(ours.map(key));
-    const column = Math.max(lines[symbol.line - 1]?.indexOf(symbol.name) ?? 0, 0);
+    const column = nameColumn(lines[symbol.line - 1] ?? '', symbol.name);
     const at = { file: symbol.file, line: symbol.line - 1, character: column };
     // A Go interface names no implementations; gopls tells which interface
     // methods this one satisfies, and calls resolved to those reach it too.
@@ -305,7 +305,7 @@ export class LspService {
     own: (p: Position) => boolean,
   ): Promise<References | undefined> {
     const lines = (await readFile(join(this.root, symbol.file), 'utf8')).split('\n');
-    const at = { file: symbol.file, line: symbol.line - 1, character: Math.max(lines[symbol.line - 1]?.indexOf(symbol.name) ?? 0, 0) };
+    const at = { file: symbol.file, line: symbol.line - 1, character: nameColumn(lines[symbol.line - 1] ?? '', symbol.name) };
     // Until the server has analyzed the workspace, its search waits for that.
     if (!this.lsp.idle) return undefined;
     const deadline = options.deadline ?? Date.now() + searchMs;
@@ -488,6 +488,20 @@ export function resolvesTo(
   if (span.nameLine === declared.nameLine) return true;
   const inside = span.nameLine > declared.startLine && span.nameLine <= declared.endLine;
   return inside && (lines[span.nameLine] ?? '').startsWith(declared.name, span.nameColumn);
+}
+
+/**
+ * Where [name] is declared on its [line]: the whole word, and in a Go
+ * method past its receiver. A plain search found the name inside another:
+ * `Append` in `func (a *xor2Appender) Append(`, so the server was asked
+ * about the receiver's type, and the interfaces the method satisfies,
+ * and the calls through them, were lost.
+ */
+export function nameColumn(line: string, name: string): number {
+  const from = /^\s*func\s*\(/.test(line) ? line.indexOf(')') + 1 : 0;
+  const word = new RegExp(`(?<![\\w$])${name.replace(/[$]/g, '\\$')}(?![\\w$])`);
+  const at = word.exec(line.slice(from))?.index;
+  return at === undefined ? Math.max(line.indexOf(name), 0) : from + at;
 }
 
 /**
