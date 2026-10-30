@@ -58,6 +58,25 @@ describe('calls', () => {
     expect((await calls(ws, 'shapes.ts#Square.area')).text.split('\n').slice(1)).toEqual(['shapes.ts#Tile.area  4', 'shapes.ts#total  5']);
   }, 30_000);
 
+  it("counts this.m() above an override or below it, not in a sibling class", async () => {
+    const buttons = [
+      'export class Button {',
+      '  isOn() { return false; }',
+      '  click() { return this.isOn(); }',
+      '}',
+      'export class MuteButton extends Button {',
+      '  isOn() { return true; }',
+      '}',
+      'export class PipButton extends Button {',
+      '  toggle() { return !this.isOn(); }',
+      '}',
+      'export function press(b: Button) { return b.isOn(); }',
+    ];
+    writeFileSync(join(root, 'buttons.ts'), `${buttons.join('\n')}\n`);
+    await ws.index.update('buttons.ts');
+    expect((await calls(ws, 'buttons.ts#MuteButton.isOn')).text.split('\n').slice(1)).toEqual(['buttons.ts#Button.click  3', 'buttons.ts#press  11']);
+  }, 30_000);
+
   it("does not take a type parameter's bound for what a class extends", async () => {
     const items = [
       'export interface Props { label?: string }',
