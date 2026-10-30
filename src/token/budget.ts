@@ -18,27 +18,34 @@ export type FitOptions = {
 
 export type Fitted = { text: string; shown: number; truncated: boolean };
 
-// Row counts tried in turn: everything, then fewer and fewer.
-const steps = [30, 10, 5, 3];
-
 /**
  * Lays out [header] and [rows] within the budget, always well-formed: every
- * row, then every compact row, then fewer of each (30, 10, 5, 3), and last
- * the header alone with the count. A list cut short hides what is past it,
- * and the agent searches again for that, so less on each row comes first.
- * Whatever is left out is said, with the way to narrow the call.
+ * row, then every compact row, then as many compact rows as fit (or full
+ * rows, without compact ones), and last the header alone with the count. A
+ * list cut short hides what is past it, and the agent searches again for
+ * that, so less on each row comes first, and the cut leaves out no row that
+ * would fit. Whatever is left out is said, with the way to narrow the call.
  */
 export function fit(header: string, rows: readonly string[], options: FitOptions): Fitted {
   const total = Math.max(options.total ?? rows.length, rows.length);
-  const counts = [rows.length, ...steps.filter((n) => n < rows.length)];
-  for (const count of counts) {
-    for (const variant of [rows, options.compact].filter((v) => v !== undefined)) {
-      const lines = [header, ...variant.slice(0, count)];
-      if (count < total) lines.push(`… ${total - count} more; ${options.narrow}`);
-      const text = lines.join('\n');
-      if (estimateTokens(text) <= options.budget) return { text, shown: count, truncated: count < total };
-    }
+  const layout = (variant: readonly string[], count: number) => {
+    const lines = [header, ...variant.slice(0, count)];
+    if (count < total) lines.push(`… ${total - count} more; ${options.narrow}`);
+    return lines.join('\n');
+  };
+  const fits = (variant: readonly string[], count: number) => estimateTokens(layout(variant, count)) <= options.budget;
+  for (const variant of [rows, options.compact]) {
+    if (variant && fits(variant, rows.length)) return { text: layout(variant, rows.length), shown: rows.length, truncated: rows.length < total };
   }
+  // The most rows that fit: every row costs tokens, so fitting is monotonic.
+  const variant = options.compact ?? rows;
+  let [low, high] = [0, rows.length - 1];
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (fits(variant, middle)) low = middle;
+    else high = middle - 1;
+  }
+  if (low > 0) return { text: layout(variant, low), shown: low, truncated: true };
   return {
     text: `${header}\n… ${total} not shown within the budget; ${options.narrow}`,
     shown: 0,
