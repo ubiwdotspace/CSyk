@@ -36,10 +36,10 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  # The single questions on a few TypeScript, JavaScript and Go corpora, held
-  # to eval/gate.json: a pull request that answers worse fails here. One
-  # system is enough; the answers do not depend on it. Go and gopls are the
-  # versions the baseline was written with.
+  # The single questions on a few TypeScript, JavaScript, Go and Dart corpora,
+  # held to eval/gate.json: a pull request that answers worse fails here. One
+  # system is enough; the answers do not depend on it. Go, gopls and Flutter
+  # are the versions the baseline was written with.
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -57,6 +57,13 @@ jobs:
           go-version: 1.27.0
           cache: false
       - run: go install golang.org/x/tools/gopls@v0.24.0
-      - run: npm run corpora -- --only zustand,parse-server,chi
-      - run: npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi --limit 30
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.3
+          channel: stable
+          cache: true
+      - run: npm run corpora -- --only zustand,parse-server,chi,provider
+      # Dart's server follows imports only once the packages are fetched.
+      - run: for p in eval/corpora/provider/packages/*/; do (cd "$p" && flutter pub get); done
+      - run: npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi,provider --limit 30
       - run: npm run gate

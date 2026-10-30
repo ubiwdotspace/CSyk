@@ -2,7 +2,9 @@ import { execFile } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { sourceExtensions } from '../../src/index/parse.ts';
+import { serverFor } from '../../src/precision/lsp-service.ts';
 import { Session } from '../../src/token/session.ts';
 import { runTool } from '../../src/tools/dispatch.ts';
 import { Workspace } from '../../src/workspace/workspace.ts';
@@ -22,7 +24,7 @@ export function csyk(): Adapter {
   const open = (corpus: Corpus) => {
     let entry = workspaces.get(corpus.root);
     if (!entry) {
-      entry = { ws: Workspace.open(corpus.root), session: new Session() };
+      entry = { ws: Workspace.open(corpus.root).then(warm), session: new Session() };
       workspaces.set(corpus.root, entry);
     }
     return entry;
@@ -56,6 +58,26 @@ export function csyk(): Adapter {
       workspaces.clear();
     },
   };
+}
+
+/**
+ * [ws] with its language servers started, and those whose own search
+ * waits for their analysis (Dart) done with it, for two minutes at most: the
+ * questions then measure answers, not a cold start. A Dart server still
+ * analyzing answers the first search partially (and says so), sooner or
+ * later depending on the machine, which made CI's scores differ from a
+ * laptop's.
+ */
+async function warm(ws: Workspace): Promise<Workspace> {
+  const started = new Set<string>();
+  for (const file of ws.index.files) {
+    const spec = serverFor(file);
+    if (!spec || started.has(spec.name)) continue;
+    started.add(spec.name);
+    const service = await ws.precision(file);
+    for (let waited = 0; service && spec.completeReferences && !service.idle && waited < 120_000; waited += 200) await sleep(200);
+  }
+  return ws;
 }
 
 /**

@@ -42,14 +42,15 @@ as the change is clearly worse; a release is measured at 50. The agent sessions 
 Claude account (about $0.05 an issue); `--skip agents` runs only the single questions, which are
 free.
 
-CI also holds the single questions on mini-ts, zustand, parse-server and chi to `eval/gate.json`,
-and fails a pull request when one kind of question falls by more than a point there. When a change
-moves those scores on purpose, rerun them (with Go 1.27.0 and `gopls` v0.24.0, as CI uses) and
-write the new baseline in the same pull request:
+CI also holds the single questions on mini-ts, zustand, parse-server, chi and provider to
+`eval/gate.json`, and fails a pull request when one kind of question falls by more than a point
+there. When a change moves those scores on purpose, rerun them (with Go 1.27.0, `gopls` v0.24.0
+and Flutter 3.47.3, as CI uses) and write the new baseline in the same pull request:
 
 ```sh
-npm run corpora -- --only zustand,parse-server,chi
-npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi --limit 30
+npm run corpora -- --only zustand,parse-server,chi,provider
+for p in eval/corpora/provider/packages/*/; do (cd "$p" && flutter pub get); done
+npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi,provider --limit 30
 npm run gate -- --write
 ```
 
