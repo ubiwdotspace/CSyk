@@ -310,7 +310,7 @@ changed functions; Serena used 20.1% more tokens and named 1.4 points more.
 
 ## Reproduce
 
-A change, at a chosen size: `npm run bench -- --tier <5|10|20|30|50> [--only <tools>] [--run <name>]`
+A change, at a chosen size: `npm run bench -- --tier <5|10|20|30|50> [--lang ts|py|go|dart] [--only <tools>] [--run <name>]`
 runs the single questions of the kinds those tools answer and the agent sessions on every
 benchmark, the measured setup and Claude Code alone side by side, then prints both summaries. A
 tier is the number of questions of each kind per repository and of issues per language; tiers

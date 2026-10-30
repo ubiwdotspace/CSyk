@@ -26,12 +26,15 @@ TypeScript and Python language servers come with the dependencies. To work on Go
 
 If a change affects what a tool answers (ranking, what an answer shows, how long it is, or a tool
 description), measure it before and after, and put both numbers in the pull request. `npm run
-bench` measures at a chosen size, on only the tools a change touches:
+bench` measures at a chosen size, on only the tools and the language a change touches. Build and
+measure a change on TypeScript and JavaScript first (`--lang ts`); once it holds there, bring it to
+the other languages one at a time (`--lang py`, `go`, `dart`), rather than running all of them for
+every step:
 
 ```sh
 npm run corpora                                   # once: fetch the pinned public repositories
-npm run bench -- --tier 5 --only grep --run my-change
-npm run bench -- --tier 10 --only grep --run my-change   # runs only the 5 new issues
+npm run bench -- --tier 5 --lang ts --only grep --run my-change
+npm run bench -- --tier 10 --lang ts --only grep --run my-change   # runs only the 5 new issues
 ```
 
 Tiers nest, so going up a tier reuses what ran. While optimizing, go 5, 10, 20, 30 and stop as soon

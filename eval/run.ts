@@ -17,7 +17,7 @@ import type { Adapter, Case, Corpus } from './harness/types.ts';
 
 const adapters: Record<string, () => Adapter> = { b0: () => b0Ripgrep, csyk, serena, graphify };
 
-const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>] [--category <A-G>[,<A-G>…]] [--limit <n>]
+const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>[,<name>…]] [--category <A-G>[,<A-G>…]] [--limit <n>]
 
 Runs the cases in eval/cases/ (and eval/cases/private/) through an adapter,
 prints one table per corpus and writes every score to eval/results/. --limit
@@ -46,7 +46,7 @@ async function main(): Promise<void> {
   const corpora = await loadCorpora(root);
   const files = (await loadCaseFiles(join(root, 'eval/cases'))).filter(
     (file) =>
-      (!values.corpus || file.corpus === values.corpus) &&
+      (!values.corpus || values.corpus.split(',').includes(file.corpus)) &&
       (!values.category || values.category.toUpperCase().split(',').includes(file.category)),
   );
   if (files.length === 0) throw new Error('No case files match.');
