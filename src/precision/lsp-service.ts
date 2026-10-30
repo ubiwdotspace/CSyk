@@ -198,7 +198,11 @@ export class LspService {
     // Every text mention is resolved, nearest first, so a search cut short by
     // its deadline has the likeliest answers. The server answers nothing in a
     // comment or string, so only files with answers are parsed afterwards.
-    const candidates = (await this.mentionsOf(symbol.name))
+    const mentions = await this.mentionsOf(symbol.name);
+    const renamed = await Promise.all(
+      importAliases(symbol.name, mentions).map(async ({ alias, file }) => (await this.mentionsOf(alias)).filter((m) => !file || m.file === file)),
+    );
+    const candidates = [...mentions, ...renamed.flat()]
       .filter((p) => !own(p))
       .sort((a, b) => distance(symbol.file, a.file) - distance(symbol.file, b.file));
     // An overloaded function resolves to all its signatures; any of them will do.
@@ -317,6 +321,27 @@ export type ReferenceOptions = {
 
 /** A text mention: its place and its line's text. */
 export type Mention = Position & { text: string };
+
+/**
+ * The names [name] is imported or exported under (`import { a as b }`,
+ * `from m import a as b`, `export { a as b }`), read from the [mentions]
+ * of it: uses under those names are its uses too. An import's name is used
+ * only in its file; an export's, anywhere (no file). Only import and export
+ * lines, or a line of a multi-line import, count, not `x as T`.
+ */
+export function importAliases(name: string, mentions: readonly { file: string; text: string }[]): { alias: string; file?: string }[] {
+  const escaped = name.replace(/[$]/g, '\\$');
+  const alias = new RegExp(`(?<![\\w$])${escaped}\\s+as\\s+([A-Za-z_$][\\w$]*)`);
+  const inImport = new RegExp(`^\\s*(?:(?:import|export|from)\\b|(?:type\\s+)?${escaped}\\s+as\\s+[\\w$]+\\s*,?\\s*$)`);
+  const found = new Map<string, { alias: string; file?: string }>();
+  for (const { file, text } of mentions) {
+    const named = alias.exec(text)?.[1];
+    if (!named || named === 'default' || named === name || !inImport.test(text)) continue;
+    const exported = /^\s*export\b/.test(text);
+    found.set(exported ? named : `${named} ${file}`, exported ? { alias: named } : { alias: named, file });
+  }
+  return [...found.values()];
+}
 
 /** Mentions of [name] in code; see textMentions and inCode. */
 export async function codeMentions(

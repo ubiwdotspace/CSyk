@@ -6,6 +6,9 @@ cases:
     expect:
       - { file: src/cart/checkout.ts, lines: [1, 1] }
       - { file: src/cart/checkout.ts, lines: [10, 10] }
+      # Imported under another name, and used under it.
+      - { file: src/cart/receipt.ts, lines: [1, 1] }
+      - { file: src/cart/receipt.ts, lines: [6, 6] }
       - { file: test/cart.test.ts, lines: [1, 1] }
       - { file: test/cart.test.ts, lines: [5, 5] }
   - id: C02

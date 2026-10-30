@@ -51,12 +51,13 @@ describe('LspOracle on mini-ts', () => {
 });
 
 describe('LspOracle with pyright', () => {
-  it('finds callers in every file, decorators and tests included', async () => {
+  it('finds callers in every file, decorators, tests and renamed imports included', async () => {
     const root = mkdtempSync(join(tmpdir(), 'csyk-oracle-py-'));
     const files = {
       'shop.py': 'def checkout(f=None):\n    return f\n',
       'views.py': 'from shop import checkout\n\n\n@checkout(1)\ndef index():\n    pass\n\n\ndef page():\n    return checkout()\n',
       'tests/test_shop.py': 'from shop import checkout\n\n\ndef test_checkout():\n    assert checkout() is None\n',
+      'cart.py': 'from shop import checkout as pay\n\n\ndef buy():\n    return pay()\n',
     };
     mkdirSync(join(root, 'tests'));
     for (const [file, text] of Object.entries(files)) writeFileSync(join(root, file), text);
@@ -67,7 +68,7 @@ describe('LspOracle with pyright', () => {
     try {
       const callers = await py.calls({ file: 'shop.py', line: 0, character: 4 }, 'in');
       // The decorator's call is the module's to pyright's call hierarchy (line 1) and index's to its references.
-      expect(callers.map((s) => `${s.file}:${s.startLine + 1}`).sort()).toEqual(['tests/test_shop.py:4', 'views.py:1', 'views.py:4', 'views.py:9']);
+      expect(callers.map((s) => `${s.file}:${s.startLine + 1}`).sort()).toEqual(['cart.py:4', 'tests/test_shop.py:4', 'views.py:1', 'views.py:4', 'views.py:9']);
     } finally {
       await py.stop();
     }
