@@ -162,9 +162,10 @@ If the agent asks again for code it has already seen and that has not changed, C
 
 - A name imported under another name (`import { a as b }`, or a default import with a different
   name) is not followed.
-- Dart's compiler counts hidden `super(...)` constructor calls and calls through Flutter's base
-  classes (`State`, `Diagnosticable`) as calls; CSyk does not, which is most of the gap on provider
-  and flame for edit impact.
+- Dart's compiler counts calls through Flutter's base classes (`State`, `Diagnosticable`) as calls
+  to every override; CSyk does not follow a hierarchy into the framework, which is most of the gap
+  on provider and flame for edit impact. A subclass's constructor, with or without a `super(...)`,
+  counts as a caller of its superclass.
 - pyright's answers miss calls that CSyk finds: decorators applied with arguments
   (`@condition(...)`), calls from test files and calls through module aliases. CSyk's "correct"
   score against pyright on Python callers and edit impact (47% on django) is lower than it really

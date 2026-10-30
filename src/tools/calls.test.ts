@@ -45,6 +45,19 @@ describe('calls', () => {
     expect(result.text.split('\n').slice(1)).toEqual(['total.ts#total  1']);
   }, 30_000);
 
+  it("counts a call through the base type as a caller of an override, not a sibling's super call", async () => {
+    const shapes = [
+      'export class Shape { area() { return 0; } }',
+      'export class Square extends Shape { area() { return 1; } }',
+      'export class Circle extends Shape { area() { return super.area() + 3; } }',
+      'export class Tile extends Square { area() { return super.area() * 2; } }',
+      'export function total(s: Shape) { return s.area(); }',
+    ];
+    writeFileSync(join(root, 'shapes.ts'), `${shapes.join('\n')}\n`);
+    await ws.index.update('shapes.ts');
+    expect((await calls(ws, 'shapes.ts#Square.area')).text.split('\n').slice(1)).toEqual(['shapes.ts#Tile.area  4', 'shapes.ts#total  5']);
+  }, 30_000);
+
   it('lists a local function as a callee, not a parameter or a destructured name', async () => {
     const run = [
       'export function run(cb: () => void, { done }: { done: () => void }) {',

@@ -26,16 +26,16 @@ The six kinds of question:
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
 | zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 96.7% / 91.8% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 96.8% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 97% |
 | nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 98.4% / 96.9% |
-| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 70.9% / 89.2% |
+| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 94.3% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
-| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 70.9% / 81.1% |
+| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
 | fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 91.5% |
 | dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 98.8% / 83.7% |
-| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.4% | 100% | 99.3% / 47.2% |
+| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.4% | 100% | 99.3% / 50.7% |
 | chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 97.8% / 98.7% |
-| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 94.9% / 93.4% |
+| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 95.1% / 93.4% |
 | prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 91.5% / 97.1% |
 
 The comparison with text search for every repository, and the time each tool takes, are in
