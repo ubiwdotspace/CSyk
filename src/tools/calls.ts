@@ -18,9 +18,12 @@ const run = promisify(execFile);
 // factory, a fixture) has: the tests that use it are what a change reaches.
 // Python's runners take any name starting test; Go's take TestXxx (and
 // Benchmark, Fuzz, Example), so its testXxx is a helper, as pocketbase's
-// testDefaultFieldIdValidation, which thirteen tests call.
+// testDefaultFieldIdValidation, which thirteen tests call. A TS, JS or
+// Dart test is a callback (`it`, `test`), so a named function there is a
+// helper, as zustand's TestUseShallowSimple component.
 const isTestCase = (s: CodeSymbol) =>
-  s.isTest && (s.lang === 'py' ? /^(test|Test)/ : /^(Test|Benchmark|Fuzz|Example)(?![a-z])/).test(s.name);
+  s.isTest &&
+  ((s.lang === 'py' && /^(test|Test)/.test(s.name)) || (s.lang === 'go' && /^(Test|Benchmark|Fuzz|Example)(?![a-z])/.test(s.name)));
 
 // The callers a level is followed further through, at most, the nearest
 // first: past this, or past the deadline, the answer says how many were
