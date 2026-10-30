@@ -16,7 +16,7 @@ const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|
 Writes <corpus>.<category>.yaml with cases whose answers come from the
 language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
 to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
-Review the cases before trusting them. --answer-again keeps the D or G
+Review the cases before trusting them. --answer-again keeps the C, D or G
 questions of the existing file and answers them again, as after a fix to
 how answers are found.`;
 
@@ -68,11 +68,11 @@ async function main(): Promise<void> {
   try {
     const sources = oracle.files.filter(isSource);
     if (values['answer-again']) {
-      if (category !== 'D' && category !== 'G') throw new Error('--answer-again is for D and G cases');
+      if (category !== 'C' && category !== 'D' && category !== 'G') throw new Error('--answer-again is for C, D and G cases');
       const text = await readFile(out, 'utf8');
       const seed = Number(/seed (\d+)\./.exec(text)?.[1] ?? values.seed);
       const asked = parseCaseFile(out, `${corpus.name}.${category}.yaml`, text).cases as CallCase[];
-      const cases = await answerAgain(oracle, category, asked);
+      const cases = category === 'C' ? await usesAgain(oracle, asked) : await answerAgain(oracle, category, asked);
       await writeFile(out, render(corpus, oracleServers[values.lang] ?? values.lang, category, seed, cases));
       console.log(`${cases.length} of ${asked.length} case(s) answered again in ${out.slice(root.length + 1)}`);
       return;
@@ -91,6 +91,23 @@ async function main(): Promise<void> {
   } finally {
     await oracle.stop();
   }
+}
+
+// C cases answered again: every use of the name's one declaration, one per
+// line. A name no longer declared once keeps its old answer.
+async function usesAgain(oracle: LspOracle, cases: CallCase[]): Promise<CallCase[]> {
+  const answered: CallCase[] = [];
+  for (const c of cases) {
+    const declarations = await oracle.declarations(c.query);
+    const [only] = declarations;
+    if (!only || declarations.length !== 1) {
+      answered.push(c);
+      continue;
+    }
+    const refs = await oracle.references(c.query, only);
+    answered.push({ ...c, expect: refs.map((ref) => ({ file: ref.file, lines: [ref.line + 1, ref.line + 1] })) });
+  }
+  return answered;
 }
 
 /** A, B and C cases: one symbol per file, from files in random order. */
