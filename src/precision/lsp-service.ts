@@ -135,7 +135,13 @@ const searchMs = 5000;
  * [throughBase]: those of them that reach the symbol only through a
  * supertype's method, which a call may or may not dispatch to it.
  */
-export type References = { found: Position[]; partial?: { resolved: number; total: number }; throughBase?: Position[] };
+export type References = {
+  found: Position[];
+  partial?: { resolved: number; total: number };
+  throughBase?: Position[];
+  /** The server stopped before it answered: what it found cannot be trusted. */
+  stopped?: true;
+};
 
 // How far apart two files are: 0 for the same file, then the folders that
 // do not share a path.
@@ -204,6 +210,17 @@ export class LspService {
    * references [where] accepts are kept.
    */
   async references(symbol: CodeSymbol, options: ReferenceOptions = {}): Promise<References> {
+    const answer = await this.search(symbol, options);
+    // A server that stopped meanwhile left mentions unresolved, as if they were no uses.
+    return this.lsp.alive ? answer : { found: [], stopped: true };
+  }
+
+  /** False once the server has exited; the workspace starts another. */
+  get alive(): boolean {
+    return this.lsp.alive;
+  }
+
+  private async search(symbol: CodeSymbol, options: ReferenceOptions): Promise<References> {
     const group = [symbol, ...(options.overloads ?? [])];
     const own = (p: Position) => group.some((s) => p.file === s.file && p.line === s.line - 1);
     // A member's search follows the whole type hierarchy, framework included:

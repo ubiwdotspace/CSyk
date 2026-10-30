@@ -153,6 +153,34 @@ describe('Workspace', () => {
     }
   }, 30_000);
 
+  it('answers from text when its server dies, starts it again once, and says when it stopped twice', async () => {
+    const ws = await Workspace.open(
+      folder({ 'tsconfig.json': '{}', 'total.ts': 'export const total = 1;', 'use.ts': "import { total } from './total';\nexport const twice = total * 2;" }),
+    );
+    const refs = async () => (await runTool(ws, 'refs', { target: 'total' }, new Session())).text.split('\n')[0] ?? '';
+    const kill = async () => {
+      const service = await ws.precision('total.ts');
+      service?.['lsp']['process'].kill('SIGKILL');
+      while (service?.alive) await sleep(20);
+    };
+    try {
+      expect(await refs()).toMatch(/· lsp · complete$/);
+      // A search the server died during has nothing to trust.
+      const service = await ws.precision('total.ts');
+      const symbol = ws.index.named('total')[0]!;
+      service!['lsp']['status'].alive = false;
+      expect(await service!.references(symbol)).toEqual({ found: [], stopped: true });
+      service!['lsp']['status'].alive = true;
+      await kill();
+      expect(await refs()).toMatch(/· lsp · complete$/);
+      await kill();
+      expect(await refs()).toMatch(/· text \(the language server stopped twice\)$/);
+      expect(ws.servers()[0]?.state).toBe('stopped twice');
+    } finally {
+      await ws.close();
+    }
+  }, 60_000);
+
   it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });
     const ws = await Workspace.open(root, { watch: true });

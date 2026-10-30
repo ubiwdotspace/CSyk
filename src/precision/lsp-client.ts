@@ -8,6 +8,7 @@ import {
   CallHierarchyPrepareRequest,
   CancellationTokenSource,
   ConfigurationRequest,
+  ConnectionError,
   createProtocolConnection,
   DefinitionRequest,
   DidChangeConfigurationNotification,
@@ -69,9 +70,9 @@ export class LspClient {
   private readonly root: string;
   private readonly process: ChildProcess;
   private readonly connection: ProtocolConnection;
-  private readonly status: { idle: boolean };
+  private readonly status: { idle: boolean; alive: boolean };
 
-  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, status: { idle: boolean }) {
+  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, status: { idle: boolean; alive: boolean }) {
     this.root = root;
     this.process = process;
     this.connection = connection;
@@ -84,6 +85,11 @@ export class LspClient {
    */
   get idle(): boolean {
     return this.status.idle;
+  }
+
+  /** False once the server has exited or its connection closed; it answers nothing more. */
+  get alive(): boolean {
+    return this.status.alive;
   }
 
   /**
@@ -104,7 +110,16 @@ export class LspClient {
       new StreamMessageWriter(child.stdin),
     );
     // Set up before the handshake, so no status is missed.
-    const status = { idle: false };
+    const status = { idle: false, alive: true };
+    // A server that exits, crashes or closes its pipes answers nothing more;
+    // writing to it then must not throw where no one listens.
+    const gone = () => {
+      status.alive = false;
+    };
+    child.on('exit', gone);
+    child.on('error', gone);
+    child.stdin.on('error', gone);
+    connection.onClose(gone);
     connection.onNotification('$/analyzerStatus', (params: { isAnalyzing?: boolean }) => {
       if (params?.isAnalyzing === false) status.idle = true;
     });
@@ -137,6 +152,7 @@ export class LspClient {
    * file either way.
    */
   async changed(file: string): Promise<void> {
+    if (!this.status.alive) return;
     const uri = this.uri(file);
     const text = await readFile(join(this.root, file), 'utf8').catch(() => undefined);
     const opening = this.opened.get(file);
@@ -163,14 +179,18 @@ export class LspClient {
     let opening = this.opened.get(file);
     if (!opening) {
       opening = (async () => {
-        await this.connection.sendNotification(DidOpenTextDocumentNotification.type, {
-          textDocument: {
-            uri: this.uri(file),
-            languageId: languageIds[extname(file)] ?? 'plaintext',
-            version: 1,
-            text: await readFile(join(this.root, file), 'utf8'),
-          },
-        });
+        try {
+          await this.connection.sendNotification(DidOpenTextDocumentNotification.type, {
+            textDocument: {
+              uri: this.uri(file),
+              languageId: languageIds[extname(file)] ?? 'plaintext',
+              version: 1,
+              text: await readFile(join(this.root, file), 'utf8'),
+            },
+          });
+        } catch (error) {
+          ignoreClosed(error);
+        }
       })();
       this.opened.set(file, opening);
     }
@@ -180,7 +200,7 @@ export class LspClient {
   /** The symbols declared in [file], nested as the server reports them. */
   async documentSymbols(file: string): Promise<DocumentSymbol[]> {
     await this.open(file);
-    const symbols = await answerOrNone(
+    const symbols = await answerOrNone(() =>
       this.connection.sendRequest(DocumentSymbolRequest.type, { textDocument: { uri: this.uri(file) } }),
     );
     // A server without hierarchy support answers flat; nothing here needs that.
@@ -201,7 +221,7 @@ export class LspClient {
       if (Number.isFinite(deadline)) timer = setTimeout(() => (cancel.cancel(), done('late')), Math.max(deadline - Date.now(), 0));
     });
     try {
-      const request = answerOrNone(
+      const request = answerOrNone(() =>
         this.connection.sendRequest(
           ReferencesRequest.type,
           {
@@ -224,7 +244,7 @@ export class LspClient {
   /** Where the symbol at [at] is declared. */
   async definition(at: Position): Promise<Span[]> {
     await this.open(at.file);
-    const result = await answerOrNone(
+    const result = await answerOrNone(() =>
       this.connection.sendRequest(DefinitionRequest.type, {
         textDocument: { uri: this.uri(at.file) },
         position: { line: at.line, character: at.character },
@@ -237,7 +257,7 @@ export class LspClient {
   /** What the server says implements the declaration at [at], or what it implements (gopls answers both ways). */
   async implementations(at: Position): Promise<Span[]> {
     await this.open(at.file);
-    const result = await answerOrNone(
+    const result = await answerOrNone(() =>
       this.connection.sendRequest(ImplementationRequest.type, {
         textDocument: { uri: this.uri(at.file) },
         position: { line: at.line, character: at.character },
@@ -255,17 +275,17 @@ export class LspClient {
   async calls(at: Position, direction: 'in' | 'out'): Promise<(Span & { sites: Position[] })[]> {
     await this.open(at.file);
     const position = { line: at.line, character: at.character };
-    const items = await answerOrNone(
+    const items = await answerOrNone(() =>
       this.connection.sendRequest(CallHierarchyPrepareRequest.type, { textDocument: { uri: this.uri(at.file) }, position }),
     );
     const found: (Span & { sites: Position[] })[] = [];
     for (const item of items ?? []) {
       const others =
         direction === 'in'
-          ? (await answerOrNone(this.connection.sendRequest(CallHierarchyIncomingCallsRequest.type, { item })))?.map(
+          ? (await answerOrNone(() => this.connection.sendRequest(CallHierarchyIncomingCallsRequest.type, { item })))?.map(
               (c) => ({ other: c.from, ranges: c.fromRanges }),
             )
-          : (await answerOrNone(this.connection.sendRequest(CallHierarchyOutgoingCallsRequest.type, { item })))?.map(
+          : (await answerOrNone(() => this.connection.sendRequest(CallHierarchyOutgoingCallsRequest.type, { item })))?.map(
               (c) => ({ other: c.to, ranges: c.fromRanges }),
             );
       for (const { other, ranges } of others ?? []) {
@@ -330,12 +350,19 @@ function isFlat(symbol: DocumentSymbol | SymbolInformation): symbol is SymbolInf
 
 // A server can refuse one file (gopls for a file a build tag leaves out,
 // say); that file then has no answer. Lost connections still throw.
-async function answerOrNone<T>(request: Promise<T>): Promise<T | null> {
+// A request the server answered with an error, or could not answer since
+// its connection closed (which throws as the request is made), has no answer.
+async function answerOrNone<T>(request: () => Promise<T>): Promise<T | null> {
   try {
-    return await request;
+    return await request();
   } catch (error) {
-    if (error instanceof ResponseError) return null;
+    if (error instanceof ResponseError || error instanceof ConnectionError) return null;
     throw error;
   }
+}
+
+// A notification to a server whose connection closed is dropped.
+function ignoreClosed(error: unknown): void {
+  if (!(error instanceof ConnectionError)) throw error;
 }
 
