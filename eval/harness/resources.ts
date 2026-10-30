@@ -71,7 +71,8 @@ export function watchResources(pid: number = process.pid, everyMs = 250): { stop
     pending ??= sample().finally(() => (pending = undefined));
   };
   tick();
-  const timer = setInterval(tick, everyMs);
+  // unref: a run that fails still exits, instead of waiting on the timer.
+  const timer = setInterval(tick, everyMs).unref();
 
   return {
     async stop() {

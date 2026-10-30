@@ -1,9 +1,14 @@
+import { execFile } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
+import { promisify } from 'node:util';
+import { sourceExtensions } from '../../src/index/parse.ts';
 import { Session } from '../../src/token/session.ts';
 import { runTool } from '../../src/tools/dispatch.ts';
 import { Workspace } from '../../src/workspace/workspace.ts';
 import type { Adapter, Corpus } from '../harness/types.ts';
+
+const run = promisify(execFile);
 
 /**
  * CSyk itself, called in-process the way its MCP server calls the tools:
@@ -64,6 +69,11 @@ export async function withEdits<T>(root: string, edits: string, ask: () => Promi
     if (!match?.[1] || !match[2]) throw new Error(`edit ${edit} is not file:line`);
     byFile.set(match[1], [...(byFile.get(match[1]) ?? []), Number(match[2])]);
   }
+  // impact reads the whole diff, so an edit a stopped run left behind would
+  // count as changed in every later case: stop instead of scoring that.
+  const { stdout } = await run('git', ['diff', '--name-only'], { cwd: root });
+  const left = stdout.split('\n').filter((f) => sourceExtensions.has(extname(f)));
+  if (left.length) throw new Error(`${root} has uncommitted changes to ${left.join(', ')}; restore them (git checkout) first`);
   const originals = new Map<string, string>();
   try {
     for (const [file, lines] of byFile) {
