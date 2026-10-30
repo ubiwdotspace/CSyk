@@ -525,14 +525,19 @@ async function heritageOf(ws: Workspace, type: CodeSymbol): Promise<string[]> {
       break;
     }
   }
-  const header = text.slice(0, end).replace(/\([^()]*(?:\([^()]*\)[^()]*)*\)/g, '');
+  let header = text.slice(0, end).replace(/\([^()]*(?:\([^()]*\)[^()]*)*\)/g, '');
+  // Type parameters first, nested ones too: in `class A<P extends Props>`
+  // the props type is a bound, not what A extends.
+  while (/<[^<>]*>/.test(header)) header = header.replace(/<[^<>]*>/g, '');
   return names(/\b(?:extends|implements|with|on)\b(.*)$/.exec(header)?.[1] ?? '');
 }
 
 // The type names in a heritage clause, generic arguments left out.
 function names(heritage: string): string[] {
-  return heritage.replace(/<[^>]*>/g, '').match(/[A-Za-z_]\w*/g) ?? [];
+  return (heritage.replace(/<[^>]*>/g, '').match(/[A-Za-z_]\w*/g) ?? []).filter((name) => !heritageWords.has(name));
 }
+
+const heritageWords = new Set(['extends', 'implements', 'with', 'on']);
 
 const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widget', 'provider', 'type']);
 

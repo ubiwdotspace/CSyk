@@ -58,6 +58,18 @@ describe('calls', () => {
     expect((await calls(ws, 'shapes.ts#Square.area')).text.split('\n').slice(1)).toEqual(['shapes.ts#Tile.area  4', 'shapes.ts#total  5']);
   }, 30_000);
 
+  it("does not take a type parameter's bound for what a class extends", async () => {
+    const items = [
+      'export interface Props { label?: string }',
+      'export class Base<P extends Props> { get label() { return "x"; } }',
+      'export class Item extends Base<Props> { render() { return this.label; } }',
+      'export function caption(props: Props) { return props.label; }',
+    ];
+    writeFileSync(join(root, 'items.ts'), `${items.join('\n')}\n`);
+    await ws.index.update('items.ts');
+    expect((await calls(ws, 'items.ts#Base.label')).text.split('\n').slice(1)).toEqual(['items.ts#Item.render  3']);
+  }, 30_000);
+
   it('lists a local function as a callee, not a parameter or a destructured name', async () => {
     const run = [
       'export function run(cb: () => void, { done }: { done: () => void }) {',
