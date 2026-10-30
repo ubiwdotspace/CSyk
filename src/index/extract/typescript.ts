@@ -27,6 +27,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           // `namespace A { … }` at the top level is an expression statement.
           if (child?.type === 'internal_module') declare(child, exported, [], parent);
           else if (child?.type === 'assignment_expression') assigned(node, child);
+          else if (child && copied(child).length > 0) copiedInto(child);
           // `describe('…', () => { const run = … })`: helpers in a callback.
           else if (child) inside(child, parent);
         }
@@ -116,11 +117,13 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
   const assigned = (statement: Node, assignment: Node) => {
     const left = assignment.childForFieldName('left');
     const value = assignment.childForFieldName('right');
-    // `module.exports = { … }` exports its functions; `Store.prototype = { … }` holds Store's methods.
-    if (value?.type === 'object') {
+    // `module.exports = { … }` exports its functions; `Store.prototype = { … }`,
+    // or `Object.assign(Object.create(Base.prototype), { … })`, holds Store's methods.
+    const objects = value?.type === 'object' ? [value] : value ? copied(value) : [];
+    if (objects.length > 0) {
       const prototype = /^(\w+)\.prototype$/.exec(left?.text ?? '')?.[1];
       const owner = prototype ? sink.symbols.find((s) => s.name === prototype && !s.parent) : undefined;
-      if (owner || /^(module\.)?exports$/.test(left?.text ?? '')) members(value, true, owner);
+      if (owner || /^(module\.)?exports$/.test(left?.text ?? '')) for (const object of objects) members(object, true, owner);
       return;
     }
     const property = left?.type === 'member_expression' ? left.childForFieldName('property') : null;
@@ -129,6 +132,15 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
     const owner = sink.symbols.find((s) => s.name === object && !s.parent);
     const exported = /^(module\.)?exports$/.test(object) || owner?.exported === true;
     inside(value, sink.add(property, functionKind(property.text, jsx), statement, exported, owner));
+  };
+
+  // `Object.assign(Line.prototype, { … })` at the top level: Line's methods,
+  // or with `Object.assign(Line, …)` its static ones.
+  const copiedInto = (call: Node) => {
+    const target = call.childForFieldName('arguments')?.namedChildren[0]?.text.replace(/\.prototype$/, '') ?? '';
+    const owner = sink.symbols.find((s) => s.name === target && !s.parent);
+    if (!owner) return inside(call);
+    for (const object of copied(call)) members(object, true, owner);
   };
 
   // The functions an object literal holds, `m() {…}`, `m: function () {…}` or
@@ -235,6 +247,12 @@ function boundNames(pattern: Node): Node[] {
     default:
       return [];
   }
+}
+
+// The object literals `Object.assign(target, { … })` copies onto its target.
+function copied(call: Node): Node[] {
+  if (call.type !== 'call_expression' || call.childForFieldName('function')?.text !== 'Object.assign') return [];
+  return (call.childForFieldName('arguments')?.namedChildren ?? []).slice(1).filter((a): a is Node => a?.type === 'object');
 }
 
 // A named function or class expression, as is or inside wrapping calls

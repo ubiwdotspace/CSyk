@@ -128,6 +128,20 @@ describe('extractSymbols for JavaScript', () => {
     ]);
   });
 
+  it('finds the methods Object.assign copies onto a constructor or its prototype', async () => {
+    const source = [
+      'function Line() {}',
+      'Line.prototype = Object.assign(Object.create(Object3D.prototype), {',
+      '  constructor: Line,',
+      '  raycast: function (raycaster) {},',
+      '});',
+      'Object.assign(Line.prototype, { copy(source) {} });',
+      'Object.assign(Line, { create() {} });',
+    ].join('\n');
+    const found = (await extractSymbols('Line.js', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}`);
+    expect(found).toEqual(['function Line 1-1', 'method Line.raycast 4-4', 'method Line.copy 6-6', 'method Line.create 7-7']);
+  });
+
   it('reads JavaScript with type annotations, as Babel takes it', async () => {
     const source = [
       '// @flow',
