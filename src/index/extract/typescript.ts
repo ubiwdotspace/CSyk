@@ -53,6 +53,12 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           if (!named.type.includes('class')) inside(named, owner);
           return;
         }
+        // `export default function ({ … }) {…}` names no function; TypeScript calls it default.
+        const keyword = node.children.find((c) => c?.type === 'default');
+        if (value && keyword && functionValues.has(value.type)) {
+          inside(value, sink.add(keyword, 'function', node, true, parent));
+          return;
+        }
         for (const child of node.namedChildren) if (child) declare(child, true, decorators, parent);
         return;
       }

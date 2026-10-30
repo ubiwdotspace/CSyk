@@ -155,6 +155,8 @@ describe('calls of a default export', () => {
     writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "jsx": "preserve" }, "include": ["*.ts", "*.tsx"] }');
     writeFileSync(join(dir, 'sum.ts'), 'export default function total(xs: number[]) {\n  return xs.length;\n}\n');
     writeFileSync(join(dir, 'main.ts'), "import add from './sum';\n\nexport function run() {\n  return add([1]);\n}\n");
+    writeFileSync(join(dir, 'cli.ts'), 'export default function (name: string) {\n  return name;\n}\n');
+    writeFileSync(join(dir, 'start.ts'), "import runner from './cli';\n\nrunner('server');\n");
     writeFileSync(join(dir, 'wrap.ts'), 'export const memo = <T>(c: T): T => c;\nexport const connect = (m: unknown) => <T>(c: T): T => c;\n');
     writeFileSync(
       join(dir, 'button.tsx'),
@@ -164,6 +166,7 @@ describe('calls of a default export', () => {
     const repo = await Workspace.open(dir);
     try {
       expect((await calls(repo, 'sum.ts#total')).text.split('\n').slice(1)).toEqual(['main.ts#run  4']);
+      expect((await calls(repo, 'cli.ts#default')).text.split('\n').slice(1)).toEqual(['start.ts (top level)  3']);
       expect((await calls(repo, 'button.tsx#Button')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9', 'page.tsx#Page  4']);
       // The wrappers' other arguments are not what renders.
       expect((await calls(repo, 'button.tsx#mapState')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9']);

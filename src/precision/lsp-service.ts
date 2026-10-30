@@ -216,7 +216,8 @@ export class LspService {
     // Every text mention is resolved, nearest first, so a search cut short by
     // its deadline has the likeliest answers. The server answers nothing in a
     // comment or string, so only files with answers are parsed afterwards.
-    const mentions = await this.mentionsOf(symbol.name);
+    // An unnamed default export (`default`) is written only under the names it is imported as.
+    const mentions = symbol.name === 'default' ? [] : await this.mentionsOf(symbol.name);
     const text = await readFile(join(this.root, symbol.file), 'utf8');
     const aliases = [...importAliases(symbol.name, mentions), ...(await defaultAliases(symbol, text, (name) => this.mentionsOf(name)))];
     const renamed = await Promise.all(
@@ -493,6 +494,7 @@ export function resolvesTo(
  * default`) or wrapped (`export default memo(name)`).
  */
 function isDefaultExport(text: string, name: string): boolean {
+  if (name === 'default') return true;
   const escaped = name.replace(/[$]/g, '\\$');
   const itself = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${escaped}\\b|\\b${escaped}\\s+as\\s+default\\b`);
   return itself.test(text) || wrappedDefault(text.split('\n'), name).length > 0;
