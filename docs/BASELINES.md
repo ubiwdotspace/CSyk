@@ -160,13 +160,14 @@ CSyk):
 - **Go.** A function declared twice under opposite build tags resolves to the copy `gopls` builds
   by default (pocketbase, part of a name). Prometheus's most used methods hit the search time limit
   on uses, callers and edit impact.
-- **Renamed imports** (`import { a as b }`, default imports under another name) are not followed.
+- **Renamed imports** are followed: `import { a as b }` (#28), and a default export imported under
+  another name or wrapped (`export default connect(mapState)(Indicator)`) (#46).
 
 **Uses against the servers' own search** (measured on an earlier question set): CSyk's uses were
 compared with `textDocument/references`, a different algorithm. They agreed on every case for gopls
 and Dart and on 29 of 30 for pyright (a name listed as a string in `__all__`); on excalidraw CSyk
 added only the import and export specifiers `tsc` leaves out, and missed one default import under
-another name.
+another name, followed since #46.
 
 ## mini-ts
 
