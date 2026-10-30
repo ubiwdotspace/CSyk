@@ -149,6 +149,30 @@ describe('calls across a project that cannot read JavaScript', () => {
   }, 30_000);
 });
 
+describe('calls of a default export', () => {
+  it('counts uses under another name and through a wrapper as calls', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-default-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "jsx": "preserve" }, "include": ["*.ts", "*.tsx"] }');
+    writeFileSync(join(dir, 'sum.ts'), 'export default function total(xs: number[]) {\n  return xs.length;\n}\n');
+    writeFileSync(join(dir, 'main.ts'), "import add from './sum';\n\nexport function run() {\n  return add([1]);\n}\n");
+    writeFileSync(join(dir, 'wrap.ts'), 'export const memo = <T>(c: T): T => c;\nexport const connect = (m: unknown) => <T>(c: T): T => c;\n');
+    writeFileSync(
+      join(dir, 'button.tsx'),
+      "import { connect, memo } from './wrap';\n\nfunction Button() {\n  return null;\n}\nfunction mapState() {\n  return {};\n}\nexport default connect(mapState)(memo(Button));\n",
+    );
+    writeFileSync(join(dir, 'page.tsx'), "import Button from './button';\n\nexport function Page() {\n  return <Button />;\n}\n");
+    const repo = await Workspace.open(dir);
+    try {
+      expect((await calls(repo, 'sum.ts#total')).text.split('\n').slice(1)).toEqual(['main.ts#run  4']);
+      expect((await calls(repo, 'button.tsx#Button')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9', 'page.tsx#Page  4']);
+      // The wrappers' other arguments are not what renders.
+      expect((await calls(repo, 'button.tsx#mapState')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9']);
+    } finally {
+      await repo.close();
+    }
+  }, 30_000);
+});
+
 describe('impact', () => {
   it('lists a caller reached through two changed callees once, with the lines of both', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
