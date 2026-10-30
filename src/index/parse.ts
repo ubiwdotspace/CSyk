@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Language, Parser, type Node, type Tree } from 'web-tree-sitter';
 import { extractDart } from './extract/dart.ts';
 import { extractGo } from './extract/go.ts';
+import { leftOutOfBuild } from './go-build.ts';
 import { extractMarkdown } from './extract/markdown.ts';
 import { extractPython } from './extract/python.ts';
 import { extractTypeScript } from './extract/typescript.ts';
@@ -90,7 +91,7 @@ export async function extractSymbols(file: string, text: string): Promise<CodeSy
   const tree = dialect ? await parseFile(file, text) : undefined;
   if (!dialect || !tree) return [];
   try {
-    const sink = new SymbolSink(file, dialect.lang);
+    const sink = new SymbolSink(file, dialect.lang, dialect.lang === 'go' && leftOutOfBuild(file, text));
     dialect.extract(tree.rootNode, sink);
     return sink.symbols;
   } finally {
