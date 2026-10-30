@@ -25,18 +25,18 @@ The six kinds of question:
 
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
-| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 87% | 100% | 96.7% / 91.8% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 85.3% | 100% | 98.3% / 96.8% |
-| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 84.1% | 100% | 95.8% / 96.9% |
-| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 93.2% | 100% | 70.9% / 89.2% |
-| wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 99.2% | 100% | 100% / 98.2% |
-| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.4% / 80.9% |
+| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 96.7% / 91.8% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 96.8% |
+| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 98.4% / 96.9% |
+| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 70.9% / 89.2% |
+| wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
+| flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 70.9% / 81.1% |
 | fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 91.5% |
-| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 92.7% | 100% | 98.8% / 83.7% |
-| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 92.7% | 100% | 99.3% / 47.2% |
+| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 98.8% / 83.7% |
+| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.4% | 100% | 99.3% / 47.2% |
 | chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 97.8% / 98.7% |
-| pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96% | 100% | 94.9% / 93.4% |
-| prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 89.3% / 97.2% |
+| pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96.7% | 100% | 95.1% / 93.4% |
+| prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 91.5% / 97.1% |
 
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
@@ -186,7 +186,7 @@ Means over the twelve repositories, everything started cold.
 | Exact name: first answer right | **98.6%** | 85.1% | 79.9% |
 | Part of a name: first answer right | **99.4%** | 17.0% | 31.6% |
 | Uses: found / correct | **97.3% / 97.8%** | 76.5% / 81.2% | 28.6% / 41.6% |
-| Callers and calls: found / correct | **98.7% / 93.5%** | 77.5% / 75.0% | 47.7% / 53.8% |
+| Callers and calls: found / correct | **98.7% / 96.1%** | 77.5% / 75.0% | 47.7% / 53.8% |
 | Message: in the first five | **100%** | – | 11.9% |
 | Tokens per answer | **115** | 243 | 719 |
 | Tool calls per question | **1.0** | 1.5 | 1.2 |

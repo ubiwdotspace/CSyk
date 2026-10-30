@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { Tree } from 'web-tree-sitter';
-import { isCallAt, isImportAt, isMemberAt, isValueUseAt, parseFile } from '../index/parse.ts';
+import { declaresFunctionAt, isCallAt, isImportAt, isMemberAt, isValueUseAt, parseFile } from '../index/parse.ts';
 import type { SymbolKind } from '../index/symbols.ts';
 import { pool } from '../precision/lsp-service.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
@@ -15,8 +15,11 @@ const run = promisify(execFile);
 
 // More callers than this at one level are listed, not followed further.
 const maxFanOut = 40;
-// How long `calls` and `impact` resolve mentions in all before answering with what they have.
-const toolMs = 6000;
+// How long `calls` and `impact` resolve mentions in all before answering with
+// what they have. Accuracy comes first: at 6 seconds, impact on Prometheus
+// found 87.8% of what a change touches, as the language server was still
+// loading; at 30, 91.5%, for 28% more CPU.
+const toolMs = 30000;
 
 // Kinds a member access calls when it reaches them.
 const callableKinds: ReadonlySet<SymbolKind> = new Set(['function', 'method', 'hook', 'component', 'route']);
@@ -218,9 +221,18 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
         const callee = calleeAt(ws, span.file, span.nameLine + 1, name.text);
         // A member access counts only when it reaches a function.
         if (!name.called && !(callee.symbol && callableKinds.has(callee.symbol.kind))) continue;
-        // A name a file imports from outside the repo resolves to its import.
-        const tree = callee.symbol ? undefined : await treeOf(span.file);
-        if (!tree || !isImportAt(tree, span.nameLine, span.nameColumn)) declared.push(callee);
+        if (callee.symbol) {
+          declared.push(callee);
+          continue;
+        }
+        // Without a symbol of its own, the declaration is local: a function
+        // declared in another (kept), or a parameter, a destructured name or
+        // a variable such as a React state setter, which is no callee. A name
+        // a file imports from outside the repo resolves to its import.
+        const tree = await treeOf(span.file);
+        if (tree && !isImportAt(tree, span.nameLine, span.nameColumn) && declaresFunctionAt(tree, span.nameLine, span.nameColumn)) {
+          declared.push(callee);
+        }
       }
       return { line: name.row + 1, declared };
     });
@@ -244,7 +256,8 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
 // declared there, a constructor (named by its class, placed at its own
 // line), or a local function.
 function calleeAt(ws: Workspace, file: string, line: number, name: string): Omit<Callee, 'lines'> {
-  const exact = ws.index.symbolsIn(file).find((s) => s.line === line);
+  // By name too: a parameter declared on its function's line is not the function.
+  const exact = ws.index.symbolsIn(file).find((s) => s.line === line && (s.name === name || s.parent === `${file}#${name}`));
   if (exact) return { label: exact.id, file, line, symbol: exact };
   const home = ws.index.containing(file, line);
   if (home?.name === name) return { label: home.id, file, line, symbol: home };
