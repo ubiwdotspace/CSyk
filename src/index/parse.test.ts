@@ -142,6 +142,12 @@ describe('extractSymbols for JavaScript', () => {
     expect(found).toEqual(['function Line 1-1', 'method Line.raycast 4-4', 'method Line.copy 6-6', 'method Line.create 7-7']);
   });
 
+  it('names an unnamed default export function default, as TypeScript does', async () => {
+    const source = ['function log() {}', 'export default function ({ start }) {', '  log();', '  const inner = () => 1;', '}'].join('\n');
+    const found = (await extractSymbols('runner.js', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}${s.nested ? ' nested' : ''}`);
+    expect(found).toEqual(['function log 1-1', 'function default 2-5', 'function default.inner 4-4 nested']);
+  });
+
   it('reads JavaScript with type annotations, as Babel takes it', async () => {
     const source = [
       '// @flow',
