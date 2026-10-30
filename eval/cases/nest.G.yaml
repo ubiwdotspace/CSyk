@@ -11,11 +11,32 @@ cases:
       - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [1, 748] }
       - { file: "packages/core/router/route-conflict-detector.ts", lines: [135, 192] }
       - { file: "packages/core/router/route-specificity-sorter.ts", lines: [42, 58] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [32, 37] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [39, 44] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [46, 51] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [53, 58] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [60, 65] }
+      - { file: "packages/core/router/route-conflict-detector.ts", lines: [143, 188] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [69, 72] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [74, 78] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [80, 84] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [86, 90] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [92, 99] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [101, 108] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [110, 117] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [119, 124] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [126, 133] }
+      - { file: "packages/core/router/route-specificity-sorter.ts", lines: [49, 52] }
   - id: G02
     query: "sample/26-queues/src/audio/audio.controller.ts:11"
     expect:
       - { file: "sample/26-queues/src/audio/audio.controller.ts", lines: [9, 14] }
       - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [1, 76] }
+      - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [38, 44] }
+      - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [46, 50] }
+      - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [52, 57] }
+      - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [59, 65] }
+      - { file: "sample/26-queues/src/audio/audio.controller.spec.ts", lines: [67, 73] }
   - id: G03
     query: "packages/core/middleware/route-info-path-extractor.ts:171"
     expect:
@@ -25,6 +46,18 @@ cases:
       - { file: "packages/core/middleware/builder.ts", lines: [166, 181] }
       - { file: "packages/core/middleware/middleware-module.ts", lines: [357, 409] }
       - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [1, 569] }
+      - { file: "packages/core/middleware/route-info-path-extractor.ts", lines: [62, 62] }
+      - { file: "packages/core/middleware/builder.ts", lines: [149, 163] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [19, 34] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [36, 53] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [55, 93] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [95, 119] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [132, 148] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [150, 158] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [160, 176] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [178, 199] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [212, 230] }
+      - { file: "packages/core/test/middleware/route-info-path-extractor.spec.ts", lines: [540, 566] }
   - id: G04
     query: "integration/versioning/src/main.ts:7"
     expect:
@@ -53,6 +86,18 @@ cases:
       - { file: "packages/core/pipes/pipes-consumer.ts", lines: [13, 31] }
       - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [42, 57] }
       - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [1, 145] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [8, 12] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [14, 17] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [20, 25] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [27, 40] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [42, 52] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [54, 61] }
+      - { file: "packages/common/test/pipes/default-value.pipe.spec.ts", lines: [63, 75] }
+      - { file: "packages/common/test/pipes/validation.pipe.spec.ts", lines: [1088, 1100] }
+      - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [54, 54] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [53, 56] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [59, 68] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [69, 74] }
   - id: G06
     query: "packages/core/hooks/on-app-bootstrap.hook.ts:16 packages/core/hooks/on-app-bootstrap.hook.ts:30"
     expect:
@@ -61,6 +106,7 @@ cases:
       - { file: "packages/core/hooks/on-app-bootstrap.hook.ts", lines: [40, 66] }
       - { file: "packages/core/nest-application-context.ts", lines: [477, 482] }
       - { file: "packages/core/test/hooks/on-app-bootstrap.hook.spec.ts", lines: [1, 46] }
+      - { file: "packages/core/test/hooks/on-app-bootstrap.hook.spec.ts", lines: [38, 43] }
   - id: G07
     query: "packages/microservices/client/client-kafka.ts:135"
     expect:
@@ -73,6 +119,9 @@ cases:
       - { file: "packages/core/hooks/on-module-init.hook.ts", lines: [13, 15] }
       - { file: "packages/core/hooks/on-module-init.hook.ts", lines: [20, 26] }
       - { file: "packages/core/hooks/on-module-init.hook.ts", lines: [34, 61] }
+      - { file: "integration/microservices/src/kafka-concurrent/kafka-concurrent.controller.ts", lines: [49, 51] }
+      - { file: "integration/microservices/src/kafka/kafka.controller.ts", lines: [44, 46] }
+      - { file: "packages/microservices/test/client/client-kafka.spec.ts", lines: [267, 274] }
   - id: G08
     query: "sample/38-webhooks/src/orders/orders.service.ts:116 sample/38-webhooks/src/orders/orders.service.ts:62"
     expect:
@@ -80,6 +129,7 @@ cases:
       - { file: "sample/38-webhooks/src/orders/orders.service.ts", lines: [56, 65] }
       - { file: "sample/38-webhooks/src/provider-webhooks/payment-provider-webhooks.controller.ts", lines: [23, 51] }
       - { file: "sample/38-webhooks/src/orders/orders.controller.ts", lines: [30, 33] }
+      - { file: "sample/38-webhooks/src/provider-webhooks/payment-provider-webhooks.controller.ts", lines: [37, 43] }
   - id: G09
     query: "packages/platform-node/adapters/utils/hostname.util.ts:12"
     expect:
@@ -114,6 +164,19 @@ cases:
       - { file: "packages/core/pipes/pipes-consumer.ts", lines: [13, 31] }
       - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [42, 57] }
       - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [1, 145] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [20, 25] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [28, 31] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [36, 40] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [41, 45] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [46, 50] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [51, 55] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [56, 60] }
+      - { file: "packages/common/test/pipes/parse-float.pipe.spec.ts", lines: [61, 65] }
+      - { file: "packages/common/test/pipes/validation.pipe.spec.ts", lines: [1088, 1100] }
+      - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [54, 54] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [53, 56] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [59, 68] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [69, 74] }
   - id: G11
     query: "sample/09-babel-example/src/main.js:6"
     expect:
@@ -142,6 +205,23 @@ cases:
       - { file: "packages/core/pipes/pipes-consumer.ts", lines: [13, 31] }
       - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [42, 57] }
       - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [1, 145] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [14, 25] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [27, 32] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [34, 38] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [41, 49] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [51, 57] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [63, 63] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [73, 73] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [80, 80] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [85, 85] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [90, 90] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [95, 95] }
+      - { file: "packages/common/test/pipes/parse-date.pipe.spec.ts", lines: [113, 113] }
+      - { file: "packages/common/test/pipes/validation.pipe.spec.ts", lines: [1088, 1100] }
+      - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [54, 54] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [53, 56] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [59, 68] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [69, 74] }
   - id: G13
     query: "integration/typeorm/src/database.module.ts:17"
     expect:
@@ -156,6 +236,20 @@ cases:
       - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [16, 36] }
       - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [1, 282] }
       - { file: "packages/websockets/web-sockets-controller.ts", lines: [324, 340] }
+      - { file: "packages/platform-socket.io/adapters/io-adapter.ts", lines: [90, 104] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [8, 8] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [24, 27] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [53, 56] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [77, 77] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [96, 98] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [105, 119] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [121, 148] }
+      - { file: "packages/platform-socket.io/test/utils/merge-map-bounded.util.spec.ts", lines: [150, 160] }
+      - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [67, 101] }
+      - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [122, 122] }
+      - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [148, 148] }
+      - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [159, 223] }
+      - { file: "packages/platform-socket.io/test/io-adapter.spec.ts", lines: [225, 279] }
   - id: G15
     query: "packages/core/injector/settlement-signal.ts:40"
     expect:
@@ -173,6 +267,37 @@ cases:
       - { file: "packages/core/injector/injector.ts", lines: [431, 508] }
       - { file: "packages/core/injector/injector.ts", lines: [897, 998] }
       - { file: "packages/core/injector/injector.ts", lines: [1631, 1648] }
+      - { file: "packages/core/injector/injector.ts", lines: [729, 731] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [80, 89] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [91, 97] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [99, 103] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [105, 119] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [121, 136] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [139, 148] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [172, 181] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [183, 192] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1151, 1156] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [98, 117] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [119, 138] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [140, 170] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [245, 267] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [357, 369] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [371, 384] }
+      - { file: "packages/core/injector/injector.ts", lines: [473, 477] }
+      - { file: "packages/core/injector/injector.ts", lines: [963, 967] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [848, 857] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [858, 866] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [867, 878] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [882, 895] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [922, 936] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [939, 959] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [961, 982] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [986, 1012] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1014, 1043] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1045, 1067] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1110, 1130] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1132, 1163] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1165, 1192] }
   - id: G16
     query: "integration/scopes/src/request-chain/interceptors/logging.interceptor.ts:16"
     expect:
@@ -191,6 +316,15 @@ cases:
       - { file: "packages/core/test/router/router-exception-filters.spec.ts", lines: [1, 170] }
       - { file: "packages/microservices/context/rpc-context-creator.ts", lines: [296, 333] }
       - { file: "packages/websockets/context/ws-context-creator.ts", lines: [219, 256] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [31, 31] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [35, 35] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [61, 62] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [70, 78] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [79, 95] }
+      - { file: "packages/core/interceptors/interceptors-context-creator.ts", lines: [56, 57] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [101, 106] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [109, 121] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [122, 130] }
   - id: G17
     query: "packages/microservices/helpers/grpc-helpers.ts:16"
     expect:
@@ -201,6 +335,13 @@ cases:
       - { file: "packages/microservices/client/client-grpc.ts", lines: [297, 321] }
       - { file: "packages/microservices/server/server-grpc.ts", lines: [154, 166] }
       - { file: "packages/microservices/test/server/server-grpc.spec.ts", lines: [1, 2023] }
+      - { file: "packages/microservices/client/client-grpc.ts", lines: [325, 328] }
+      - { file: "packages/microservices/server/server-grpc.ts", lines: [824, 827] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [10, 16] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [23, 31] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [38, 45] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [52, 59] }
+      - { file: "packages/microservices/test/server/server-grpc.spec.ts", lines: [1863, 1863] }
   - id: G18
     query: "packages/common/decorators/core/bind.decorator.ts:19"
     expect:
@@ -213,12 +354,17 @@ cases:
       - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [42, 60] }
       - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [20, 40] }
       - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [1, 76] }
+      - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [33, 33] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [17, 20] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [23, 32] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [33, 38] }
   - id: G20
     query: "packages/websockets/context/ws-context-creator.ts:292"
     expect:
       - { file: "packages/websockets/context/ws-context-creator.ts", lines: [288, 296] }
       - { file: "packages/websockets/context/ws-context-creator.ts", lines: [263, 282] }
       - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [1, 372] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [273, 280] }
   - id: G21
     query: "integration/lazy-modules/src/main.ts:6"
     expect:
@@ -232,6 +378,12 @@ cases:
       - { file: "packages/core/hooks/on-app-shutdown.hook.ts", lines: [40, 82] }
       - { file: "packages/core/nest-application-context.ts", lines: [488, 496] }
       - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [1, 115] }
+      - { file: "packages/core/hooks/on-app-shutdown.hook.ts", lines: [57, 59] }
+      - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [38, 43] }
+      - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [45, 57] }
+      - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [59, 82] }
+      - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [84, 101] }
+      - { file: "packages/core/test/hooks/on-app-shutdown.hook.spec.ts", lines: [103, 112] }
   - id: G23
     query: "packages/core/helpers/safe-instance-decorator.ts:21"
     expect:
@@ -274,6 +426,44 @@ cases:
       - { file: "packages/microservices/nest-microservice.ts", lines: [205, 223] }
       - { file: "packages/microservices/nest-microservice.ts", lines: [230, 248] }
       - { file: "packages/microservices/nest-microservice.ts", lines: [250, 266] }
+      - { file: "packages/core/injector/injector.ts", lines: [142, 163] }
+      - { file: "packages/core/injector/module.ts", lines: [404, 406] }
+      - { file: "packages/core/nest-application.ts", lines: [718, 720] }
+      - { file: "packages/core/nest-application.ts", lines: [730, 732] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [4, 12] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [14, 22] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [24, 42] }
+      - { file: "packages/microservices/nest-microservice.ts", lines: [442, 444] }
+      - { file: "integration/scopes/e2e/class-provider-hosts.spec.ts", lines: [170, 175] }
+      - { file: "packages/core/injector/internal-core-module/internal-core-module-factory.ts", lines: [30, 34] }
+      - { file: "packages/core/injector/module-ref.ts", lines: [38, 48] }
+      - { file: "packages/core/nest-application-context.ts", lines: [69, 82] }
+      - { file: "packages/core/nest-application.ts", lines: [76, 101] }
+      - { file: "packages/core/nest-factory.ts", lines: [223, 227] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [24, 26] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [462, 465] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1247, 1250] }
+      - { file: "packages/core/test/injector/injector.spec.ts", lines: [1259, 1264] }
+      - { file: "packages/core/test/injector/instance-loader.spec.ts", lines: [23, 47] }
+      - { file: "packages/core/test/injector/lazy-module-loader/lazy-module-loader.spec.ts", lines: [32, 55] }
+      - { file: "packages/core/test/injector/nested-transient-isolation.spec.ts", lines: [13, 16] }
+      - { file: "packages/core/test/middleware/middleware-module.spec.ts", lines: [476, 552] }
+      - { file: "packages/core/test/middleware/resolver.spec.ts", lines: [17, 21] }
+      - { file: "packages/core/test/nest-application-context.spec.ts", lines: [896, 924] }
+      - { file: "packages/core/test/nest-application-context.spec.ts", lines: [926, 952] }
+      - { file: "packages/core/test/nest-application-context.spec.ts", lines: [956, 1012] }
+      - { file: "packages/core/test/nest-application-context.spec.ts", lines: [1027, 1030] }
+      - { file: "packages/core/test/router/router-explorer.spec.ts", lines: [67, 89] }
+      - { file: "packages/core/test/router/routes-resolver.spec.ts", lines: [73, 81] }
+      - { file: "packages/core/test/router/routes-resolver.spec.ts", lines: [169, 224] }
+      - { file: "packages/core/test/router/routes-resolver.spec.ts", lines: [304, 330] }
+      - { file: "packages/microservices/test/listeners-controller.spec.ts", lines: [55, 99] }
+      - { file: "packages/websockets/test/web-sockets-controller.spec.ts", lines: [57, 84] }
+      - { file: "packages/core/test/injector/module.spec.ts", lines: [255, 269] }
+      - { file: "packages/core/test/injector/module.spec.ts", lines: [271, 300] }
+      - { file: "packages/core/nest-application.ts", lines: [721, 721] }
+      - { file: "packages/core/nest-application.ts", lines: [737, 743] }
+      - { file: "packages/microservices/nest-microservice.ts", lines: [445, 445] }
   - id: G24
     query: "sample/25-dynamic-modules/src/main.ts:5"
     expect:
@@ -294,6 +484,11 @@ cases:
     expect:
       - { file: "packages/platform-express/multer/interceptors/any-files.interceptor.ts", lines: [29, 73] }
       - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [1, 88] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [9, 12] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [20, 32] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [33, 43] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [44, 74] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [77, 79] }
   - id: G28
     query: "packages/core/exceptions/external-exceptions-handler.ts:26 packages/core/exceptions/external-exceptions-handler.ts:36"
     expect:
@@ -305,12 +500,33 @@ cases:
       - { file: "packages/core/helpers/external-context-creator.ts", lines: [95, 199] }
       - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [1, 168] }
       - { file: "packages/core/helpers/external-proxy.ts", lines: [6, 20] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [38, 43] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [45, 51] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [54, 61] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [66, 69] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [71, 71] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [76, 78] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [93, 96] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [97, 101] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [102, 108] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [117, 120] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [121, 125] }
+      - { file: "packages/core/helpers/external-context-creator.ts", lines: [142, 148] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [36, 40] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [49, 53] }
+      - { file: "packages/core/helpers/external-proxy.ts", lines: [11, 19] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [19, 19] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [28, 31] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [50, 50] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [60, 60] }
   - id: G29
     query: "packages/core/repl/repl-context.ts:101"
     expect:
       - { file: "packages/core/repl/repl-context.ts", lines: [77, 112] }
       - { file: "packages/core/repl/repl-context.ts", lines: [53, 75] }
       - { file: "packages/core/repl/repl-context.ts", lines: [29, 186] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [56, 74] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [39, 47] }
   - id: G30
     query: "packages/core/hooks/on-module-destroy.hook.ts:30"
     expect:
@@ -318,3 +534,9 @@ cases:
       - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [39, 79] }
       - { file: "packages/core/nest-application-context.ts", lines: [463, 471] }
       - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [1, 113] }
+      - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [53, 55] }
+      - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [38, 43] }
+      - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [45, 57] }
+      - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [59, 82] }
+      - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [84, 101] }
+      - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [103, 110] }

@@ -7,6 +7,7 @@ cases:
     direction: in
     expect:
       - { file: "react/features/recording/actions.any.ts", lines: [263, 385] }
+      - { file: "react/features/recording/actions.any.ts", lines: [269, 384] }
   - id: D02
     query: "_constructTranscripts"
     direction: out
@@ -85,6 +86,9 @@ cases:
       - { file: "react/features/filmstrip/components/native/Thumbnail.tsx", lines: [1, 383] }
       - { file: "react/features/filmstrip/components/web/Thumbnail.tsx", lines: [1, 1377] }
       - { file: "react/features/large-video/components/LargeVideo.native.tsx", lines: [1, 185] }
+      - { file: "react/features/filmstrip/components/native/Thumbnail.tsx", lines: [378, 382] }
+      - { file: "react/features/filmstrip/components/web/Thumbnail.tsx", lines: [1372, 1376] }
+      - { file: "react/features/large-video/components/LargeVideo.native.tsx", lines: [180, 184] }
   - id: D14
     query: "_suspendDetected"
     direction: out
@@ -105,6 +109,7 @@ cases:
     direction: in
     expect:
       - { file: "react/features/base/settings/reducer.ts", lines: [1, 185] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [136, 149] }
   - id: D18
     query: "canRejectParticipant"
     direction: out
@@ -132,6 +137,8 @@ cases:
     expect:
       - { file: "react/features/base/sounds/actions.ts", lines: [70, 88] }
       - { file: "react/features/reactions/middleware.ts", lines: [1, 275] }
+      - { file: "react/features/base/sounds/actions.ts", lines: [71, 87] }
+      - { file: "react/features/reactions/middleware.ts", lines: [64, 225] }
   - id: D22
     query: "setNewWhiteboardOpen"
     direction: out
@@ -159,6 +166,7 @@ cases:
     direction: in
     expect:
       - { file: "react/features/keyboard-shortcuts/actions.ts", lines: [174, 240] }
+      - { file: "react/features/keyboard-shortcuts/actions.ts", lines: [175, 239] }
   - id: D26
     query: "_beginAddPeople"
     direction: out
@@ -169,6 +177,7 @@ cases:
     direction: in
     expect:
       - { file: "react/features/recording/components/Recording/web/StartRecordingDialogContent.tsx", lines: [108, 188] }
+      - { file: "react/features/recording/components/Recording/web/StartRecordingDialogContent.tsx", lines: [159, 176] }
   - id: D28
     query: "_onStopTranscription"
     direction: out

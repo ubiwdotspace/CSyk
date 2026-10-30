@@ -99,12 +99,14 @@ export async function impactAnswer(oracle: LspOracle, changed: Span[]): Promise<
  */
 export async function answerAgain(oracle: LspOracle, category: 'D' | 'G', cases: CallCase[]): Promise<CallCase[]> {
   const answered: CallCase[] = [];
+  // An old answer stays: one the oracle does not give again was found by a server set up otherwise.
+  const kept = (c: CallCase, expect: Expected[]) => ({ ...c, expect: union(c.expect, expect) });
   for (const c of cases) {
     if (category === 'D') {
       const [only] = await oracle.declarations(c.query);
       const direction = c.direction ?? 'in';
       // A name no longer declared once keeps its old answer.
-      answered.push(only ? { ...c, expect: await callAnswer(oracle, { file: only.file, line: only.nameLine, character: only.nameColumn }, direction) } : c);
+      answered.push(only ? kept(c, await callAnswer(oracle, { file: only.file, line: only.nameLine, character: only.nameColumn }, direction)) : c);
       continue;
     }
     const changed: Span[] = [];
@@ -116,9 +118,16 @@ export async function answerAgain(oracle: LspOracle, category: 'D' | 'G', cases:
         .sort((a, b) => a.range.end.line - a.range.start.line - (b.range.end.line - b.range.start.line))[0];
       if (around && !changed.some((s) => s.file === file && s.startLine === around.range.start.line)) changed.push(spanOf(file, around));
     }
-    answered.push({ ...c, expect: await impactAnswer(oracle, changed) });
+    answered.push(kept(c, await impactAnswer(oracle, changed)));
   }
   return answered;
+}
+
+/** [old] and the places of [found] it lacks. */
+export function union(old: readonly Expected[], found: readonly Expected[]): Expected[] {
+  const key = (e: Expected) => `${e.file}:${e.lines.join('-')}`;
+  const have = new Set(old.map(key));
+  return [...old, ...found.filter((e) => !have.has(key(e)))];
 }
 
 function spanOf(file: string, s: DocumentSymbol): Span {

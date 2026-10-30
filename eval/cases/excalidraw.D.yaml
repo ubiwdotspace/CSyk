@@ -7,6 +7,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/fonts/ExcalidrawFontFace.ts", lines: [58, 88] }
+      - { file: "setupTests.ts", lines: [113, 121] }
   - id: D02
     query: "vectorFromPoint"
     direction: out
@@ -19,6 +20,7 @@ cases:
     expect:
       - { file: "packages/element/src/store.ts", lines: [117, 175] }
       - { file: "packages/element/src/store.ts", lines: [183, 201] }
+      - { file: "packages/element/src/store.ts", lines: [168, 173] }
   - id: D04
     query: "ExampleApp"
     direction: out
@@ -34,6 +36,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/components/App.tsx", lines: [583, 11446] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [4975, 5022] }
   - id: D06
     query: "rangeInclusiveFromPair"
     direction: out
@@ -55,6 +58,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/laserTrails.ts", lines: [79, 134] }
+      - { file: "packages/excalidraw/laserTrails.ts", lines: [119, 122] }
   - id: D10
     query: "getSegmentMidPointIndex"
     direction: out
@@ -73,6 +77,12 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [7526, 7951] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [7966, 8016] }
       - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [1, 1649] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [922, 942] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [990, 1016] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [1018, 1027] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [1029, 1056] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [1251, 1282] }
+      - { file: "packages/excalidraw/tests/interactivity.test.tsx", lines: [1298, 1321] }
   - id: D12
     query: "IconPicker"
     direction: out
@@ -106,6 +116,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [97, 166] }
+      - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [140, 144] }
   - id: D16
     query: "polygonSignedArea"
     direction: out
@@ -116,6 +127,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/eraser/index.ts", lines: [196, 304] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [239, 243] }
   - id: D18
     query: "parseHTMLTree"
     direction: out
@@ -161,6 +173,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [1, 350] }
+      - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [65, 172] }
   - id: D26
     query: "getBounds"
     direction: out
@@ -174,6 +187,9 @@ cases:
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [107, 121] }
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [217, 224] }
       - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [195, 248] }
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [108, 120] }
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [219, 222] }
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [238, 247] }
   - id: D28
     query: "cssHueRotate"
     direction: out
@@ -189,6 +205,13 @@ cases:
       - { file: "packages/element/src/binding.ts", lines: [1743, 1889] }
       - { file: "packages/element/src/binding.ts", lines: [2022, 2093] }
       - { file: "packages/element/src/binding.ts", lines: [2098, 2254] }
+      - { file: "packages/element/src/binding.ts", lines: [1278, 1278] }
+      - { file: "packages/element/src/binding.ts", lines: [1389, 1390] }
+      - { file: "packages/element/src/binding.ts", lines: [1874, 1876] }
+      - { file: "packages/element/src/binding.ts", lines: [2069, 2070] }
+      - { file: "packages/element/src/binding.ts", lines: [2088, 2089] }
+      - { file: "packages/element/src/binding.ts", lines: [2164, 2164] }
+      - { file: "packages/element/src/binding.ts", lines: [2174, 2176] }
   - id: D30
     query: "TTDStreamFetch"
     direction: out

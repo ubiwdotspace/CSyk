@@ -17,6 +17,7 @@ cases:
     direction: in
     expect:
       - { file: "src/ParseServer.ts", lines: [419, 497] }
+      - { file: "src/Adapters/Storage/Postgres/PostgresStorageAdapter.js", lines: [21, 25] }
   - id: D04
     query: "triggerExists"
     direction: out
@@ -38,6 +39,7 @@ cases:
     direction: in
     expect:
       - { file: "src/Routers/LogsRouter.js", lines: [6, 16] }
+      - { file: "src/Routers/LogsRouter.js", lines: [12, 14] }
   - id: D08
     query: "handleLogInAs"
     direction: out
@@ -69,6 +71,7 @@ cases:
     direction: in
     expect:
       - { file: "src/Adapters/Files/GridFSBucketAdapter.js", lines: [74, 76] }
+      - { file: "src/Adapters/Files/GridFSBucketAdapter.js", lines: [75, 75] }
   - id: D14
     query: "validatePasswordPolicy"
     direction: out
@@ -79,6 +82,7 @@ cases:
     direction: in
     expect:
       - { file: "benchmark/compare.js", lines: [265, 295] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [93, 97] }
   - id: D16
     query: "getUntestedVersions"
     direction: out
@@ -89,6 +93,7 @@ cases:
     direction: in
     expect:
       - { file: "src/Routers/PurgeRouter.js", lines: [34, 38] }
+      - { file: "src/Routers/PurgeRouter.js", lines: [35, 37] }
   - id: D18
     query: "getPackageFiles"
     direction: out
@@ -109,6 +114,7 @@ cases:
     direction: in
     expect:
       - { file: "src/RestQuery.js", lines: [1104, 1123] }
+      - { file: "src/RestQuery.js", lines: [1, 1412] }
   - id: D22
     query: "getPushController"
     direction: out

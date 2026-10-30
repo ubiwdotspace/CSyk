@@ -9,6 +9,11 @@ cases:
       - { file: "packages/core/router/route-conflict-detector.ts", lines: [89, 128] }
       - { file: "packages/core/router/route-specificity-sorter.ts", lines: [60, 91] }
       - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [1, 748] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [32, 37] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [39, 44] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [46, 51] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [53, 58] }
+      - { file: "packages/core/test/router/route-conflict-detector.spec.ts", lines: [60, 65] }
   - id: D02
     query: "extractExclusionsFrom"
     direction: out
@@ -51,6 +56,7 @@ cases:
     direction: in
     expect:
       - { file: "sample/38-webhooks/src/provider-webhooks/carrier-webhooks.controller.ts", lines: [24, 47] }
+      - { file: "sample/38-webhooks/src/provider-webhooks/carrier-webhooks.controller.ts", lines: [36, 37] }
   - id: D08
     query: "createRequestClass"
     direction: out
@@ -73,6 +79,12 @@ cases:
       - { file: "packages/microservices/client/client-grpc.ts", lines: [323, 338] }
       - { file: "packages/microservices/server/server-grpc.ts", lines: [822, 845] }
       - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [1, 64] }
+      - { file: "packages/microservices/client/client-grpc.ts", lines: [325, 328] }
+      - { file: "packages/microservices/server/server-grpc.ts", lines: [824, 827] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [10, 16] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [23, 31] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [38, 45] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [52, 59] }
   - id: D12
     query: "ssePromiseDelayed"
     direction: out
@@ -117,6 +129,7 @@ cases:
     direction: in
     expect:
       - { file: "packages/microservices/test/ctx-host/tcp.context.spec.ts", lines: [1, 21] }
+      - { file: "packages/microservices/test/ctx-host/tcp.context.spec.ts", lines: [11, 13] }
   - id: D20
     query: "createWsParamDecorator"
     direction: out
@@ -129,6 +142,13 @@ cases:
       - { file: "packages/platform-fastify/multipart/multipart/multipart.parser.ts", lines: [62, 72] }
       - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [1, 133] }
       - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [1, 79] }
+      - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [21, 25] }
+      - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [27, 31] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [16, 17] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [32, 33] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [44, 45] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [62, 63] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [73, 74] }
   - id: D22
     query: "Header"
     direction: out
@@ -140,6 +160,10 @@ cases:
     expect:
       - { file: "packages/core/injector/instance-wrapper.ts", lines: [565, 593] }
       - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [1, 132] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [10, 17] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [19, 26] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [28, 34] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [36, 40] }
   - id: D24
     query: "destroyStreamableFile"
     direction: out
@@ -153,6 +177,9 @@ cases:
       - { file: "packages/core/inspector/graph-inspector.ts", lines: [93, 98] }
       - { file: "packages/core/inspector/graph-inspector.ts", lines: [167, 203] }
       - { file: "packages/core/test/inspector/serialized-graph.spec.ts", lines: [1, 333] }
+      - { file: "packages/core/inspector/graph-inspector.ts", lines: [172, 174] }
+      - { file: "packages/core/test/inspector/serialized-graph.spec.ts", lines: [135, 157] }
+      - { file: "packages/core/test/inspector/serialized-graph.spec.ts", lines: [159, 161] }
   - id: D26
     query: "onState"
     direction: out
@@ -185,6 +212,18 @@ cases:
       - { file: "packages/platform-node/test/multer/interceptors/file.interceptor.spec.ts", lines: [1, 89] }
       - { file: "packages/platform-node/test/multer/interceptors/files.interceptor.spec.ts", lines: [1, 91] }
       - { file: "packages/platform-node/test/multer/multer/multer.utils.spec.ts", lines: [1, 426] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [177, 200] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [44, 74] }
+      - { file: "packages/platform-express/test/multer/interceptors/file-fields.interceptor.spec.ts", lines: [63, 95] }
+      - { file: "packages/platform-express/test/multer/interceptors/file.interceptor.spec.ts", lines: [45, 75] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [47, 77] }
+      - { file: "packages/platform-express/test/multer/multer/multer.utils.spec.ts", lines: [223, 242] }
+      - { file: "packages/platform-fastify/test/multipart/interceptors/file.interceptor.spec.ts", lines: [340, 363] }
+      - { file: "packages/platform-node/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [44, 74] }
+      - { file: "packages/platform-node/test/multer/interceptors/file-fields.interceptor.spec.ts", lines: [63, 95] }
+      - { file: "packages/platform-node/test/multer/interceptors/file.interceptor.spec.ts", lines: [45, 75] }
+      - { file: "packages/platform-node/test/multer/interceptors/files.interceptor.spec.ts", lines: [47, 77] }
+      - { file: "packages/platform-node/test/multer/multer/multer.utils.spec.ts", lines: [223, 242] }
   - id: D30
     query: "asyncRun"
     direction: out

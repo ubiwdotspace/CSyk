@@ -17,6 +17,17 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [2141, 2316] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [2325, 2755] }
       - { file: "packages/excalidraw/components/DefaultSidebar.tsx", lines: [1, 128] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7744, 7751] }
+      - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [274, 317] }
+      - { file: "packages/excalidraw/components/SearchMenu.tsx", lines: [275, 337] }
+      - { file: "packages/excalidraw/components/TTDDialog/MermaidToExcalidraw.tsx", lines: [142, 146] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialog.tsx", lines: [154, 163] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2304, 2304] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7727, 7760] }
+      - { file: "packages/excalidraw/components/DefaultSidebar.tsx", lines: [59, 121] }
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialog.tsx", lines: [81, 221] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7729, 7742] }
+      - { file: "packages/excalidraw/components/TTDDialog/MermaidToExcalidraw.tsx", lines: [147, 150] }
   - id: G02
     query: "packages/excalidraw/fonts/ExcalidrawFontFace.ts:77 packages/excalidraw/fonts/ExcalidrawFontFace.ts:95"
     expect:
@@ -24,6 +35,8 @@ cases:
       - { file: "packages/excalidraw/fonts/ExcalidrawFontFace.ts", lines: [90, 112] }
       - { file: "packages/excalidraw/fonts/ExcalidrawFontFace.ts", lines: [37, 51] }
       - { file: "packages/excalidraw/fonts/Fonts.ts", lines: [333, 377] }
+      - { file: "setupTests.ts", lines: [113, 121] }
+      - { file: "packages/excalidraw/fonts/Fonts.ts", lines: [354, 374] }
   - id: G03
     query: "examples/with-script-in-browser/components/ExampleApp.tsx:571"
     expect:
@@ -43,12 +56,14 @@ cases:
       - { file: "packages/excalidraw/animatedTrail.ts", lines: [147, 151] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [2325, 2755] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [583, 11446] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [4975, 5022] }
   - id: G05
     query: "scripts/buildUtils.js:33"
     expect:
       - { file: "scripts/buildUtils.js", lines: [29, 38] }
       - { file: "scripts/buildUtils.js", lines: [56, 62] }
       - { file: "scripts/buildUtils.js", lines: [1, 67] }
+      - { file: "scripts/buildUtils.js", lines: [64, 66] }
   - id: G06
     query: "packages/element/src/textMeasurements.ts:159"
     expect:
@@ -62,6 +77,9 @@ cases:
       - { file: "packages/excalidraw/scene/export.ts", lines: [96, 128] }
       - { file: "packages/excalidraw/wysiwyg/textWysiwyg.tsx", lines: [572, 628] }
       - { file: "packages/excalidraw/wysiwyg/textWysiwyg.tsx", lines: [634, 703] }
+      - { file: "packages/element/src/textMeasurements.ts", lines: [207, 209] }
+      - { file: "packages/element/src/textWrapping.ts", lines: [514, 516] }
+      - { file: "packages/excalidraw/wysiwyg/textWysiwyg.tsx", lines: [601, 605] }
   - id: G07
     query: "packages/excalidraw/components/HelpDialog.tsx:84"
     expect:
@@ -117,6 +135,35 @@ cases:
       - { file: "packages/excalidraw/tests/drawShape.test.tsx", lines: [1, 859] }
       - { file: "packages/excalidraw/tests/drawShape.test.tsx", lines: [511, 521] }
       - { file: "packages/excalidraw/drawShapeTrail.ts", lines: [58, 60] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [188, 193] }
+      - { file: "packages/excalidraw/lasso/index.ts", lines: [199, 205] }
+      - { file: "packages/excalidraw/actions/actionFinalize.tsx", lines: [57, 420] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8993, 9412] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7928, 7929] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7931, 7932] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [9451, 10298] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [4975, 5022] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [49, 87] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1864, 1870] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [376, 467] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [469, 655] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [657, 877] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [879, 922] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [926, 1201] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1203, 1812] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1814, 1859] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1911, 1917] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1919, 1925] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1928, 1970] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1972, 2020] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2058, 2064] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2066, 2072] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2074, 2090] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2093, 2135] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2137, 2167] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2169, 2221] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [76, 82] }
+      - { file: "packages/excalidraw/lasso/index.ts", lines: [151, 157] }
   - id: G10
     query: "packages/element/src/linearElementEditor.ts:431"
     expect:
@@ -127,6 +174,11 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [583, 11446] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [8990, 9413] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [2325, 2755] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [1227, 1241] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [1350, 1364] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7149, 7155] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [5135, 5618] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8993, 9412] }
   - id: G11
     query: "packages/excalidraw/components/App.tsx:8061 packages/excalidraw/components/App.tsx:11442"
     expect:
@@ -136,6 +188,8 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [4293, 4507] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [2141, 2316] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [2325, 2755] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2304, 2304] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7727, 7760] }
   - id: G12
     query: "packages/excalidraw/lasso/index.ts:89"
     expect:
@@ -153,29 +207,57 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [2325, 2755] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [583, 11446] }
       - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1, 2223] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8993, 9412] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [49, 87] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1864, 1870] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2304, 2304] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7727, 7760] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7928, 7929] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [4975, 5022] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [376, 467] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [469, 655] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [657, 877] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [879, 922] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [926, 1201] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1203, 1812] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1814, 1859] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1911, 1917] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1919, 1925] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1928, 1970] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [1972, 2020] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2058, 2064] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2066, 2072] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2074, 2090] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2093, 2135] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2137, 2167] }
+      - { file: "packages/excalidraw/tests/lasso.test.tsx", lines: [2169, 2221] }
   - id: G13
     query: "scripts/buildBase.js:28"
     expect:
       - { file: "scripts/buildBase.js", lines: [24, 32] }
       - { file: "scripts/buildBase.js", lines: [44, 50] }
       - { file: "scripts/buildBase.js", lines: [1, 55] }
+      - { file: "scripts/buildBase.js", lines: [52, 54] }
   - id: G14
     query: "packages/excalidraw/components/IconPicker.tsx:310"
     expect:
       - { file: "packages/excalidraw/components/IconPicker.tsx", lines: [286, 333] }
       - { file: "packages/excalidraw/actions/actionProperties.tsx", lines: [1, 2323] }
+      - { file: "packages/excalidraw/actions/actionProperties.tsx", lines: [2003, 2055] }
   - id: G15
     query: "packages/excalidraw/fonts/Fonts.ts:358"
     expect:
       - { file: "packages/excalidraw/fonts/Fonts.ts", lines: [333, 377] }
       - { file: "packages/excalidraw/fonts/Fonts.ts", lines: [229, 264] }
       - { file: "packages/excalidraw/scene/export.ts", lines: [969, 1188] }
+      - { file: "packages/excalidraw/scene/export.ts", lines: [1108, 1111] }
   - id: G16
     query: "packages/excalidraw/components/App.clipboard.ts:400"
     expect:
       - { file: "packages/excalidraw/components/App.clipboard.ts", lines: [376, 425] }
       - { file: "packages/excalidraw/components/App.clipboard.ts", lines: [112, 291] }
       - { file: "packages/excalidraw/components/App.clipboard.ts", lines: [73, 638] }
+      - { file: "packages/excalidraw/components/App.clipboard.ts", lines: [315, 371] }
   - id: G17
     query: "packages/element/src/flowchart.ts:752 packages/element/src/flowchart.ts:463"
     expect:
@@ -186,6 +268,7 @@ cases:
       - { file: "packages/element/src/flowchart.ts", lines: [470, 580] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [3304, 3382] }
       - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [53, 95] }
+      - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [140, 144] }
   - id: G18
     query: "packages/math/src/polygon.ts:76"
     expect:
@@ -199,12 +282,19 @@ cases:
       - { file: "packages/excalidraw/lasso/utils.ts", lines: [37, 148] }
       - { file: "packages/utils/src/shape.ts", lines: [267, 296] }
       - { file: "packages/utils/src/shape.ts", lines: [298, 352] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [252, 256] }
+      - { file: "packages/utils/tests/geometry.test.ts", lines: [46, 51] }
+      - { file: "packages/element/src/shape.ts", lines: [670, 672] }
+      - { file: "packages/utils/src/shape.ts", lines: [315, 317] }
   - id: G19
     query: "packages/element/src/renderElement.ts:1380"
     expect:
       - { file: "packages/element/src/renderElement.ts", lines: [1362, 1416] }
       - { file: "packages/excalidraw/eraser/index.ts", lines: [196, 304] }
       - { file: "packages/excalidraw/eraser/index.ts", lines: [84, 186] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [239, 243] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [110, 115] }
+      - { file: "packages/excalidraw/eraser/index.ts", lines: [146, 151] }
   - id: G20
     query: "packages/excalidraw/clients.ts:20"
     expect:
@@ -214,6 +304,9 @@ cases:
       - { file: "packages/excalidraw/clients.ts", lines: [56, 258] }
       - { file: "packages/excalidraw/laserTrails.ts", lines: [79, 134] }
       - { file: "packages/excalidraw/renderer/interactiveScene.ts", lines: [1614, 2152] }
+      - { file: "packages/excalidraw/actions/actionNavigate.tsx", lines: [61, 150] }
+      - { file: "packages/excalidraw/laserTrails.ts", lines: [99, 101] }
+      - { file: "packages/excalidraw/renderer/interactiveScene.ts", lines: [1905, 1908] }
   - id: G21
     query: "packages/excalidraw/hooks/useOutsideClick.ts:86"
     expect:
@@ -222,12 +315,15 @@ cases:
       - { file: "packages/excalidraw/components/Sidebar/Sidebar.tsx", lines: [1, 234] }
       - { file: "packages/excalidraw/components/dropdownMenu/DropdownMenuContent.tsx", lines: [17, 114] }
       - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [147, 716] }
+      - { file: "packages/excalidraw/components/Sidebar/Sidebar.tsx", lines: [49, 166] }
+      - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [470, 705] }
   - id: G22
     query: "packages/excalidraw/clipboard.ts:223"
     expect:
       - { file: "packages/excalidraw/clipboard.ts", lines: [213, 231] }
       - { file: "packages/excalidraw/clipboard.ts", lines: [233, 251] }
       - { file: "packages/excalidraw/clipboard.ts", lines: [331, 364] }
+      - { file: "packages/excalidraw/clipboard.ts", lines: [338, 339] }
   - id: G23
     query: "packages/common/src/binary-heap.ts:18 packages/common/src/binary-heap.ts:90"
     expect:
@@ -237,6 +333,18 @@ cases:
       - { file: "packages/common/src/binary-heap.ts", lines: [107, 109] }
       - { file: "packages/common/tests/binary-heap.test.ts", lines: [1, 110] }
       - { file: "packages/element/src/elbowArrow.ts", lines: [1653, 1762] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [25, 25] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [69, 77] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [79, 87] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [33, 33] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [40, 45] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [49, 49] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [55, 55] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [63, 63] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [71, 71] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [81, 81] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [99, 99] }
+      - { file: "packages/common/tests/binary-heap.test.ts", lines: [93, 107] }
   - id: G24
     query: "packages/element/src/zindex.ts:605"
     expect:
@@ -244,6 +352,8 @@ cases:
       - { file: "packages/element/src/zindex.ts", lines: [642, 652] }
       - { file: "packages/element/src/zindex.ts", lines: [654, 664] }
       - { file: "packages/excalidraw/actions/actionZindex.tsx", lines: [1, 157] }
+      - { file: "packages/excalidraw/actions/actionZindex.tsx", lines: [89, 95] }
+      - { file: "packages/excalidraw/actions/actionZindex.tsx", lines: [127, 133] }
   - id: G25
     query: "packages/laser-pointer/src/simplify.ts:31"
     expect:
@@ -252,6 +362,8 @@ cases:
       - { file: "packages/element/src/shape.ts", lines: [1338, 1347] }
       - { file: "packages/excalidraw/animatedTrail.ts", lines: [161, 206] }
       - { file: "packages/excalidraw/animatedTrail.ts", lines: [208, 225] }
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [174, 176] }
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [209, 218] }
   - id: G26
     query: "packages/excalidraw/components/App.arrowText.ts:138 packages/excalidraw/components/App.arrowText.ts:205"
     expect:
@@ -263,6 +375,10 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [8964, 8973] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [8975, 8988] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [7526, 7951] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8993, 9412] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8967, 8972] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8978, 8987] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [7928, 7929] }
   - id: G27
     query: "packages/excalidraw/data/encode.ts:179"
     expect:
@@ -271,6 +387,8 @@ cases:
       - { file: "packages/excalidraw/data/encode.ts", lines: [255, 291] }
       - { file: "packages/excalidraw/data/encode.ts", lines: [322, 354] }
       - { file: "packages/excalidraw/data/encode.ts", lines: [374, 412] }
+      - { file: "packages/excalidraw/data/encode.ts", lines: [261, 265] }
+      - { file: "packages/excalidraw/data/encode.ts", lines: [276, 280] }
   - id: G28
     query: "packages/math/src/angle.ts:57 packages/math/src/angle.ts:76"
     expect:
@@ -285,8 +403,10 @@ cases:
       - { file: "packages/element/src/bucketFill.ts", lines: [515, 534] }
       - { file: "packages/element/src/bucketFill.ts", lines: [717, 1218] }
       - { file: "packages/element/src/bucketFill.ts", lines: [1595, 1603] }
+      - { file: "packages/element/src/bucketFill.ts", lines: [1031, 1044] }
   - id: G30
     query: "packages/excalidraw/components/LibraryMenuItems.tsx:269"
     expect:
       - { file: "packages/excalidraw/components/LibraryMenuItems.tsx", lines: [60, 461] }
       - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [1, 350] }
+      - { file: "packages/excalidraw/components/LibraryMenu.tsx", lines: [65, 172] }

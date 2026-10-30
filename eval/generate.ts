@@ -7,7 +7,7 @@ import { assertPinned, loadCorpora } from './harness/corpora.ts';
 import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
 import { parseCaseFile } from './harness/cases.ts';
-import { answerAgain, callCases, impactCases, type CallCase } from './oracle/call-cases.ts';
+import { answerAgain, callCases, impactCases, union, type CallCase } from './oracle/call-cases.ts';
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
@@ -105,7 +105,7 @@ async function usesAgain(oracle: LspOracle, cases: CallCase[]): Promise<CallCase
       continue;
     }
     const refs = await oracle.references(c.query, only);
-    answered.push({ ...c, expect: refs.map((ref) => ({ file: ref.file, lines: [ref.line + 1, ref.line + 1] })) });
+    answered.push({ ...c, expect: union(c.expect, refs.map((ref) => ({ file: ref.file, lines: [ref.line + 1, ref.line + 1] as [number, number] }))) });
   }
   return answered;
 }

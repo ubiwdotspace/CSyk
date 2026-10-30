@@ -12,6 +12,13 @@ cases:
       - { file: "react/features/base/popover/components/Popover.web.tsx", lines: [262, 348] }
       - { file: "react/features/toolbox/components/web/JitsiPortal.tsx", lines: [48, 56] }
       - { file: "react/features/base/config/functions.any.ts", lines: [314, 396] }
+      - { file: "react/features/toolbox/components/web/DialogPortal.ts", lines: [89, 100] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [397, 642] }
+      - { file: "modules/API/API.js", lines: [1005, 1011] }
+      - { file: "react/features/base/config/functions.any.ts", lines: [169, 170] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [620, 626] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [1, 870] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [131, 346] }
   - id: G02
     query: "react/features/base/toolbox/components/BaseVideoMuteButton.ts:44"
     expect:
@@ -25,18 +32,25 @@ cases:
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [312, 331] }
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [339, 343] }
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
+      - { file: "react/features/audio-translation/components/web/AudioTranslationButton.tsx", lines: [60, 62] }
+      - { file: "react/features/pip/components/web/PiPTriggerButton.tsx", lines: [45, 50] }
+      - { file: "react/features/toolbox/components/native/ScreenSharingAndroidButton.ts", lines: [44, 48] }
   - id: G03
     query: "react/features/subtitles/components/AbstractCaptions.tsx:49 react/features/subtitles/components/AbstractCaptions.tsx:111"
     expect:
       - { file: "react/features/subtitles/components/AbstractCaptions.tsx", lines: [42, 58] }
       - { file: "react/features/subtitles/components/AbstractCaptions.tsx", lines: [98, 122] }
       - { file: "react/features/subtitles/components/AbstractCaptions.tsx", lines: [135, 146] }
+      - { file: "react/features/subtitles/components/web/Captions.tsx", lines: [157, 167] }
   - id: G04
     query: "react/features/analytics/functions.ts:184 react/features/analytics/functions.ts:318"
     expect:
       - { file: "react/features/analytics/functions.ts", lines: [161, 288] }
       - { file: "react/features/analytics/functions.ts", lines: [299, 339] }
       - { file: "react/features/analytics/functions.ts", lines: [67, 151] }
+      - { file: "react/features/analytics/middleware.ts", lines: [1, 217] }
+      - { file: "react/features/analytics/middleware.ts", lines: [123, 130] }
+      - { file: "react/features/analytics/middleware.ts", lines: [87, 216] }
   - id: G05
     query: "react/features/base/toolbox/components/AbstractToolboxItem.tsx:214"
     expect:
@@ -45,6 +59,8 @@ cases:
       - { file: "react/features/base/toolbox/components/AbstractToolboxItem.tsx", lines: [170, 172] }
       - { file: "react/features/base/toolbox/components/AbstractToolboxItem.tsx", lines: [181, 183] }
       - { file: "react/features/base/toolbox/components/AbstractToolboxItem.tsx", lines: [191, 195] }
+      - { file: "react/features/base/toolbox/components/ToolboxItem.web.tsx", lines: [74, 146] }
+      - { file: "react/features/base/toolbox/components/ToolboxItem.native.tsx", lines: [35, 82] }
   - id: G06
     query: "react/features/dynamic-branding/reducer.ts:299 react/features/dynamic-branding/reducer.ts:211"
     expect:
@@ -58,18 +74,23 @@ cases:
       - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [184, 204] }
       - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [214, 231] }
       - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [125, 344] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [306, 307] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [323, 324] }
   - id: G08
     query: "react/features/base/media/components/AbstractVideoTrack.tsx:100 react/features/base/media/components/AbstractVideoTrack.tsx:132"
     expect:
       - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [75, 123] }
       - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [131, 137] }
       - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [55, 138] }
+      - { file: "react/features/base/media/components/native/VideoTrack.tsx", lines: [21, 27] }
+      - { file: "react/features/base/media/components/web/VideoTrack.tsx", lines: [153, 176] }
   - id: G09
     query: "react/features/chat/reducer.ts:547 react/features/chat/reducer.ts:516"
     expect:
       - { file: "react/features/chat/reducer.ts", lines: [535, 560] }
       - { file: "react/features/chat/reducer.ts", lines: [514, 524] }
       - { file: "react/features/chat/reducer.ts", lines: [1, 561] }
+      - { file: "react/features/chat/reducer.ts", lines: [89, 503] }
   - id: G10
     query: "react/features/base/util/uri.ts:73"
     expect:
@@ -87,22 +108,43 @@ cases:
       - { file: "react/features/invite/functions.ts", lines: [744, 759] }
       - { file: "react/features/recent-list/functions.native.ts", lines: [19, 40] }
       - { file: "react/features/recent-list/functions.web.ts", lines: [11, 23] }
+      - { file: "react/features/base/util/uri.ts", lines: [368, 368] }
+      - { file: "react/features/base/conference/middleware.any.ts", lines: [641, 746] }
+      - { file: "react/features/base/jwt/middleware.any.ts", lines: [153, 246] }
+      - { file: "react/features/base/known-domains/middleware.ts", lines: [34, 38] }
+      - { file: "react/features/load-test/loadTestParticipant.ts", lines: [1, 200] }
+      - { file: "react/features/mobile/audio-mode/middleware.ts", lines: [1, 173] }
+      - { file: "react/features/recent-list/middleware.ts", lines: [52, 74] }
+      - { file: "react/features/time-timer/middleware.ts", lines: [1, 226] }
+      - { file: "react/features/app/actions.native.ts", lines: [54, 169] }
+      - { file: "react/features/app/actions.web.ts", lines: [42, 95] }
+      - { file: "react/features/authentication/middleware.any.ts", lines: [256, 301] }
+      - { file: "react/features/base/config/actions.ts", lines: [98, 142] }
+      - { file: "react/features/base/config/actions.ts", lines: [154, 180] }
+      - { file: "react/features/base/jwt/middleware.web.ts", lines: [25, 100] }
+      - { file: "react/features/mobile/audio-mode/middleware.ts", lines: [31, 84] }
+      - { file: "react/features/preload/preload.web.ts", lines: [54, 71] }
+      - { file: "react/features/recent-list/functions.web.ts", lines: [14, 22] }
+      - { file: "react/features/time-timer/middleware.ts", lines: [85, 225] }
   - id: G11
     query: "react/features/recent-list/reducer.ts:121"
     expect:
       - { file: "react/features/recent-list/reducer.ts", lines: [112, 135] }
       - { file: "react/features/recent-list/reducer.ts", lines: [1, 152] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [47, 62] }
   - id: G12
     query: "react/features/base/user-interaction/middleware.ts:68"
     expect:
       - { file: "react/features/base/user-interaction/middleware.ts", lines: [60, 70] }
       - { file: "react/features/base/user-interaction/middleware.ts", lines: [1, 87] }
+      - { file: "react/features/base/user-interaction/middleware.ts", lines: [21, 33] }
   - id: G13
     query: "react/features/screen-share/actions.any.ts:15"
     expect:
       - { file: "react/features/screen-share/actions.any.ts", lines: [14, 19] }
       - { file: "react/features/device-selection/actions.web.ts", lines: [98, 122] }
       - { file: "react/features/settings/components/web/SettingsDialog.tsx", lines: [131, 372] }
+      - { file: "react/features/device-selection/actions.web.ts", lines: [99, 121] }
   - id: G14
     query: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx:207"
     expect:
@@ -116,17 +158,20 @@ cases:
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [115, 437] }
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
       - { file: "react/features/toolbox/components/web/VideoMuteButton.tsx", lines: [177, 190] }
+      - { file: "react/features/toolbox/components/web/AudioMuteButton.tsx", lines: [158, 171] }
   - id: G16
     query: "react/features/base/sounds/middleware.any.ts:109"
     expect:
       - { file: "react/features/base/sounds/middleware.any.ts", lines: [98, 115] }
       - { file: "react/features/base/sounds/middleware.any.ts", lines: [1, 130] }
+      - { file: "react/features/base/sounds/middleware.any.ts", lines: [122, 128] }
   - id: G17
     query: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts:30"
     expect:
       - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [18, 37] }
       - { file: "react/features/analytics/handlers/AmplitudeHandler.ts", lines: [12, 91] }
       - { file: "react/features/analytics/functions.ts", lines: [67, 151] }
+      - { file: "react/features/analytics/handlers/AmplitudeHandler.ts", lines: [32, 35] }
   - id: G18
     query: "react/features/av-moderation/functions.ts:172 react/features/av-moderation/functions.ts:193"
     expect:
@@ -145,6 +190,41 @@ cases:
       - { file: "react/features/video-menu/actions.any.ts", lines: [92, 104] }
       - { file: "modules/API/API.js", lines: [1369, 1388] }
       - { file: "react/features/av-moderation/actions.ts", lines: [92, 98] }
+      - { file: "react/features/video-menu/components/AbstractMuteButton.ts", lines: [102, 111] }
+      - { file: "react/features/video-menu/components/web/MuteButton.tsx", lines: [25, 70] }
+      - { file: "react/features/video-menu/components/web/MuteButton.tsx", lines: [41, 42] }
+      - { file: "react/features/base/media/middleware.any.ts", lines: [1, 340] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [828, 978] }
+      - { file: "react/features/talk-while-muted/middleware.ts", lines: [1, 76] }
+      - { file: "react/features/video-menu/components/native/AskUnmuteButton.ts", lines: [89, 98] }
+      - { file: "react/features/video-menu/components/web/ParticipantContextMenu.tsx", lines: [125, 414] }
+      - { file: "modules/API/API.js", lines: [1070, 1280] }
+      - { file: "react/features/base/media/middleware.any.ts", lines: [67, 170] }
+      - { file: "react/features/talk-while-muted/middleware.ts", lines: [44, 69] }
+      - { file: "react/features/video-menu/components/web/ParticipantContextMenu.tsx", lines: [143, 144] }
+      - { file: "react/features/video-menu/components/web/ParticipantContextMenu.tsx", lines: [145, 146] }
+      - { file: "react/features/video-menu/actions.any.ts", lines: [93, 103] }
+      - { file: "react/features/participants-pane/components/web/MeetingParticipantItem.tsx", lines: [295, 329] }
+      - { file: "react/features/video-menu/components/web/ParticipantContextMenu.tsx", lines: [205, 206] }
+      - { file: "react/features/video-menu/components/native/MuteButton.ts", lines: [15, 20] }
+      - { file: "react/features/participants-pane/components/web/ParticipantQuickAction.tsx", lines: [58, 162] }
+      - { file: "react/features/video-menu/components/web/AskToUnmuteButton.tsx", lines: [22, 74] }
+      - { file: "modules/API/API.js", lines: [216, 222] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [93, 97] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [903, 906] }
+      - { file: "react/features/participants-pane/components/web/ParticipantQuickAction.tsx", lines: [67, 69] }
+      - { file: "react/features/video-menu/components/web/AskToUnmuteButton.tsx", lines: [30, 42] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [939, 942] }
+      - { file: "react/features/participants-pane/components/web/ParticipantQuickAction.tsx", lines: [71, 73] }
+      - { file: "modules/API/API.js", lines: [209, 215] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [921, 924] }
+      - { file: "react/features/participants-pane/components/web/ParticipantQuickAction.tsx", lines: [75, 77] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [1, 1004] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [517, 518] }
+      - { file: "react/features/base/participants/middleware.ts", lines: [488, 568] }
+      - { file: "react/features/participants-pane/components/native/MeetingParticipantItem.tsx", lines: [138, 167] }
+      - { file: "react/features/participants-pane/components/web/MeetingParticipantContextMenu.tsx", lines: [84, 124] }
+      - { file: "react/features/video-menu/components/web/RemoteVideoMenuTriggerButton.tsx", lines: [167, 192] }
   - id: G19
     query: "react/features/connection-indicator/functions.ts:24 react/features/connection-indicator/functions.ts:36"
     expect:
@@ -155,6 +235,14 @@ cases:
       - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [454, 467] }
       - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [424, 444] }
       - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [749, 783] }
+      - { file: "react/features/base/participants/components/ParticipantView.native.tsx", lines: [237, 250] }
+      - { file: "react/features/connection-indicator/components/native/ConnectionIndicator.tsx", lines: [179, 204] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicator.tsx", lines: [380, 403] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicatorContent.tsx", lines: [343, 374] }
+      - { file: "react/features/video-menu/components/native/ConnectionStatusComponent.tsx", lines: [462, 474] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [243, 393] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [393, 398] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [769, 782] }
   - id: G20
     query: "react/features/chat/components/native/MessageRecipient.tsx:159 react/features/chat/components/native/MessageRecipient.tsx:76"
     expect:
@@ -176,6 +264,7 @@ cases:
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [115, 437] }
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
       - { file: "react/features/toolbox/components/web/VideoMuteButton.tsx", lines: [177, 190] }
+      - { file: "react/features/toolbox/components/web/AudioMuteButton.tsx", lines: [158, 171] }
   - id: G23
     query: "react/features/calendar-sync/functions.web.ts:110"
     expect:
@@ -188,6 +277,13 @@ cases:
       - { file: "react/features/settings/components/web/CalendarTab.tsx", lines: [120, 124] }
       - { file: "react/features/settings/components/web/CalendarTab.tsx", lines: [159, 161] }
       - { file: "react/features/calendar-sync/actions.web.ts", lines: [101, 104] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [55, 56] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [199, 219] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [231, 266] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [278, 290] }
+      - { file: "react/features/calendar-sync/components/AddMeetingUrlButton.web.tsx", lines: [78, 84] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [65, 72] }
+      - { file: "react/features/calendar-sync/actions.web.ts", lines: [209, 209] }
   - id: G24
     query: "react/features/whiteboard/middleware.web.ts:143 react/features/whiteboard/middleware.web.ts:203"
     expect:
@@ -204,6 +300,13 @@ cases:
       - { file: "react/features/base/connection/actions.any.ts", lines: [287, 302] }
       - { file: "react/features/video-menu/components/native/DemoteToVisitorDialog.tsx", lines: [21, 38] }
       - { file: "react/features/authentication/components/native/LoginRetryDialog.tsx", lines: [15, 42] }
+      - { file: "react/features/visitors/actions.ts", lines: [98, 103] }
+      - { file: "react/features/authentication/actions.native.ts", lines: [25, 43] }
+      - { file: "react/features/video-menu/components/web/DemoteToVisitorDialog.tsx", lines: [22, 40] }
+      - { file: "react/features/video-menu/components/native/DemoteToVisitorDialog.tsx", lines: [23, 27] }
+      - { file: "react/features/video-menu/components/web/DemoteToVisitorDialog.tsx", lines: [26, 28] }
+      - { file: "react/features/authentication/components/native/LoginDialog.tsx", lines: [258, 260] }
+      - { file: "react/features/authentication/components/native/LoginRetryDialog.tsx", lines: [22, 32] }
   - id: G26
     query: "react/features/video-menu/components/AbstractMuteVideoButton.ts:87 react/features/video-menu/components/AbstractMuteVideoButton.ts:43"
     expect:
@@ -214,6 +317,7 @@ cases:
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [115, 437] }
       - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
       - { file: "react/features/toolbox/components/web/VideoMuteButton.tsx", lines: [177, 190] }
+      - { file: "react/features/toolbox/components/web/AudioMuteButton.tsx", lines: [158, 171] }
   - id: G27
     query: "react/features/recording/components/LiveStream/native/LiveStreamButton.ts:54 react/features/recording/components/LiveStream/native/LiveStreamButton.ts:38"
     expect:
@@ -252,3 +356,5 @@ cases:
       - { file: "react/features/recording/components/Recording/AbstractStartRecordingDialog.ts", lines: [758, 760] }
       - { file: "react/features/recording/components/Recording/AbstractStartRecordingDialog.ts", lines: [767, 769] }
       - { file: "react/features/recording/components/Recording/AbstractStartRecordingDialog.ts", lines: [785, 787] }
+      - { file: "react/features/recording/components/Recording/native/RecordingTranscriptionDialog.tsx", lines: [42, 93] }
+      - { file: "react/features/recording/components/Recording/web/RecordingTranscriptionDialog.tsx", lines: [41, 95] }

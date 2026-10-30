@@ -13,6 +13,47 @@ cases:
       - { file: "tests/persistSync.test.tsx", lines: [1, 761] }
       - { file: "tests/persistSync.test.tsx", lines: [101, 111] }
       - { file: "tests/persistSync.test.tsx", lines: [695, 705] }
+      - { file: "src/middleware/persist.ts", lines: [190, 190] }
+      - { file: "tests/persistAsync.test.tsx", lines: [77, 77] }
+      - { file: "tests/persistAsync.test.tsx", lines: [124, 124] }
+      - { file: "tests/persistAsync.test.tsx", lines: [156, 156] }
+      - { file: "tests/persistAsync.test.tsx", lines: [240, 240] }
+      - { file: "tests/persistAsync.test.tsx", lines: [298, 298] }
+      - { file: "tests/persistAsync.test.tsx", lines: [353, 353] }
+      - { file: "tests/persistAsync.test.tsx", lines: [395, 395] }
+      - { file: "tests/persistAsync.test.tsx", lines: [437, 437] }
+      - { file: "tests/persistAsync.test.tsx", lines: [494, 494] }
+      - { file: "tests/persistAsync.test.tsx", lines: [539, 539] }
+      - { file: "tests/persistAsync.test.tsx", lines: [590, 590] }
+      - { file: "tests/persistAsync.test.tsx", lines: [627, 627] }
+      - { file: "tests/persistAsync.test.tsx", lines: [656, 656] }
+      - { file: "tests/persistAsync.test.tsx", lines: [738, 738] }
+      - { file: "tests/persistAsync.test.tsx", lines: [777, 777] }
+      - { file: "tests/persistAsync.test.tsx", lines: [836, 836] }
+      - { file: "tests/persistAsync.test.tsx", lines: [870, 870] }
+      - { file: "tests/persistAsync.test.tsx", lines: [954, 954] }
+      - { file: "tests/persistAsync.test.tsx", lines: [997, 997] }
+      - { file: "tests/persistAsync.test.tsx", lines: [1040, 1040] }
+      - { file: "tests/persistSync.test.tsx", lines: [61, 61] }
+      - { file: "tests/persistSync.test.tsx", lines: [77, 96] }
+      - { file: "tests/persistSync.test.tsx", lines: [106, 106] }
+      - { file: "tests/persistSync.test.tsx", lines: [155, 155] }
+      - { file: "tests/persistSync.test.tsx", lines: [190, 190] }
+      - { file: "tests/persistSync.test.tsx", lines: [217, 217] }
+      - { file: "tests/persistSync.test.tsx", lines: [244, 244] }
+      - { file: "tests/persistSync.test.tsx", lines: [284, 284] }
+      - { file: "tests/persistSync.test.tsx", lines: [314, 314] }
+      - { file: "tests/persistSync.test.tsx", lines: [350, 350] }
+      - { file: "tests/persistSync.test.tsx", lines: [389, 389] }
+      - { file: "tests/persistSync.test.tsx", lines: [434, 434] }
+      - { file: "tests/persistSync.test.tsx", lines: [453, 453] }
+      - { file: "tests/persistSync.test.tsx", lines: [490, 490] }
+      - { file: "tests/persistSync.test.tsx", lines: [510, 510] }
+      - { file: "tests/persistSync.test.tsx", lines: [531, 531] }
+      - { file: "tests/persistSync.test.tsx", lines: [559, 559] }
+      - { file: "tests/persistSync.test.tsx", lines: [650, 650] }
+      - { file: "tests/persistSync.test.tsx", lines: [678, 678] }
+      - { file: "tests/persistSync.test.tsx", lines: [700, 700] }
   - id: D02
     query: "Experience"
     direction: out
@@ -36,6 +77,7 @@ cases:
     direction: in
     expect:
       - { file: "examples/demo/src/components/Fireflies.jsx", lines: [31, 67] }
+      - { file: "examples/demo/src/components/Fireflies.jsx", lines: [62, 64] }
   - id: D06
     query: "CopyButton"
     direction: out
@@ -48,6 +90,7 @@ cases:
       - { file: "tests/shallow.test.tsx", lines: [37, 55] }
       - { file: "tests/shallow.test.tsx", lines: [128, 138] }
       - { file: "tests/shallow.test.tsx", lines: [166, 180] }
+      - { file: "tests/shallow.test.tsx", lines: [169, 169] }
   - id: D08
     query: "CodePreview"
     direction: out
@@ -59,3 +102,4 @@ cases:
     direction: in
     expect:
       - { file: "rollup.config.mjs", lines: [93, 105] }
+      - { file: "rollup.config.mjs", lines: [1, 106] }

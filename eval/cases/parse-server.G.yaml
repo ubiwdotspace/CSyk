@@ -14,6 +14,11 @@ cases:
       - { file: "src/Controllers/DatabaseController.js", lines: [874, 932] }
       - { file: "src/Adapters/Storage/Postgres/PostgresStorageAdapter.js", lines: [1904, 1920] }
       - { file: "src/Controllers/DatabaseController.js", lines: [804, 825] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [657, 727] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [499, 499] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [915, 921] }
+      - { file: "src/Adapters/Storage/Postgres/PostgresStorageAdapter.js", lines: [1913, 1919] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [807, 822] }
   - id: G02
     query: "src/Security/CheckGroups/CheckGroupServerConfig.js:58"
     expect:
@@ -53,6 +58,31 @@ cases:
       - { file: "src/triggers.js", lines: [1080, 1119] }
       - { file: "src/Controllers/HooksController.js", lines: [104, 112] }
       - { file: "src/cloud-code/Parse.Cloud.js", lines: [1, 879] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [155, 165] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [178, 180] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [210, 231] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [257, 278] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [303, 320] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [341, 350] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [370, 379] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [404, 421] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [452, 462] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [488, 498] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [524, 545] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [571, 581] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [670, 680] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [709, 719] }
+      - { file: "src/cloud-code/Parse.Cloud.js", lines: [605, 613] }
+      - { file: "src/Routers/FilesRouter.js", lines: [229, 234] }
+      - { file: "src/Routers/FilesRouter.js", lines: [243, 248] }
+      - { file: "src/Routers/FilesRouter.js", lines: [272, 277] }
+      - { file: "src/Routers/FilesRouter.js", lines: [583, 588] }
+      - { file: "src/Routers/FilesRouter.js", lines: [552, 656] }
+      - { file: "src/Routers/FilesRouter.js", lines: [717, 722] }
+      - { file: "src/Routers/FilesRouter.js", lines: [658, 793] }
+      - { file: "src/Routers/FilesRouter.js", lines: [795, 835] }
+      - { file: "src/Routers/FilesRouter.js", lines: [850, 855] }
+      - { file: "src/Routers/FilesRouter.js", lines: [837, 882] }
   - id: G08
     query: "src/Adapters/Files/FilesAdapter.js:114"
     expect:
@@ -76,6 +106,10 @@ cases:
       - { file: "src/Auth.js", lines: [130, 216] }
       - { file: "src/Auth.js", lines: [1, 693] }
       - { file: "src/Auth.js", lines: [88, 127] }
+      - { file: "src/Auth.js", lines: [232, 252] }
+      - { file: "src/Auth.js", lines: [98, 106] }
+      - { file: "src/Auth.js", lines: [166, 174] }
+      - { file: "src/Auth.js", lines: [223, 231] }
   - id: G11
     query: "src/Routers/LogsRouter.js:10"
     expect:
@@ -90,6 +124,7 @@ cases:
       - { file: "src/cli/utils/runner.js", lines: [1, 50] }
       - { file: "src/cli/parse-live-query-server.js", lines: [1, 12] }
       - { file: "src/cli/parse-server.js", lines: [1, 119] }
+      - { file: "src/cli/utils/runner.js", lines: [46, 48] }
   - id: G13
     query: "src/Routers/UsersRouter.js:870"
     expect:
@@ -106,6 +141,14 @@ cases:
       - { file: "src/Adapters/Cache/RedisCacheAdapter.js", lines: [83, 87] }
       - { file: "src/StatusHandler.js", lines: [42, 44] }
       - { file: "src/StatusHandler.js", lines: [60, 68] }
+      - { file: "src/StatusHandler.js", lines: [43, 43] }
+      - { file: "src/StatusHandler.js", lines: [61, 66] }
+      - { file: "src/StatusHandler.js", lines: [96, 101] }
+      - { file: "src/StatusHandler.js", lines: [111, 121] }
+      - { file: "src/StatusHandler.js", lines: [183, 198] }
+      - { file: "src/StatusHandler.js", lines: [301, 305] }
+      - { file: "src/StatusHandler.js", lines: [308, 316] }
+      - { file: "src/StatusHandler.js", lines: [318, 327] }
   - id: G15
     query: "src/Adapters/Auth/qq.js:81"
     expect:
@@ -125,6 +168,7 @@ cases:
       - { file: "src/Adapters/Auth/index.js", lines: [268, 339] }
       - { file: "src/Adapters/Auth/index.js", lines: [274, 282] }
       - { file: "src/Adapters/Auth/index.js", lines: [284, 315] }
+      - { file: "src/Adapters/Auth/index.js", lines: [290, 313] }
   - id: G18
     query: "src/Controllers/ParseGraphQLController.js:108"
     expect:
@@ -146,6 +190,26 @@ cases:
       - { file: "benchmark/compare.js", lines: [137, 163] }
       - { file: "benchmark/compare.js", lines: [265, 295] }
       - { file: "benchmark/compare.js", lines: [1, 309] }
+      - { file: "benchmark/compare.js", lines: [153, 162] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [18, 22] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [24, 28] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [30, 34] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [36, 41] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [43, 47] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [51, 59] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [93, 97] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [1, 357] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [110, 120] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [122, 138] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [140, 152] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [154, 164] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [166, 182] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [184, 194] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [196, 206] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [208, 215] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [217, 227] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [229, 233] }
+      - { file: "spec/BenchmarkCompare.spec.js", lines: [235, 239] }
   - id: G21
     query: "src/Adapters/Cache/LRUCache.js:39"
     expect:
@@ -173,6 +237,7 @@ cases:
       - { file: "src/Routers/PushRouter.js", lines: [7, 9] }
       - { file: "src/Routers/SchemasRouter.js", lines: [131, 158] }
       - { file: "src/Routers/SecurityRouter.js", lines: [6, 20] }
+      - { file: "src/Routers/FilesRouter.js", lines: [316, 355] }
   - id: G23
     query: "src/Routers/FeaturesRouter.js:34"
     expect:
@@ -225,3 +290,4 @@ cases:
       - { file: "src/Routers/SessionsRouter.js", lines: [116, 138] }
       - { file: "src/Routers/UsersRouter.js", lines: [831, 877] }
       - { file: "src/PromiseRouter.js", lines: [14, 113] }
+      - { file: "src/Routers/AudiencesRouter.js", lines: [48, 50] }

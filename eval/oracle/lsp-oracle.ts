@@ -47,8 +47,11 @@ const containerKinds: ReadonlySet<SymbolKind> = new Set([
   SymbolKind.Property,
 ]);
 
-// Symbols a call is made from: not a local variable it is assigned to.
+// Symbols a call is made from: functions and classes, and a variable over
+// several lines, which holds a function (`const debug = function () {…}`),
+// not a one-line variable a result is assigned to.
 const callerKinds: ReadonlySet<SymbolKind> = new Set([SymbolKind.Function, SymbolKind.Method, SymbolKind.Constructor, SymbolKind.Class]);
+const holderKinds: ReadonlySet<SymbolKind> = new Set([SymbolKind.Variable, SymbolKind.Constant, SymbolKind.Property]);
 
 /**
  * Answers for cases from a language server itself (`tsc --lsp`, pyright,
@@ -125,10 +128,13 @@ export class LspOracle {
           : { ...span, startLine: 0, endLine: lastLine },
       );
     }
-    // pyright's incoming calls miss most files it has not opened: on django,
-    // all but 2 of condition()'s 13 callers. Its references, kept to calls
-    // and grouped by the function each is in, add the rest.
-    if (direction === 'in' && this.spec.name === 'pyright') {
+    // A server's incoming calls miss what lies outside the projects it has
+    // open: pyright's on django, all but 2 of condition()'s 13 callers; the
+    // TypeScript server's in a repo with no tsconfig.json over all its files
+    // (jitsi-meet's tsconfig.web.json and tsconfig.native.json), or with one
+    // that only references others, as Vite's and Nx's do. Its references,
+    // kept to calls and grouped by the function each is in, add the rest.
+    if (direction === 'in' && (this.spec.name === 'pyright' || this.spec.name === 'tsc')) {
       const have = new Set(spans.map((s) => `${s.file}:${s.startLine}`));
       for (const span of await this.callersByReference(at)) if (!have.has(`${span.file}:${span.startLine}`)) spans.push(span);
     }
@@ -221,13 +227,28 @@ export class LspOracle {
       const called = tree ? isCallAt(tree, ref.line, ref.character) || (property && isMemberAt(tree, ref.line, ref.character)) : false;
       tree?.delete();
       if (!called) continue;
-      const home = await this.containing(ref.file, ref.line, callerKinds);
+      const home = await this.callerAt(ref.file, ref.line);
       const span = home
         ? { file: ref.file, startLine: home.range.start.line, endLine: home.range.end.line, nameLine: home.selectionRange.start.line, nameColumn: home.selectionRange.start.character }
         : { file: ref.file, startLine: 0, endLine: text.split('\n').length - 1, nameLine: 0, nameColumn: 0 };
       callers.set(`${span.file}:${span.startLine}`, span);
     }
     return [...callers.values()];
+  }
+
+  // The innermost function, class or function-holding variable around [line].
+  private async callerAt(file: string, line: number): Promise<DocumentSymbol | undefined> {
+    let best: DocumentSymbol | undefined;
+    const visit = (symbols: DocumentSymbol[]) => {
+      for (const symbol of symbols) {
+        if (symbol.range.start.line > line || symbol.range.end.line < line) continue;
+        const spans = symbol.range.end.line > symbol.range.start.line;
+        if (callerKinds.has(symbol.kind) || (holderKinds.has(symbol.kind) && spans)) best = symbol;
+        visit(symbol.children ?? []);
+      }
+    };
+    visit(await this.lsp.documentSymbols(file));
+    return best;
   }
 
   async containing(file: string, line: number, kinds = containerKinds): Promise<DocumentSymbol | undefined> {
