@@ -215,8 +215,12 @@ export class LspService {
       startLine: s.range[0] - 1,
       endLine: s.range[1] - 1,
     }));
-    const isOurs = (spans: Span[]) => spans.some((span) => declared.some((d) => resolvesTo(span, d, lines)));
-    const ours = resolved.filter(({ spans }) => isOurs(spans)).map(({ p }) => p);
+    const bases = new Set(options.bases?.map((s) => `${s.file}:${s.line - 1}`));
+    // `super.m()`, and Python's `super().m()` or `super(C, self).m()`.
+    const viaSuper = (p: Mention) => /\bsuper(\([^)]*\))?\.$/.test(p.text.slice(0, p.character));
+    const isOurs = (p: Mention, spans: Span[]) =>
+      spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`))));
+    const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
     const found = await inCode(this.root, ours, options.where);
     // A Go method whose type is declared in another file has no parent, but is a method.
     if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial };
@@ -300,6 +304,11 @@ export type ReferenceOptions = {
   viaSupertypes?: boolean;
   /** Declarations that count as the symbol: overloads, supertypes' methods. */
   overloads?: readonly CodeSymbol[];
+  /**
+   * Those of [overloads] that are a supertype's methods: a call through the
+   * supertype may reach the symbol, but `super.m()` runs the supertype's own.
+   */
+  bases?: readonly CodeSymbol[];
   /** Which mentions in code count, such as calls only; all by default. */
   where?: (tree: Tree, line: number, column: number) => boolean;
   /** When to stop resolving mentions (a Date.now() time); five seconds from the start by default. */
