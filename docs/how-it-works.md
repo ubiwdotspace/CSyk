@@ -117,7 +117,8 @@ at most 200 callers a level, code before tests and nearest first.
 mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
 two levels up and may wait for a language server still loading a large project; when it stops
 early, the answer says how much it covered. Language servers start when first needed and stop
-after ten minutes without use.
+after ten minutes without use. One that stops on its own starts again on the next call; after a
+second stop its language is answered from text for the session, and every such answer says so.
 
 **Memory.** CSyk and its language servers keep to a budget: 1 GB on a machine with 8 GB of RAM,
 2 GB on 16, 3 GB on 24 and 4 GB on 32 or more, and at most half of the memory free when a server
@@ -170,12 +171,21 @@ If the agent asks again for code it has already seen and that has not changed, C
 
 ## Limitations
 
-- A name imported under another name (`import { a as b }`, or a default import with a different
-  name) is not followed.
-- Dart's compiler counts calls through Flutter's base classes (`State`, `Diagnosticable`) as calls
-  to every override; CSyk does not follow a hierarchy into the framework, which is most of the gap
-  on provider and flame for edit impact. A subclass's constructor, with or without a `super(...)`,
-  counts as a caller of its superclass.
+- `complete` means every use or caller CSyk reaches through the workspace's own code and types.
+  It leaves out, on purpose: calls through an interface or base class declared outside the
+  workspace (Go's `error`, `slog.Handler` or `http.Flusher`, a module's interface, Flutter's
+  `State` and `Diagnosticable`), which would make every `.Error()` call in a repository a caller;
+  a closure a function returns, called later (`const off = addEventListener(…)`, then `off()`);
+  Flow interfaces, which TypeScript cannot read; and workspace packages whose `node_modules`
+  links are missing, as in a fresh checkout of nest.
+- Dart's call hierarchy, which the benchmark's answers for Dart come from, counts a call through a
+  base class as a call to every override, and follows lifecycle methods every component has
+  (`onLoad`) to every place one is mounted. That is most of the gap on flame and provider for edit
+  impact: a change to an example game's `onCollisionStart` lists flame's `Component.onMount() {}`,
+  an empty method, and another tutorial's drag handler. Read by hand, none of the sampled places
+  could run the changed code; following Dart's hierarchy further gained 0.6 points and took 28%
+  longer. A subclass's constructor, with or without a `super(...)`, counts as a caller of its
+  superclass.
 - On Python, answers for callers and edit impact come from pyright's call hierarchy, which misses
   most files pyright has not opened, and its reference search, kept to calls. A function passed
   as a callback, which CSyk counts as called, is in pyright's answers only when its call
@@ -195,7 +205,9 @@ Ideas, not promises: each one lands only if the evaluation shows it helps.
 - **Questions by meaning.** Find code from what it does rather than its name ("where are tokens
   refreshed"), with static code embeddings ranked together with names. Only if name and text
   search measurably fall short.
-- **Renamed imports.** Follow `import { a as b }` and default imports under another name.
+- **Values returned and called later.** Follow a closure a function returns to the places that
+  call it (`addEventListener`'s unsubscribe, a decorator factory's result), which edit impact
+  misses today.
 - **Long sessions in very large repositories.** Keep answers short enough that a search of 20
   turns and more costs clearly fewer tokens with CSyk than without it.
 - **Lighter language servers.** On Prometheus, `gopls` is 85 of CSyk's 90 CPU seconds and 2.2 GB
