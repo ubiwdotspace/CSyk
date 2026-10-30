@@ -226,6 +226,27 @@ describe('impact', () => {
     }
   }, 30_000);
 
+  it("counts a change in a nested function as one in the function around it, whose callers it reaches", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "include": ["*.ts"] }');
+    const app = (body: string) => `export function app() {\n  const save = () => {\n    return ${body};\n  };\n  return save();\n}\n`;
+    writeFileSync(join(dir, 'app.ts'), app('1'));
+    writeFileSync(join(dir, 'main.ts'), "import { app } from './app';\n\napp();\n");
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    git('init', '-q');
+    git('add', '.');
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
+    writeFileSync(join(dir, 'app.ts'), app('2'));
+    const repo = await Workspace.open(dir);
+    try {
+      expect((await impact(repo)).text.split('\n')).toEqual(
+        expect.arrayContaining(['changed  app.ts#app.save  2', 'changed  app.ts#app  1', 'caller 1  main.ts (top level)  3  ← app']),
+      );
+    } finally {
+      await repo.close();
+    }
+  }, 30_000);
+
   it('names the changed symbol, its callers and the tests among them', async () => {
     writeFileSync(join(root, 'total.ts'), 'export function total(xs: number[]) {\n  return xs.reduce((a, b) => a + b, 1);\n}\n');
     const result = await impact(ws);

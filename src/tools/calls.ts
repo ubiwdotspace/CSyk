@@ -140,6 +140,12 @@ export async function impact(
     for (const line of lines) {
       const home = ws.index.containing(file, line);
       if (home) changed.set(home.id, home);
+      // A change in a nested function (a component's handler) is one in the
+      // function around it too, whose callers it reaches as directly.
+      for (let inner = home; inner?.nested && inner.parent; ) {
+        inner = ws.index.get(inner.parent);
+        if (inner && !inner.nested) changed.set(inner.id, inner);
+      }
     }
   }
   const rows: Row[] = [...changed.values()].map((s) => ({
