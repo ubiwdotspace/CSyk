@@ -8,6 +8,7 @@ import { rgPath } from '@vscode/ripgrep';
 import { codeExtensions, sourceExtensions } from '../index/parse.ts';
 import { parsedAtOnce, SymbolIndex } from '../index/symbol-index.ts';
 import { LspService, pool, serverFor, servers } from '../precision/lsp-service.ts';
+import { memoryBudget, treeMb } from '../precision/memory.ts';
 
 const run = promisify(execFile);
 
@@ -16,6 +17,8 @@ const run = promisify(execFile);
 const debounceMs = 200;
 // A language server nobody asked for this long is stopped.
 const idleMs = 10 * 60 * 1000;
+// A server asked within this long may be answering: it is never stopped for memory.
+const busyMs = 30_000;
 
 // Folders whose changes never touch the project's own sources.
 const ignoredDirs = /(^|\/)(node_modules|\.git|dist|build|out|coverage|\.next|\.dart_tool)\//;
@@ -53,6 +56,7 @@ export class Workspace {
   // One flush at a time, so a tool never sees half of one.
   private flushing: Promise<void> = Promise.resolve();
   private readonly reaper: NodeJS.Timeout;
+  private readonly watcherOfMemory: NodeJS.Timeout;
 
   private constructor(root: string, index: SymbolIndex, options: { watch?: boolean; persist?: boolean }) {
     this.root = root;
@@ -65,6 +69,8 @@ export class Workspace {
     }
     this.reaper = setInterval(() => void this.stopIdle(), 60_000);
     this.reaper.unref();
+    this.watcherOfMemory = setInterval(() => void this.keepToBudget(), 10_000);
+    this.watcherOfMemory.unref();
   }
 
   static async open(root: string, options: { watch?: boolean; persist?: boolean } = {}): Promise<Workspace> {
@@ -125,7 +131,8 @@ export class Workspace {
     if (!spec) return Promise.resolve(undefined);
     let running = this.services.get(spec.name);
     if (!running) {
-      running = { service: LspService.start(this.root, spec), used: 0 };
+      // Room is made before a server starts, not after it has filled the machine.
+      running = { service: this.keepToBudget(spec.name).then(() => LspService.start(this.root, spec)), used: 0 };
       this.services.set(spec.name, running);
     }
     running.used = Date.now();
@@ -171,6 +178,7 @@ export class Workspace {
     this.watcher?.close();
     clearTimeout(this.timer);
     clearInterval(this.reaper);
+    clearInterval(this.watcherOfMemory);
     const services = [...this.services.values()];
     this.services.clear();
     for (const { service } of services) await (await service.catch(() => undefined))?.stop();
@@ -181,6 +189,25 @@ export class Workspace {
     this.pending.add(file);
     clearTimeout(this.timer);
     this.timer = setTimeout(() => void this.fresh(), debounceMs);
+  }
+
+  /**
+   * While CSyk and its servers hold more than the budget (memoryBudget),
+   * stops the servers used longest ago, never one asked in the last half
+   * minute nor [keep]: each starts again the next time a tool needs it.
+   * Answers stay those of the compiler; only time is traded.
+   */
+  private async keepToBudget(keep?: string): Promise<void> {
+    if (this.services.size === 0) return;
+    const { mb } = memoryBudget();
+    const idle = [...this.services]
+      .filter(([name, running]) => name !== keep && Date.now() - running.used > busyMs)
+      .sort(([, a], [, b]) => a.used - b.used);
+    for (const [name, running] of idle) {
+      if (treeMb(process.pid) <= mb) return;
+      this.services.delete(name);
+      await (await running.service.catch(() => undefined))?.stop();
+    }
   }
 
   private async stopIdle(): Promise<void> {

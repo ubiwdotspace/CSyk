@@ -135,6 +135,24 @@ describe('Workspace', () => {
   });
 
   // File system events can lag on a busy machine; the test retries rather than wait longer.
+  it('stops a server not asked lately while over the memory budget, not one just asked', async () => {
+    const ws = await Workspace.open(folder({ 'a.ts': 'export const a = 1;', 'tsconfig.json': '{}' }));
+    const before = process.env.CSYK_MEMORY;
+    process.env.CSYK_MEMORY = '1';
+    try {
+      await ws.precision('a.ts');
+      await ws['keepToBudget']();
+      expect(ws.servers()[0]?.state).toBe('running');
+      // As if last asked a minute ago.
+      for (const running of ws['services'].values()) running.used = Date.now() - 60_000;
+      await ws['keepToBudget']();
+      expect(ws.servers()[0]?.state).toBe('starts on first use');
+    } finally {
+      process.env.CSYK_MEMORY = before;
+      await ws.close();
+    }
+  }, 30_000);
+
   it('indexes a file written while it watches', { retry: 2, timeout: 15_000 }, async () => {
     const root = folder({ 'a.ts': 'export const a = 1;' });
     const ws = await Workspace.open(root, { watch: true });

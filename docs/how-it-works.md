@@ -110,14 +110,24 @@ skips comments and strings.
 render it, or pass it as a callback), grouped by the function they are in. For a method, calls
 through an interface or base class count too, since they can reach it. The functions a symbol
 calls are the calls in its body, each followed to its definition. `impact` reads `git diff`, finds
-the symbols the change touches and follows their callers two levels up, stopping at tests and at
-symbols with more than 40 callers.
+the symbols the change touches and follows their callers two levels up, stopping at tests, through
+at most 200 callers a level, code before tests and nearest first.
 
 **Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
 mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
 two levels up and may wait for a language server still loading a large project; when it stops
 early, the answer says how much it covered. Language servers start when first needed and stop
 after ten minutes without use.
+
+**Memory.** CSyk and its language servers keep to a budget: 1 GB on a machine with 8 GB of RAM,
+2 GB on 16, 3 GB on 24 and 4 GB on 32 or more, and at most half of the memory free when a server
+starts, so a machine busy with other work gives less. Past it, the servers used longest ago stop,
+never one asked in the last half minute; each starts again when a tool needs it. Answers stay the
+compiler's; only time is traded. `CSYK_MEMORY` sets the budget instead: `low` (1 GB), `normal`
+(2 GB), `high` (4 GB) or a number of MB. In low mode a search resolves 4 mentions at a time, not
+16, and `gopls` runs with `GOMEMLIMIT` at 60% of the budget, collecting sooner: slower, and a very
+common name's uses may come back partial, which the answer says. `status` shows the budget, how it
+was chosen and the memory in use.
 
 ## Answers
 

@@ -90,8 +90,14 @@ export class LspClient {
    * Starts [command] in [root] and completes the initialize handshake. With
    * [settings], by section, the server gets them asked for or not.
    */
-  static async start(command: string, args: string[], root: string, settings?: Record<string, unknown>): Promise<LspClient> {
-    const child = spawn(command, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'] });
+  static async start(
+    command: string,
+    args: string[],
+    root: string,
+    settings?: Record<string, unknown>,
+    env?: NodeJS.ProcessEnv,
+  ): Promise<LspClient> {
+    const child = spawn(command, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'], ...(env ? { env } : {}) });
     if (!child.stdout || !child.stdin) throw new Error(`${command} has no stdio`);
     const connection = createProtocolConnection(
       new StreamMessageReader(child.stdout),

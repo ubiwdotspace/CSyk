@@ -74,6 +74,11 @@ in those files, but cannot confirm which uses and callers are real.
 Every file `csyk setup` writes, its options for scripts, and its hooks are in
 [setup](docs/setup.md).
 
+CSyk and the compilers it starts keep to a memory budget that suits the machine: 1 GB on 8 GB of
+RAM up to 4 GB on 32 GB, and less while the machine is busy. Set `CSYK_MEMORY` (`low`, `normal`,
+`high` or a number of MB) in the agent's environment to choose it; see
+[how it works](docs/how-it-works.md).
+
 ## Before and after
 
 The question an agent asks all day: who uses this? Here, `restoreElements` in the excalidraw
