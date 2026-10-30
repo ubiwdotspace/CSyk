@@ -130,6 +130,25 @@ describe('calls', () => {
   }, 30_000);
 });
 
+describe('calls across a project that cannot read JavaScript', () => {
+  it('counts a TS caller whose import of the JS function the server stops at', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-nojs-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "allowJs": false }, "include": ["*.ts"] }');
+    writeFileSync(join(dir, 'router.js'), 'export function build() {\n  return [];\n}\n');
+    writeFileSync(join(dir, 'main.ts'), "import { build } from './router';\n\nexport function start() {\n  return build();\n}\n");
+    // The default import is the module's default, not the function of the same name.
+    writeFileSync(join(dir, 'log.js'), 'function log() {\n  return {};\n}\nexport default { error() {} };\n');
+    writeFileSync(join(dir, 'fail.ts'), "import log from './log';\n\nexport function fail() {\n  log.error();\n}\n");
+    const repo = await Workspace.open(dir);
+    try {
+      expect((await calls(repo, 'router.js#build')).text.split('\n').slice(1)).toEqual(['main.ts#start  4']);
+      expect((await calls(repo, 'log.js#log')).text.split('\n').slice(1)).toEqual([]);
+    } finally {
+      await repo.close();
+    }
+  }, 30_000);
+});
+
 describe('impact', () => {
   it('lists a caller reached through two changed callees once, with the lines of both', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
