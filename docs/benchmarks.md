@@ -35,8 +35,8 @@ The six kinds of question:
 | dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 98.8% / 83.7% |
 | django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.4% | 100% | 99.3% / 47.2% |
 | chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 97.8% / 98.7% |
-| pocketbase (Go, medium) | 100% | 96.7% | 100% / 100% | 96.7% / 96.7% | 100% | 95.1% / 93.4% |
-| prometheus (Go, large) | 90% | 96.7% | 93.3% / 93.3% | 93.3% / 91.9% | 100% | 91.5% / 97.1% |
+| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 94.9% / 93.4% |
+| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 91.5% / 97.1% |
 
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
@@ -179,14 +179,17 @@ Queries are passed as the questions are written, the same for every tool.
 
 ### Accuracy and tokens
 
-Means over the twelve repositories, everything started cold.
+Means over the twelve repositories, everything started cold. CSyk's accuracy is the mean of the
+table above, measured again after fixes to callees, to Go functions declared once per build and to
+how long `calls` and `impact` wait; its tokens, and the other tools' rows, are from the run they
+were compared in.
 
 | | **CSyk** | Serena | Graphify |
 |---|---|---|---|
-| Exact name: first answer right | **98.6%** | 85.1% | 79.9% |
-| Part of a name: first answer right | **99.4%** | 17.0% | 31.6% |
-| Uses: found / correct | **97.3% / 97.8%** | 76.5% / 81.2% | 28.6% / 41.6% |
-| Callers and calls: found / correct | **98.7% / 96.1%** | 77.5% / 75.0% | 47.7% / 53.8% |
+| Exact name: first answer right | **99.5%** | 85.1% | 79.9% |
+| Part of a name: first answer right | **100.0%** | 17.0% | 31.6% |
+| Uses: found / correct | **99.4% / 99.5%** | 76.5% / 81.2% | 28.6% / 41.6% |
+| Callers and calls: found / correct | **99.5% / 97.0%** | 77.5% / 75.0% | 47.7% / 53.8% |
 | Message: in the first five | **100%** | – | 11.9% |
 | Tokens per answer | **115** | 243 | 719 |
 | Tool calls per question | **1.0** | 1.5 | 1.2 |

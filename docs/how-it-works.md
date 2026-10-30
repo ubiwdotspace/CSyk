@@ -169,8 +169,9 @@ If the agent asks again for code it has already seen and that has not changed, C
   (`@condition(...)`), calls from test files and calls through module aliases. CSyk's "correct"
   score against pyright on Python callers and edit impact (47% on django) is lower than it really
   is.
-- A Go function declared twice under different build tags resolves to the one `gopls` builds by
-  default.
+- A Go function declared once per build (`_linux.go`, `//go:build`) is found as the variant this
+  machine's default build compiles, as `gopls` does; the others rank lower, and their uses are not
+  resolved.
 - A name used thousands of times (Django's `Model.save`) gets a partial answer after the time
   limit, and the answer says so.
 - In very large repositories, long search sessions save little: TypeScript, with three VS Code
