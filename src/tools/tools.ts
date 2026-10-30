@@ -2,7 +2,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
 import type { SearchOptions } from '../index/symbol-index.ts';
@@ -513,7 +513,9 @@ async function ancestorNames(ws: Workspace, type: CodeSymbol): Promise<Set<strin
       for (const name of await heritageOf(ws, t)) {
         if (names.has(name)) continue;
         names.add(name);
-        next.push(...ws.index.named(name).filter((s) => classKinds.has(s.kind)));
+        const types = (await typesNamed(ws, name, t.file)).filter((s) => classKinds.has(s.kind));
+        for (const type of types) names.add(type.name);
+        next.push(...types);
       }
     }
     level = next;
@@ -537,8 +539,9 @@ async function supertypeMethods(ws: Workspace, symbol: CodeSymbol): Promise<{ me
     const next: CodeSymbol[] = [];
     for (const type of types) {
       for (const name of await heritageOf(ws, type)) {
-        if (!ws.index.named(name).some((s) => supertypeKinds.has(s.kind))) closed = false;
-        for (const base of ws.index.named(name)) {
+        const bases = await typesNamed(ws, name, type.file);
+        if (bases.length === 0) closed = false;
+        for (const base of bases) {
           if (seen.has(base.id) || !supertypeKinds.has(base.kind)) continue;
           seen.add(base.id);
           next.push(base);
@@ -550,6 +553,25 @@ async function supertypeMethods(ws: Workspace, symbol: CodeSymbol): Promise<{ me
     types = next;
   }
   return { methods, closed };
+}
+
+/**
+ * The types [name] stands for in [file]: those declared so in the
+ * workspace, or else the default export of the module [file] imports it
+ * from, under another name (parse-server's `import BaseCodeAuthAdapter
+ * from './BaseCodeAuthAdapter'` for `export default class BaseAuthCodeAdapter`).
+ */
+async function typesNamed(ws: Workspace, name: string, file: string): Promise<CodeSymbol[]> {
+  const named = ws.index.named(name).filter((s) => supertypeKinds.has(s.kind));
+  if (named.length > 0) return named;
+  const text = await readFile(join(ws.root, file), 'utf8').catch(() => '');
+  const imported = new RegExp(`^\\s*import\\s+${name.replace(/[$]/g, '\\$')}\\s*(?:,[^'"]*)?from\\s*['"](\\.{1,2}/[^'"]+)['"]`, 'm').exec(text)?.[1];
+  if (!imported) return [];
+  const base = join(dirname(file), imported).replace(/\.[cm]?[jt]sx?$/, '');
+  const target = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '/index.ts', '/index.tsx', '/index.js'].map((ext) => base + ext).find((f) => ws.index.has(f));
+  if (!target) return [];
+  const lines = (await readFile(join(ws.root, target), 'utf8')).split('\n');
+  return ws.index.symbolsIn(target).filter((s) => !s.parent && supertypeKinds.has(s.kind) && /\bexport\s+default\b/.test(lines[s.line - 1] ?? ''));
 }
 
 // The type names a declaration extends, implements or mixes in, read from

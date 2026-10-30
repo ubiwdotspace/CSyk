@@ -173,6 +173,21 @@ describe('calls of a default export', () => {
   }, 30_000);
 });
 
+describe('calls of an override whose base is imported under another name', () => {
+  it("counts the base class's this.m() as a caller", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-base-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "allowJs": true, "checkJs": false }, "include": ["*.js"] }');
+    writeFileSync(join(dir, 'base.js'), 'export default class BaseAuth {\n  find() {\n    return this.user();\n  }\n  user() {}\n}\n');
+    writeFileSync(join(dir, 'line.js'), "import Base from './base';\n\nclass Line extends Base {\n  user() {\n    return 1;\n  }\n}\nexport default new Line();\n");
+    const repo = await Workspace.open(dir);
+    try {
+      expect((await calls(repo, 'line.js#Line.user')).text.split('\n').slice(1)).toEqual(['base.js#BaseAuth.find  3']);
+    } finally {
+      await repo.close();
+    }
+  }, 30_000);
+});
+
 describe('impact', () => {
   it('lists a caller reached through two changed callees once, with the lines of both', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
