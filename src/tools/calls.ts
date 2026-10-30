@@ -1,11 +1,11 @@
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import type { Tree } from 'web-tree-sitter';
 import { declaresFunctionAt, isCallAt, isImportAt, isMemberAt, isValueUseAt, parseFile } from '../index/parse.ts';
 import type { SymbolKind } from '../index/symbols.ts';
-import { pool } from '../precision/lsp-service.ts';
+import { pool, serverFor, textMentions } from '../precision/lsp-service.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
@@ -184,8 +184,40 @@ async function callersOf(
     if (!caller.lines.includes(site.line + 1)) caller.lines.push(site.line + 1);
     byHome.set(key, caller);
   }
+  for (const caller of await superCallers(ws, symbol)) {
+    const key = caller.home?.id ?? caller.file;
+    if (!byHome.has(key)) byHome.set(key, caller);
+  }
   const callers = [...byHome.values()].sort((a, b) => a.file.localeCompare(b.file) || (a.lines[0] ?? 0) - (b.lines[0] ?? 0));
   return { callers, precision };
+}
+
+// The subclasses of the Dart class [symbol], whose constructors call its
+// own through `: super(...)` or `: super.named(...)`, which name no class,
+// or, calling none, without a word. TS needs none: its `extends` clause is
+// a value, so a use already.
+async function superCallers(ws: Workspace, symbol: CodeSymbol): Promise<Caller[]> {
+  if (symbol.kind !== 'class' || symbol.lang !== 'dart') return [];
+  const extensions = serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]);
+  // Another class of the same name: the language server says which one each subclass extends.
+  const ambiguous = ws.index.named(symbol.name).filter((s) => s.kind === 'class').length > 1;
+  const service = ambiguous ? await ws.precision(symbol.file) : undefined;
+  if (ambiguous && !service) return [];
+  const callers: Caller[] = [];
+  for (const mention of await textMentions(ws.root, symbol.name, extensions)) {
+    if (!/\bextends\s+$/.test(mention.text.slice(0, mention.character))) continue;
+    const sub = ws.index.containing(mention.file, mention.line + 1);
+    if (sub?.kind !== 'class' || sub.id === symbol.id) continue;
+    if (service && !(await service.definition(mention)).some((s) => s.file === symbol.file && s.nameLine === symbol.line - 1)) continue;
+    const lines = (await readFile(join(ws.root, sub.file), 'utf8')).split('\n');
+    const calls: number[] = [];
+    for (let n = sub.range[0]; n <= sub.range[1]; n++) {
+      const text = lines[n - 1] ?? '';
+      if (/(^|[^.\w])super\s*\(|[:,]\s*super\s*\.\s*\w+\s*\(/.test(text)) calls.push(n);
+    }
+    callers.push({ file: sub.file, home: sub, lines: calls.length > 0 ? calls : [sub.line] });
+  }
+  return callers;
 }
 
 // The callees of [symbol]: each name called in its body, resolved to its
