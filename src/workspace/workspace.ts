@@ -47,6 +47,9 @@ export class Workspace {
   ready: Promise<void> = Promise.resolve();
   complete = true;
   private readonly services = new Map<string, Running>();
+  // Servers started again after stopping on their own, and those that stopped twice.
+  private readonly restarted = new Set<string>();
+  private readonly gone = new Set<string>();
   private readonly pending = new Set<string>();
   private readonly snapshot: string | undefined;
   private watcher: FSWatcher | undefined;
@@ -125,11 +128,23 @@ export class Workspace {
     await pool(files.slice(0, 20), parsedAtOnce, (file) => this.index.update(file));
   }
 
-  /** The language server for [file], or undefined when none is installed. */
-  precision(file: string): Promise<LspService | undefined> {
+  /**
+   * The language server for [file], or undefined when none is installed or
+   * it stopped twice. A server that stopped on its own starts again once.
+   */
+  async precision(file: string): Promise<LspService | undefined> {
     const spec = serverFor(file);
-    if (!spec) return Promise.resolve(undefined);
+    if (!spec || this.gone.has(spec.name)) return undefined;
     let running = this.services.get(spec.name);
+    if (running && (await running.service.catch(() => undefined))?.alive === false && this.services.get(spec.name) === running) {
+      this.services.delete(spec.name);
+      running = undefined;
+      if (this.restarted.has(spec.name)) {
+        this.gone.add(spec.name);
+        return undefined;
+      }
+      this.restarted.add(spec.name);
+    }
     if (!running) {
       // Room is made before a server starts, not after it has filled the machine.
       running = { service: this.keepToBudget(spec.name).then(() => LspService.start(this.root, spec)), used: 0 };
@@ -158,15 +173,27 @@ export class Workspace {
     if (files.length > 0 && this.snapshot) await this.index.save(this.snapshot);
   }
 
-  /** Each language in the index with its server: running, not started yet, or not installed. */
-  servers(): { lang: string; server: string; state: 'running' | 'starts on first use' | 'not installed' }[] {
+  /** Whether [file]'s language server stopped twice, so its language is answered from text. */
+  stopped(file: string): boolean {
+    const spec = serverFor(file);
+    return spec !== undefined && this.gone.has(spec.name);
+  }
+
+  /** Each language in the index with its server: running, not started yet, not installed, or stopped twice. */
+  servers(): { lang: string; server: string; state: 'running' | 'starts on first use' | 'not installed' | 'stopped twice' }[] {
     const extensions = new Set(this.index.files.map((file) => extname(file)));
     return servers
       .filter((spec) => [...spec.extensions].some((ext) => extensions.has(ext)))
       .map((spec) => ({
         lang: [...spec.extensions].filter((ext) => extensions.has(ext)).join(' '),
         server: spec.name,
-        state: this.services.has(spec.name) ? 'running' : spec.command() ? 'starts on first use' : 'not installed',
+        state: this.gone.has(spec.name)
+          ? 'stopped twice'
+          : this.services.has(spec.name)
+            ? 'running'
+            : spec.command()
+              ? 'starts on first use'
+              : 'not installed',
       }));
   }
 

@@ -459,7 +459,13 @@ export async function references(
     options.viaSupertypes === true && (symbol.lang === 'go' || (related.length > 0 && (symbol.lang !== 'dart' || closed)));
   if (service) {
     const group = [...overloads, ...related];
-    const { found: all, partial, throughBase } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
+    const { found: all, partial, throughBase, stopped } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
+    if (stopped) {
+      const mentions = (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]), options.where)).filter(
+        (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
+      );
+      return { found: mentions, precision: 'text, unconfirmed: the language server stopped; it starts again on the next call' };
+    }
     const found = throughBase?.length ? await withoutSiblingCalls(ws, symbol, all, throughBase) : all;
     // A server still loading the project resolves nothing in time: its unconfirmed mentions beat none.
     if (found.length === 0 && partial?.resolved === 0) {
@@ -476,7 +482,7 @@ export async function references(
   const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(
     (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
   );
-  return { found, precision: 'text (no language server)' };
+  return { found, precision: ws.stopped(symbol.file) ? 'text (the language server stopped twice)' : 'text (no language server)' };
 }
 
 /**

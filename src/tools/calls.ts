@@ -397,7 +397,9 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
   } finally {
     for (const t of trees.values()) t?.delete();
   }
-  return { callees: [...byId.values()], precision: service ? 'lsp' : 'index' };
+  // A server that stopped meanwhile resolved some calls to nothing.
+  const precision = !service ? 'index' : service.alive ? 'lsp' : 'index, unconfirmed: the language server stopped; it starts again on the next call';
+  return { callees: [...byId.values()], precision };
 }
 
 // The callee declared at [line] of [file] and called as [name]: the symbol
