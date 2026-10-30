@@ -59,7 +59,7 @@ describe('the MCP server', () => {
   it('answers references from the compiler', async () => {
     const answer = await call('refs', { target: 'calculateTotal' });
     expect(answer).toBe(
-      ['src/cart/total.ts#calculateTotal · 4 refs in 2 files · lsp', 'src/cart/checkout.ts  1, 10·checkout', 'test/cart.test.ts  1, 5'].join('\n'),
+      ['src/cart/total.ts#calculateTotal · 4 refs in 2 files · lsp · complete', 'src/cart/checkout.ts  1, 10·checkout', 'test/cart.test.ts  1, 5'].join('\n'),
     );
   }, 30_000);
 
