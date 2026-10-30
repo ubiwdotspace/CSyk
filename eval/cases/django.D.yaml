@@ -130,6 +130,33 @@ cases:
       - { file: "tests/auth_tests/test_auth_backends.py", lines: [1, 1499] }
       - { file: "tests/auth_tests/test_forms.py", lines: [1, 1776] }
       - { file: "tests/view_tests/views.py", lines: [1, 444] }
+      - { file: "django/contrib/auth/__init__.py", lines: [76, 89] }
+      - { file: "django/contrib/auth/__init__.py", lines: [123, 144] }
+      - { file: "django/contrib/auth/__init__.py", lines: [147, 166] }
+      - { file: "django/contrib/auth/backends.py", lines: [66, 80] }
+      - { file: "django/contrib/auth/backends.py", lines: [82, 96] }
+      - { file: "django/contrib/auth/forms.py", lines: [106, 120] }
+      - { file: "django/contrib/auth/forms.py", lines: [122, 129] }
+      - { file: "django/contrib/auth/forms.py", lines: [165, 197] }
+      - { file: "django/contrib/auth/forms.py", lines: [343, 357] }
+      - { file: "django/contrib/auth/forms.py", lines: [536, 547] }
+      - { file: "tests/auth_tests/test_auth_backends.py", lines: [1077, 1079] }
+      - { file: "tests/auth_tests/test_auth_backends.py", lines: [1081, 1083] }
+      - { file: "tests/auth_tests/test_auth_backends.py", lines: [1102, 1104] }
+      - { file: "tests/auth_tests/test_forms.py", lines: [1732, 1775] }
+      - { file: "tests/view_tests/tests/test_debug.py", lines: [2134, 2136] }
+      - { file: "tests/view_tests/views.py", lines: [163, 178] }
+      - { file: "tests/view_tests/views.py", lines: [181, 196] }
+      - { file: "tests/view_tests/views.py", lines: [199, 209] }
+      - { file: "tests/view_tests/views.py", lines: [221, 236] }
+      - { file: "tests/view_tests/views.py", lines: [239, 254] }
+      - { file: "tests/view_tests/views.py", lines: [270, 276] }
+      - { file: "tests/view_tests/views.py", lines: [292, 298] }
+      - { file: "tests/view_tests/views.py", lines: [313, 329] }
+      - { file: "tests/view_tests/views.py", lines: [354, 368] }
+      - { file: "tests/view_tests/views.py", lines: [370, 384] }
+      - { file: "tests/view_tests/views.py", lines: [386, 395] }
+      - { file: "tests/view_tests/views.py", lines: [418, 430] }
   - id: D22
     query: "django_release"
     direction: out

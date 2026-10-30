@@ -26,17 +26,17 @@ The six kinds of question:
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
 | zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 96.7% / 91.8% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 97% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 93.1% | 100% | 98.3% / 96.6% |
 | nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 98.4% / 96.9% |
 | provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 94.3% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
 | flame (Dart, large) | 96.7% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
-| fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 91.5% |
-| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 98.8% / 83.7% |
-| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.4% | 100% | 99.3% / 50.7% |
-| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 97.8% / 98.7% |
+| fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 100% |
+| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 97.8% / 95.6% |
+| django (Python, large) | 96.7% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 96.7% / 84.6% |
+| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 98.8% |
 | pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 95.1% / 93.4% |
-| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 91.5% / 97.1% |
+| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 92.7% / 97.2% |
 
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
@@ -180,9 +180,12 @@ Queries are passed as the questions are written, the same for every tool.
 ### Accuracy and tokens
 
 Means over the twelve repositories, everything started cold. CSyk's accuracy is the mean of the
-table above, measured again after fixes to callees, to Go functions declared once per build and to
-how long `calls` and `impact` wait; its tokens, and the other tools' rows, are from the run they
-were compared in.
+table above, measured again after fixes to callees, to Go functions declared once per build, to
+super calls and test helpers, and to how long `calls` and `impact` wait; its tokens, and the other
+tools' rows, are from the run they were compared in. The Python answers for callers and edit
+impact were completed since (pyright's call hierarchy missed most files it had not opened): the
+same questions, every old answer kept, 27 places added to django's callers. The other tools were
+scored against the answers before.
 
 | | **CSyk** | Serena | Graphify |
 |---|---|---|---|

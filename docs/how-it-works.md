@@ -166,10 +166,10 @@ If the agent asks again for code it has already seen and that has not changed, C
   to every override; CSyk does not follow a hierarchy into the framework, which is most of the gap
   on provider and flame for edit impact. A subclass's constructor, with or without a `super(...)`,
   counts as a caller of its superclass.
-- pyright's answers miss calls that CSyk finds: decorators applied with arguments
-  (`@condition(...)`), calls from test files and calls through module aliases. CSyk's "correct"
-  score against pyright on Python callers and edit impact (47% on django) is lower than it really
-  is.
+- On Python, answers for callers and edit impact come from pyright's call hierarchy, which misses
+  most files pyright has not opened, and its reference search, kept to calls. A function passed
+  as a callback, which CSyk counts as called, is in pyright's answers only when its call
+  hierarchy names it.
 - A Go function declared once per build (`_linux.go`, `//go:build`) is found as the variant this
   machine's default build compiles, as `gopls` does; the others rank lower, and their uses are not
   resolved.

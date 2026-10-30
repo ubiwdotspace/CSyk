@@ -13,6 +13,10 @@ import { plural, references, resolve, type Location, type ToolResult } from './t
 
 const run = promisify(execFile);
 
+// A test has no callers worth following; a helper in a test file (a
+// factory, a fixture) has: the tests that use it are what a change reaches.
+const isTestCase = (s: CodeSymbol) => s.isTest && /^(test|Test|Benchmark|Fuzz|Example)/.test(s.name);
+
 // More callers than this at one level are listed, not followed further.
 const maxFanOut = 40;
 // How long `calls` and `impact` resolve mentions in all before answering with
@@ -71,7 +75,7 @@ export async function calls(
           text: `${indent}${caller.home?.id ?? `${caller.file} (top level)`}  ${caller.lines.join(', ')}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
-        if (deeper && caller.home && !caller.home.isTest && !seen.has(caller.home.id)) {
+        if (deeper && caller.home && !isTestCase(caller.home) && !seen.has(caller.home.id)) {
           seen.add(caller.home.id);
           await visit(caller.home, level + 1);
         }
@@ -143,8 +147,7 @@ export async function impact(
           text: `caller ${step}  ${id}  ${caller.lines.join(', ')}  ← ${symbol.name}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
-        // Tests have no callers worth following.
-        if (caller.home && !caller.home.isTest) next.push(caller.home);
+        if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
       }
     }
     if (step < depth && next.length > maxFanOut) {
