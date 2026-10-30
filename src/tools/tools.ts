@@ -458,7 +458,8 @@ export async function references(
     options.viaSupertypes === true && (symbol.lang === 'go' || (related.length > 0 && (symbol.lang !== 'dart' || closed)));
   if (service) {
     const group = [...overloads, ...related];
-    const { found, partial } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
+    const { found: all, partial, throughBase } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
+    const found = throughBase?.length ? await withoutSiblingCalls(ws, symbol, all, throughBase) : all;
     // A server still loading the project resolves nothing in time: its unconfirmed mentions beat none.
     if (found.length === 0 && partial?.resolved === 0) {
       const mentions = (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]), options.where)).filter(
@@ -475,6 +476,48 @@ export async function references(
     (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
   );
   return { found, precision: 'text (no language server)' };
+}
+
+/**
+ * [found] less the calls through a supertype's method that cannot run
+ * [symbol]: `this.m()` (`self.m()`) in a class that is neither [symbol]'s
+ * class nor below or above it, a sibling, dispatches to its own m or the
+ * supertype's, never to [symbol]'s.
+ */
+async function withoutSiblingCalls(ws: Workspace, symbol: CodeSymbol, found: Position[], throughBase: Position[]): Promise<Position[]> {
+  const owner = symbol.parent ? ws.index.get(symbol.parent) : undefined;
+  if (!owner) return found;
+  const above = await ancestorNames(ws, owner);
+  const lines = new Map<string, string[]>();
+  const sibling = new Set<Position>();
+  for (const p of throughBase) {
+    if (!lines.has(p.file)) lines.set(p.file, (await readFile(join(ws.root, p.file), 'utf8')).split('\n'));
+    if (!/\b(?:this|self)\s*\.\s*$/.test((lines.get(p.file)?.[p.line] ?? '').slice(0, p.character))) continue;
+    let home = ws.index.containing(p.file, p.line + 1);
+    while (home && !classKinds.has(home.kind)) home = home.parent ? ws.index.get(home.parent) : undefined;
+    if (!home || home.name === owner.name || above.has(home.name) || (await ancestorNames(ws, home)).has(owner.name)) continue;
+    sibling.add(p);
+  }
+  const drop = new Set([...sibling].map((p) => `${p.file}:${p.line}:${p.character}`));
+  return found.filter((p) => !drop.has(`${p.file}:${p.line}:${p.character}`));
+}
+
+// The names of the types [type] extends, up to four levels, as declared in the workspace.
+async function ancestorNames(ws: Workspace, type: CodeSymbol): Promise<Set<string>> {
+  const names = new Set<string>();
+  let level = [type];
+  for (let depth = 0; depth < 4 && level.length > 0; depth++) {
+    const next: CodeSymbol[] = [];
+    for (const t of level) {
+      for (const name of await heritageOf(ws, t)) {
+        if (names.has(name)) continue;
+        names.add(name);
+        next.push(...ws.index.named(name).filter((s) => classKinds.has(s.kind)));
+      }
+    }
+    level = next;
+  }
+  return names;
 }
 
 // The same-named methods of the types [symbol]'s type extends, implements
@@ -540,6 +583,8 @@ function names(heritage: string): string[] {
 const heritageWords = new Set(['extends', 'implements', 'with', 'on']);
 
 const supertypeKinds: ReadonlySet<string> = new Set(['class', 'interface', 'widget', 'provider', 'type']);
+// Kinds a `this` belongs to: classes, React class components included.
+const classKinds: ReadonlySet<string> = new Set(['class', 'component', 'widget', 'provider']);
 
 /**
  * A symbol by id, or by name: an exact name with several declarations takes

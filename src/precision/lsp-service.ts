@@ -120,8 +120,12 @@ const concurrency = 16;
 // How long one search resolves mentions before answering with what it has.
 const searchMs = 5000;
 
-/** References found, and how far a search cut short by its deadline got. */
-export type References = { found: Position[]; partial?: { resolved: number; total: number } };
+/**
+ * References found, and how far a search cut short by its deadline got.
+ * [throughBase]: those of them that reach the symbol only through a
+ * supertype's method, which a call may or may not dispatch to it.
+ */
+export type References = { found: Position[]; partial?: { resolved: number; total: number }; throughBase?: Position[] };
 
 // How far apart two files are: 0 for the same file, then the folders that
 // do not share a path.
@@ -225,10 +229,13 @@ export class LspService {
     const isOurs = (p: Mention, spans: Span[]) =>
       spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`))));
     const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
-    const found = await inCode(this.root, ours, options.where);
-    // A Go method whose type is declared in another file has no parent, but is a method.
-    if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial };
     const key = (p: Position) => `${p.file}:${p.line}:${p.character}`;
+    const direct = (spans: Span[]) => spans.some((span) => declared.some((d) => !bases.has(`${d.file}:${d.nameLine}`) && resolvesTo(span, d, lines)));
+    const viaBase = new Set(resolved.filter(({ p, spans }) => isOurs(p, spans) && !direct(spans)).map(({ p }) => key(p)));
+    const found = await inCode(this.root, ours, options.where);
+    const throughBase = found.filter((p) => viaBase.has(key(p)));
+    // A Go method whose type is declared in another file has no parent, but is a method.
+    if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial, throughBase };
     const have = new Set(ours.map(key));
     const column = Math.max(lines[symbol.line - 1]?.indexOf(symbol.name) ?? 0, 0);
     const at = { file: symbol.file, line: symbol.line - 1, character: column };
@@ -248,7 +255,9 @@ export class LspService {
       .map((s) => ({ file: s.file, line: s.nameLine, character: s.nameColumn, text: '' }))
       .filter((p) => !have.has(key(p)) && !own(p));
     const unique = new Map([...throughInterfaces, ...(await this.withoutSuperCalls(added))].map((p) => [key(p), p]));
-    return { found: [...found, ...(await inCode(this.root, [...unique.values()], options.where))], partial };
+    // What the server's search adds spans the whole hierarchy: through a base, too.
+    const fromHierarchy = await inCode(this.root, [...unique.values()], options.where);
+    return { found: [...found, ...fromHierarchy], partial, throughBase: [...throughBase, ...fromHierarchy] };
   }
 
   // [mentions] less `super.m()` calls, which the Dart server's search counts
