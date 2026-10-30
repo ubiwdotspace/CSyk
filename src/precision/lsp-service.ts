@@ -194,8 +194,9 @@ export class LspService {
    * Every reference to [symbol]: each place its name is written in code
    * (comments and strings left out, documentation links kept) that the
    * server resolves to its declaration. Each file resolves in its own
-   * project, so references cross packages. Names written under another
-   * name (`import { a as b }`) are not followed. The [overloads] (and any
+   * project, so references cross packages. A name imported under another
+   * (`import { a as b }`, or a default export as any name) is followed in
+   * the files that import it so. The [overloads] (and any
    * other declarations passed there) count as the symbol: a use of any is a
    * use of it. With [viaSupertypes], a Go method also gets the calls through
    * the interfaces it satisfies, which Go code does not name, and a TS method
@@ -216,8 +217,10 @@ export class LspService {
     // its deadline has the likeliest answers. The server answers nothing in a
     // comment or string, so only files with answers are parsed afterwards.
     const mentions = await this.mentionsOf(symbol.name);
+    const text = await readFile(join(this.root, symbol.file), 'utf8');
+    const aliases = [...importAliases(symbol.name, mentions), ...(await defaultAliases(symbol, text, (name) => this.mentionsOf(name)))];
     const renamed = await Promise.all(
-      importAliases(symbol.name, mentions).map(async ({ alias, file }) => (await this.mentionsOf(alias)).filter((m) => !file || m.file === file)),
+      aliases.map(async ({ alias, file }) => (await this.mentionsOf(alias)).filter((m) => !file || m.file === file)),
     );
     const candidates = [...mentions, ...renamed.flat()]
       .filter((p) => !own(p))
@@ -228,7 +231,7 @@ export class LspService {
       await pool(candidates, concurrency(), async (p) => ({ p, spans: await this.definition(p) }), deadline)
     ).filter((r) => r !== undefined);
     let partial = resolved.length < candidates.length ? { resolved: resolved.length, total: candidates.length } : undefined;
-    const lines = (await readFile(join(this.root, symbol.file), 'utf8')).split('\n');
+    const lines = text.split('\n');
     const declared = group.map((s) => ({
       file: s.file,
       name: s.name,
@@ -238,11 +241,15 @@ export class LspService {
     }));
     const bases = new Set(options.bases?.map((s) => `${s.file}:${s.line - 1}`));
     const imports = symbol.parent ? new Set<string>() : await importsOf(this.root, symbol, resolved.flatMap((r) => r.spans));
+    // `export default translate(FormSection)`: the default export is the
+    // symbol wrapped (React's memo, connect, withStyles), and a use of it
+    // renders or calls the symbol; the server resolves that use to the export.
+    const wrapped = new Set(symbol.parent ? [] : wrappedDefault(lines, symbol.name));
     // `super.m()`, and Python's `super().m()` or `super(C, self).m()`.
     const viaSuper = (p: Mention) => /\bsuper(\([^)]*\))?\.$/.test(p.text.slice(0, p.character));
     const isOurs = (p: Mention, spans: Span[]) =>
       spans.some((span) => declared.some((d) => resolvesTo(span, d, lines) && !(viaSuper(p) && bases.has(`${d.file}:${d.nameLine}`)))) ||
-      spans.some((span) => imports.has(`${span.file}:${span.nameLine}`));
+      spans.some((span) => imports.has(`${span.file}:${span.nameLine}`) || (span.file === symbol.file && wrapped.has(span.nameLine)));
     const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
     const key = (p: Position) => `${p.file}:${p.line}:${p.character}`;
     const direct = (spans: Span[]) => spans.some((span) => declared.some((d) => !bases.has(`${d.file}:${d.nameLine}`) && resolvesTo(span, d, lines)));
@@ -481,6 +488,76 @@ export function resolvesTo(
 }
 
 /**
+ * Whether [name] is the default export of the file [text] is: itself
+ * (`export default function name`, `export default name`, `name as
+ * default`) or wrapped (`export default memo(name)`).
+ */
+function isDefaultExport(text: string, name: string): boolean {
+  const escaped = name.replace(/[$]/g, '\\$');
+  const itself = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${escaped}\\b|\\b${escaped}\\s+as\\s+default\\b`);
+  return itself.test(text) || wrappedDefault(text.split('\n'), name).length > 0;
+}
+
+// The lines of [lines] that export [name] wrapped as the default, as
+// React's memo, connect and withStyles do: `export default
+// translate(FormSection)`. Only what is wrapped counts, not the wrappers'
+// other arguments: in `connect(mapState)(Indicator)`, Indicator.
+function wrappedDefault(lines: readonly string[], name: string): number[] {
+  return lines.flatMap((text, n) => {
+    const value = /^\s*export\s+default\s+(.+?);?\s*$/.exec(text)?.[1];
+    return value?.includes('(') && wrappedIn(value) === name ? [n] : [];
+  });
+}
+
+// What a chain of wrapping calls wraps: the first argument of its last
+// call, followed inward (`translate(connect(a)(B))` → B).
+function wrappedIn(expression: string): string | undefined {
+  const text = expression.trim();
+  if (/^[A-Za-z_$][\w$]*$/.test(text)) return text;
+  if (!text.endsWith(')')) return undefined;
+  let depth = 0;
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === ')') depth++;
+    else if (text[i] === '(' && --depth === 0) {
+      const args = text.slice(i + 1, -1);
+      let level = 0;
+      let end = args.length;
+      for (let j = 0; j < args.length; j++) {
+        if ('([{'.includes(args[j] ?? '')) level++;
+        else if (')]}'.includes(args[j] ?? '')) level--;
+        else if (args[j] === ',' && level === 0) {
+          end = j;
+          break;
+        }
+      }
+      return wrappedIn(args.slice(0, end));
+    }
+  }
+  return undefined;
+}
+
+/**
+ * The names [symbol] is imported under in other files when it is its
+ * file's default export and they call it otherwise (`import add from
+ * './sum'` for `export default function total`), each with its file:
+ * mentions of those names are its uses there.
+ */
+async function defaultAliases(symbol: CodeSymbol, text: string, mentionsOf: (name: string) => Promise<Mention[]>): Promise<{ alias: string; file: string }[]> {
+  if (symbol.parent || !isDefaultExport(text, symbol.name)) return [];
+  const base = basename(symbol.file).replace(/\.[^.]+$/, '');
+  const module = base === 'index' ? basename(dirname(symbol.file)) : base;
+  const target = symbol.file.replace(/\.[^./]+$/, '');
+  const found: { alias: string; file: string }[] = [];
+  for (const m of await mentionsOf(module)) {
+    const match = /^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\s*(?:,[^'"]*)?from\s*['"](\.{1,2}\/[^'"]+)['"]/.exec(m.text);
+    if (!match?.[1] || !match[2] || match[1] === symbol.name) continue;
+    const imported = join(dirname(m.file), match[2]).replace(/\.[cm]?[jt]sx?$/, '');
+    if (imported === target || `${imported}/index` === target) found.push({ alias: match[1], file: m.file });
+  }
+  return found;
+}
+
+/**
  * Of [spans], those that stop at an import of [symbol] from a relative path
  * to its file, as `file:line`: by its name when it is exported, or as the
  * default when it is the file's default export. A server stops there when it
@@ -495,10 +572,7 @@ async function importsOf(root: string, symbol: CodeSymbol, spans: Span[]): Promi
     if (!files.has(file)) files.set(file, (await readFile(join(root, file), 'utf8').catch(() => '')).split('\n'));
     return files.get(file) ?? [];
   };
-  const name = symbol.name.replace(/[$]/g, '\\$');
-  const isDefault = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${name}\\b|\\b${name}\\s+as\\s+default\\b`).test(
-    (await linesOf(symbol.file)).join('\n'),
-  );
+  const isDefault = isDefaultExport((await linesOf(symbol.file)).join('\n'), symbol.name);
   for (const span of spans) {
     if (span.file === symbol.file || found.has(`${span.file}:${span.nameLine}`)) continue;
     const lines = await linesOf(span.file);
