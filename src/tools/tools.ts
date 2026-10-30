@@ -217,7 +217,7 @@ export async function refs(
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
   const { found, precision } = await references(ws, symbol);
-  const limit = options.limit ?? 50;
+  const limit = options.limit ?? Infinity;
   const byFile = new Map<string, number[]>();
   for (const p of found.slice(0, limit)) {
     byFile.set(p.file, [...new Set([...(byFile.get(p.file) ?? []), p.line + 1])].sort((a, b) => a - b));
@@ -245,7 +245,10 @@ export async function refs(
   // Docs, specs, configs and translations that name it, which the compiler does not see.
   const outside = await mentionsOutsideCode(ws.root, symbol.name);
   const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
-  const text = outside.total > 0 ? `${fitted.text}\noutside code: ${outside.shown.join(', ')}${more}` : fitted.text;
+  // Every use the compiler confirmed, listed: nothing to search again for.
+  const complete = precision === 'lsp' && !fitted.truncated && found.length <= limit;
+  const listed = complete ? fitted.text.replace(header, `${header} · complete`) : fitted.text;
+  const text = outside.total > 0 ? `${listed}\noutside code: ${outside.shown.join(', ')}${more}` : listed;
   const shownFiles = options.code
     ? new Set(rows.slice(0, fitted.shown).map((r) => r.slice(0, r.indexOf(':'))))
     : new Set(files.slice(0, fitted.shown).map(([file]) => file));
@@ -350,10 +353,10 @@ export async function grep(
   // place with its lines, else every file with its count. A rung shows all
   // it covers or gives way to the next: a list cut short hid the files past
   // it, and the agent grepped again for them.
-  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text`, ...hits.map(hitRow)]);
+  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · complete`, ...hits.map(hitRow)]);
   if (estimateTokens(rows.join('\n')) <= listBudget) return withSource(ws, hits, rows, session, options.brief);
   const lines = [
-    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · lines per symbol`,
+    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · lines per symbol · complete`,
     ...[...byFile].map(([file, fileHits]) => `${file}  ${linesPerPlace(fileHits)}`),
   ];
   if (estimateTokens(lines.join('\n')) <= listBudget) {

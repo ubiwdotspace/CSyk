@@ -56,9 +56,11 @@ export async function calls(
   if (!symbol) return { text: note, locations: [] };
   const direction = options.direction ?? 'in';
   const depth = Math.min(Math.max(options.depth ?? 1, 1), 3);
-  const limit = options.limit ?? 30;
+  const limit = options.limit ?? Infinity;
   // Each row and the places it names, so only shown rows count as answers.
-  const rows: { text: string; locations: Location[] }[] = [];
+  const rows: Row[] = [];
+  // Callers not followed further, or not listed, make the answer incomplete.
+  let cut = false;
   const seen = new Set([symbol.id]);
   let precision = 'lsp';
   const deadline = Date.now() + toolMs;
@@ -70,9 +72,12 @@ export async function calls(
       if (found.precision !== 'lsp') precision = found.precision;
       // Following every caller of a much-used symbol takes long and shows little.
       const deeper = level < depth && found.callers.length <= maxFanOut;
+      if ((level < depth && !deeper) || found.callers.length > limit) cut = true;
       for (const caller of found.callers.slice(0, limit)) {
+        const id = caller.home?.id ?? `${caller.file} (top level)`;
         rows.push({
-          text: `${indent}${caller.home?.id ?? `${caller.file} (top level)`}  ${caller.lines.join(', ')}`,
+          text: `${indent}${id}  ${caller.lines.join(', ')}`,
+          compact: `${indent}${id}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
         if (deeper && caller.home && !isTestCase(caller.home) && !seen.has(caller.home.id)) {
@@ -84,8 +89,9 @@ export async function calls(
     }
     const found = await calleesOf(ws, from);
     if (found.precision !== 'lsp') precision = found.precision;
+    if (found.callees.length > limit) cut = true;
     for (const callee of found.callees.slice(0, limit)) {
-      rows.push({ text: `${indent}${callee.label}  ${callee.line}`, locations: [{ file: callee.file, line: callee.line }] });
+      rows.push({ text: `${indent}${callee.label}  ${callee.line}`, compact: `${indent}${callee.label}`, locations: [{ file: callee.file, line: callee.line }] });
       if (level < depth && callee.symbol && !seen.has(callee.symbol.id)) {
         seen.add(callee.symbol.id);
         await visit(callee.symbol, level + 1);
@@ -96,7 +102,7 @@ export async function calls(
 
   const what = direction === 'in' ? 'caller' : 'callee';
   const header = `calls ${direction} · ${symbol.id} · ${plural(rows.length, what)} · ${precision}${note ? ` · ${note}` : ''}`;
-  return shown(header, rows, options.budget ?? defaultBudget);
+  return shown(header, rows, options.budget ?? defaultBudget, !cut && precision === 'lsp');
 }
 
 /**
@@ -120,8 +126,9 @@ export async function impact(
       if (home) changed.set(home.id, home);
     }
   }
-  const rows = [...changed.values()].map((s) => ({
+  const rows: Row[] = [...changed.values()].map((s) => ({
     text: `changed  ${s.id}  ${s.line}`,
+    compact: `changed  ${s.id}`,
     locations: [{ file: s.file, line: s.line }],
   }));
   const tests = new Set([...files].filter(isTestFile));
@@ -145,6 +152,7 @@ export async function impact(
         seen.add(id);
         rows.push({
           text: `caller ${step}  ${id}  ${caller.lines.join(', ')}  ← ${symbol.name}`,
+          compact: `caller ${step}  ${id}`,
           locations: caller.lines.map((line) => ({ file: caller.file, line })),
         });
         if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
@@ -156,18 +164,24 @@ export async function impact(
     }
     level = next;
   }
-  rows.push(...[...tests].sort().map((file) => ({ text: `test  ${file}`, locations: [] })));
+  rows.push(...[...tests].sort().map((file) => ({ text: `test  ${file}`, compact: `test  ${file}`, locations: [] })));
   const stopped = stoppedAt ? ` · stopped at caller level ${stoppedAt}: ${maxFanOut}+ callers to follow; run calls on one` : '';
   const header =
     `impact · since ${since} · ${plural(changed.size, 'symbol')} changed in ${plural(files.size, 'file')}` +
     ` · ${plural(tests.size, 'test file')} · ${precision}${stopped}`;
-  return shown(header, rows, budget);
+  return shown(header, rows, budget, !stoppedAt && precision === 'lsp');
 }
 
+/** A row of `calls` or `impact`, the same without its lines, and the places it names. */
+type Row = { text: string; compact: string; locations: Location[] };
+
 // Fits [rows] in the budget; the answer names only the places of rows shown.
-function shown(header: string, rows: { text: string; locations: Location[] }[], budget = defaultBudget): ToolResult {
-  const fitted = fit(header, rows.map((r) => r.text), { budget, narrow: 'lower depth' });
-  return { text: fitted.text, locations: rows.slice(0, fitted.shown).flatMap((r) => r.locations) };
+// One that lists everything the compiler confirmed says `complete`, so the
+// agent need not search again to make sure.
+function shown(header: string, rows: Row[], budget: number, complete: boolean): ToolResult {
+  const fitted = fit(header, rows.map((r) => r.text), { budget, narrow: 'lower depth', compact: rows.map((r) => r.compact) });
+  const text = complete && !fitted.truncated ? fitted.text.replace(header, `${header} · complete`) : fitted.text;
+  return { text, locations: rows.slice(0, fitted.shown).flatMap((r) => r.locations) };
 }
 
 // The callers of [symbol]: its references in call position, by enclosing symbol.
