@@ -54,23 +54,24 @@ sequenceDiagram
 ```
 
 **What `grep` sends back.** Most of an agent's tokens are its context, re-read on every turn, so
-`grep` tries to answer in a way that saves the agent its next turn without filling its context:
+`grep` tries to answer in a way that saves the agent its next turn without filling its context. It
+gives the most complete answer that fits its budget (2,000 tokens, 600 once the session is long),
+and never a list cut short, which hides the files past it, so the agent searches again for them.
+Only the count per file, the last resort, can leave files out: the ones with fewest matches.
 
 ```mermaid
 flowchart TD
     start["grep pattern"] --> search["ripgrep over the project<br/>(index the files it hit first, if the index is still being built)"]
     search --> found{"any match?"}
-    found -->|"no, in the folder given"| wider["search the whole project<br/>and say so"]
-    found -->|yes| many{"matches in more than 8 files<br/>and too many to list?"}
-    many -->|yes| summary["count per file, files with most matches first,<br/>with the functions they are in"]
-    many -->|no| list["each match: file:line, the function it is in, the line"]
-    list --> long{"session already long?<br/>(answers over 3,000 tokens)"}
-    long -->|yes| short["short list only (600 tokens)"]
-    long -->|no| small{"matches in up to 3 small functions?"}
-    small -->|yes| bodies["add those functions' code"]
-    small -->|no| few{"matches in up to 3 files?"}
-    few -->|yes| around["add the lines around each match"]
-    few -->|no| plain["list only"]
+    found -->|"no, in the folder given"| wider["search the whole project, briefly<br/>(400 tokens, no code), and say so"]
+    found -->|yes| all{"every match with its line<br/>fits the budget?"}
+    all -->|yes| list["each match: file:line, the function it is in, the line"]
+    all -->|no| places{"every match's line number,<br/>per function, fits?"}
+    places -->|yes| lines["per file: each function with its match lines"]
+    places -->|no| summary["count per file, files with most matches first,<br/>with the functions they are in"]
+    list --> small{"matches in up to 3 small functions,<br/>or in up to 3 files?<br/>(not in a long session)"}
+    small -->|"functions"| bodies["add those functions' code"]
+    small -->|"files"| around["add the lines around the matches that fit;<br/>matches past them keep their line"]
 ```
 
 **Where things are in the code.**
