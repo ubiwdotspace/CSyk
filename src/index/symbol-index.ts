@@ -259,7 +259,10 @@ function nameScore(
   queryWords: string[],
   key: { squashed: string; words: string[] },
 ): number {
-  if (name === query) return 100;
+  // The name exactly as asked beats any other spelling of it, whatever its
+  // kind: `Styles` (a type) over a dozen `styles` functions, `CONFERENCE_INFO`
+  // (a const) over the class `ConferenceInfo`.
+  if (name === query) return 200;
   const squashedName = key.squashed;
   if (squashedName === squashed) return 90;
   if (squashedName.startsWith(squashed)) return 70;

@@ -26,6 +26,22 @@ describe('Workspace', () => {
     await ws.close();
   });
 
+  it('finds the name exactly as asked first, whatever its kind', async () => {
+    const ws = await Workspace.open(
+      folder({
+        'chat.ts': 'export const styles = () => ({});',
+        'toolbox.ts': 'export type Styles = { color: string };',
+        'info.ts': 'export class ConferenceInfo {}',
+        'constants.ts': 'export const CONFERENCE_INFO = {};',
+      }),
+    );
+    const first = async (query: string) => (await runTool(ws, 'find', { query }, new Session())).text.split('\n')[1];
+    expect(await first('Styles')).toMatch(/^toolbox\.ts#Styles /);
+    expect(await first('CONFERENCE_INFO')).toMatch(/^constants\.ts#CONFERENCE_INFO /);
+    expect(await first('styles')).toMatch(/^chat\.ts#styles /);
+    await ws.close();
+  });
+
   it('greps before the index is full, indexing the files it hits', async () => {
     const files = Object.fromEntries(Array.from({ length: 3000 }, (_, i) => [`f${i}.ts`, `export function f${i}() {}`]));
     const root = folder({ ...files, 'z.ts': 'export function needle() {\n  return "find me";\n}' });
