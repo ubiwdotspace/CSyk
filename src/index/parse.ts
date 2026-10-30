@@ -151,12 +151,16 @@ export function isCodeAt(tree: Tree, line: number, column: number): boolean {
 
 /**
  * Whether [column] of a source [line] sits in a documentation link the
- * compiler resolves like code: a JSDoc `{@link Name}`, or a Dart or Go doc
- * comment's `[Name]`.
+ * compiler resolves like code: a JSDoc `{@link Name}`, a JSDoc tag's type
+ * (`@param {?Styles} style`, `@returns {Name}`) or the class an
+ * `@augments` names, or a Dart or Go doc comment's `[Name]`.
  */
 export function inDocLink(line: string, column: number): boolean {
   const before = line.slice(0, column);
   if (/\{@link(?:code|plain)?\s+[\w$.]*$/.test(before)) return true;
+  const jsdoc = /^\s*(?:\/\*\*|\*)/.test(before);
+  if (jsdoc && /@(?:param|arg|argument|returns?|type|typedef|throws|exception|property|prop|this|enum|satisfies)\b[^{}]*\{[^}]*$/.test(before)) return true;
+  if (jsdoc && /@(?:augments|extends|implements|mixes|see)\s+\{?[\w$.]*$/.test(before)) return true;
   return /^\s*\/\/\/?.*\[[\w$.]*$/.test(before);
 }
 
