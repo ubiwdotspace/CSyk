@@ -11,3 +11,6 @@ eval/results/
 eval/corpora/
 eval/cases/private/
 eval/corpora.local.yaml
+
+# Standalone packages built by scripts/package.sh.
+packages/

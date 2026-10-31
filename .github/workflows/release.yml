@@ -1,16 +1,51 @@
 name: Release
 
 # Runs when a version tag made by `npm version` is pushed (see CONTRIBUTING.md).
+# A pull request that changes the packaging builds and tries the standalone
+# packages, without publishing anything.
 on:
   push:
     tags: ['v*']
+  pull_request:
+    paths: [scripts/package.sh, scripts/smoke.ts, .github/workflows/release.yml]
 
 permissions:
   contents: write
   id-token: write
 
 jobs:
+  standalone:
+    strategy:
+      matrix:
+        include:
+          - { runner: ubuntu-latest, os: linux, arch: x64 }
+          - { runner: ubuntu-24.04-arm, os: linux, arch: arm64 }
+          - { runner: macos-latest, os: darwin, arch: arm64 }
+          # Built on an Apple silicon Mac, so it cannot be tried there.
+          - { runner: macos-latest, os: darwin, arch: x64, cross: true }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: scripts/package.sh ${{ matrix.os }} ${{ matrix.arch }}
+      # Without Node.js on the PATH, as on a machine that never installed it.
+      - if: ${{ !matrix.cross }}
+        run: |
+          node=$(command -v node)
+          PATH=/usr/bin:/bin "$node" scripts/smoke.ts packages/csyk-${{ matrix.os }}-${{ matrix.arch }}/bin/csyk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csyk-${{ matrix.os }}-${{ matrix.arch }}
+          path: packages/csyk-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+
   publish:
+    needs: standalone
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -31,6 +66,10 @@ jobs:
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+      - uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
+      - run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag packages/*.tar.gz
         env:
           GH_TOKEN: ${{ github.token }}

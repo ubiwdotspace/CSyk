@@ -33,13 +33,22 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 
 ## Install
 
-You need Node.js 22.18 or later, on macOS or Linux, and an AI coding agent: Claude Code, Codex or
-Antigravity. Any other agent that supports MCP works too, set up by hand.
+You need macOS or Linux and an AI coding agent: Claude Code, Codex or Antigravity. Any other agent
+that supports MCP works too, set up by hand.
 
-1. **Install CSyk**, once for your machine:
+1. **Install CSyk**, once for your machine. With Node.js 22.18 or later:
 
    ```sh
    npm install -g csyk          # or, with pnpm: pnpm add -g csyk
+   ```
+
+   Without Node.js, take the package for your machine, which has Node.js inside, and link it from
+   a folder on your `PATH`:
+
+   ```sh
+   p=csyk-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/')
+   curl -fsSL https://github.com/ubiwdotspace/CSyk/releases/latest/download/$p.tar.gz | tar -xz -C ~/.local
+   mkdir -p ~/.local/bin && ln -sf ~/.local/$p/bin/csyk ~/.local/bin/csyk   # or another folder on your PATH
    ```
 
 2. **Set it up in your project:**
