@@ -9,7 +9,7 @@ import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify|lsp-plugin|codegraph> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
