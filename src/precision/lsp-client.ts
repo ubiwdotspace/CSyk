@@ -241,8 +241,12 @@ export class LspClient {
     }
   }
 
-  /** Where the symbol at [at] is declared. */
-  async definition(at: Position): Promise<Span[]> {
+  /**
+   * Where the symbol at [at] is declared in the workspace ([spans]), and
+   * whether the server named a place outside it ([outside]: a library, the
+   * language's own types). Neither means the server could not tell.
+   */
+  async definition(at: Position): Promise<{ spans: Span[]; outside: boolean }> {
     await this.open(at.file);
     const result = await answerOrNone(() =>
       this.connection.sendRequest(DefinitionRequest.type, {
@@ -251,7 +255,8 @@ export class LspClient {
       }),
     );
     const list: (Location | LocationLink)[] = Array.isArray(result) ? result : result ? [result] : [];
-    return list.flatMap((loc) => this.span(loc));
+    const spans = list.flatMap((loc) => this.span(loc));
+    return { spans, outside: spans.length < list.length };
   }
 
   /** What the server says implements the declaration at [at], or what it implements (gopls answers both ways). */

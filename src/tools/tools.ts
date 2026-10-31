@@ -207,6 +207,24 @@ export async function read(
 }
 
 /**
+ * Mentions the compiler could not resolve, by file, as `file line, line; …`
+ * with each line written by [label]: code before tests, six files of five
+ * lines at most, then how many more.
+ */
+export function unresolvedRow(mentions: readonly Position[], label: (file: string, line: number) => string = (_, line) => `${line}`): string {
+  const byFile = new Map<string, Set<number>>();
+  for (const p of mentions) byFile.set(p.file, (byFile.get(p.file) ?? new Set()).add(p.line + 1));
+  const files = [...byFile].sort(([a], [b]) => Number(isTestFile(a)) - Number(isTestFile(b)) || a.localeCompare(b));
+  const shown = files.slice(0, 6).map(([file, set]) => {
+    const lines = [...set].sort((a, b) => a - b);
+    const more = lines.length > 5 ? ` +${lines.length - 5}` : '';
+    return `${file} ${lines.slice(0, 5).map((n) => label(file, n)).join(', ')}${more}`;
+  });
+  const rest = files.length > 6 ? ` (+${files.length - 6} more files)` : '';
+  return `${shown.join('; ')}${rest}`;
+}
+
+/**
  * `refs`: every reference to one symbol from the compiler, one row per file
  * with each line and the symbol it sits in; [code] adds each line's text.
  */
@@ -217,7 +235,7 @@ export async function refs(
 ): Promise<ToolResult> {
   const { symbol, note } = resolve(ws, target);
   if (!symbol) return { text: note, locations: [] };
-  const { found, precision } = await references(ws, symbol);
+  const { found, precision, unconfirmed = [] } = await references(ws, symbol);
   const limit = options.limit ?? Infinity;
   const byFile = new Map<string, number[]>();
   for (const p of found.slice(0, limit)) {
@@ -246,10 +264,12 @@ export async function refs(
   // Docs, specs, configs and translations that name it, which the compiler does not see.
   const outside = await mentionsOutsideCode(ws.root, symbol.name);
   const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
-  // Every use the compiler confirmed, listed: nothing to search again for.
-  const complete = precision === 'lsp' && !fitted.truncated && found.length <= limit;
+  // Every use the compiler confirmed, listed, and no mention it could not
+  // resolve: nothing to search again for.
+  const complete = precision === 'lsp' && !fitted.truncated && found.length <= limit && unconfirmed.length === 0;
   const listed = complete ? fitted.text.replace(header, `${header} · complete`) : fitted.text;
-  const text = outside.total > 0 ? `${listed}\noutside code: ${outside.shown.join(', ')}${more}` : listed;
+  const unknown = unconfirmed.length > 0 ? `\nunconfirmed, the compiler cannot tell: ${unresolvedRow(unconfirmed, where)}` : '';
+  const text = outside.total > 0 ? `${listed}${unknown}\noutside code: ${outside.shown.join(', ')}${more}` : `${listed}${unknown}`;
   const shownFiles = options.code
     ? new Set(rows.slice(0, fitted.shown).map((r) => r.slice(0, r.indexOf(':'))))
     : new Set(files.slice(0, fitted.shown).map(([file]) => file));
@@ -445,7 +465,7 @@ export async function references(
   ws: Workspace,
   symbol: CodeSymbol,
   options: Omit<ReferenceOptions, 'overloads'> = {},
-): Promise<{ found: Position[]; precision: string }> {
+): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
   const service = await ws.precision(symbol.file);
   const overloads = ws.index
     .symbolsIn(symbol.file)
@@ -459,7 +479,7 @@ export async function references(
     options.viaSupertypes === true && (symbol.lang === 'go' || (related.length > 0 && (symbol.lang !== 'dart' || closed)));
   if (service) {
     const group = [...overloads, ...related];
-    const { found: all, partial, throughBase, stopped } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
+    const { found: all, partial, throughBase, stopped, unconfirmed } = await service.references(symbol, { ...options, viaSupertypes, overloads: group, bases: related });
     if (stopped) {
       const mentions = (await codeMentions(ws.root, symbol.name, serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]), options.where)).filter(
         (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
@@ -476,7 +496,7 @@ export async function references(
     }
     // A much-used name has more mentions than one search resolves in time; say so.
     const cut = partial ? `, partial: ${partial.resolved} of ${partial.total} mentions resolved in time` : '';
-    return { found, precision: `lsp${cut}` };
+    return { found, precision: `lsp${cut}`, ...(unconfirmed?.length ? { unconfirmed } : {}) };
   }
   const extensions = serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]);
   const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(

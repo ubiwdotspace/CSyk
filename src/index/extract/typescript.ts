@@ -10,7 +10,8 @@ const httpDecorator = /^@(Get|Post|Put|Patch|Delete|Options|Head|All|Sse)\b/;
  * TS/JS declarations: top-level functions, classes, interfaces, types,
  * enums, bindings and namespaces (with what they declare), class methods,
  * and the functions in an object literal (`module.exports = { … }`,
- * `const api = { … }`, `export default { … }`). React components and hooks, and
+ * `const api = { … }`, `export default { … }`, or one a top-level call is
+ * given: `createSlice({ … })`, `expect.extend({ … })`). React components and hooks, and
  * NestJS controllers' routes and injectable providers, get their own kinds.
  * Functions declared inside functions (a factory's helpers, a hook's
  * handlers, a test's) are kept, marked nested, under the function around
@@ -28,6 +29,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           if (child?.type === 'internal_module') declare(child, exported, [], parent);
           else if (child?.type === 'assignment_expression') assigned(node, child);
           else if (child && copied(child).length > 0) copiedInto(child);
+          else if (child?.type === 'call_expression') given(child, false, parent);
           // `describe('…', () => { const run = … })`: helpers in a callback.
           else if (child) inside(child, parent);
         }
@@ -53,6 +55,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
           if (!named.type.includes('class')) inside(named, owner);
           return;
         }
+        if (value?.type === 'call_expression') return given(value, true, parent);
         // `export default function ({ … }) {…}` names no function; TypeScript calls it default.
         const keyword = node.children.find((c) => c?.type === 'default');
         if (value && keyword && functionValues.has(value.type)) {
@@ -107,6 +110,7 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
             const value = declarator.childForFieldName('value');
             const bound = sink.add(binding, bindingKind(binding.text, value, jsx), declarator, exported, parent);
             if (value?.type === 'object') members(value, exported, bound);
+            else if (value?.type === 'call_expression') given(value, exported, bound);
             else if (value) inside(value, bound);
             continue;
           }
@@ -165,6 +169,23 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         inside(value, sink.add(key, owner ? 'method' : functionKind(key.text, jsx), member, exported, owner));
       } else if (value.type === 'object') members(value, exported, owner);
       else inside(value, owner);
+    }
+  };
+
+  // A call's arguments: the functions of an object literal it is given,
+  // under [owner] (`createSlice({ reducers: { add() {…} } })`,
+  // `expect.extend({ … })`), or of one a function it is given returns
+  // (zustand's `create((set) => ({ … }))`), also through calls wrapping
+  // them; the rest as any code.
+  const given = (call: Node, exported: boolean, owner?: CodeSymbol, depth = 0): void => {
+    const callee = call.childForFieldName('function');
+    if (callee) inside(callee, owner);
+    for (const arg of call.childForFieldName('arguments')?.namedChildren ?? []) {
+      if (!arg) continue;
+      const object = arg.type === 'object' ? arg : returnedObject(arg);
+      if (object) members(object, exported, owner);
+      else if (arg.type === 'call_expression' && depth < 2) given(arg, exported, owner, depth + 1);
+      else inside(arg, owner);
     }
   };
 
@@ -253,6 +274,14 @@ function boundNames(pattern: Node): Node[] {
     default:
       return [];
   }
+}
+
+// The object literal an arrow function returns as its body, `(set) => ({ … })`.
+function returnedObject(node: Node): Node | undefined {
+  if (node.type !== 'arrow_function') return undefined;
+  const body = node.childForFieldName('body');
+  const inner = body?.type === 'parenthesized_expression' ? body.namedChildren[0] : undefined;
+  return inner?.type === 'object' ? inner : undefined;
 }
 
 // The object literals `Object.assign(target, { … })` copies onto its target.

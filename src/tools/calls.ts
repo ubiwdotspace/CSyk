@@ -10,7 +10,7 @@ import { distance, pool, serverFor, textMentions } from '../precision/lsp-servic
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
-import { classKinds, plural, references, resolve, type Location, type ToolResult } from './tools.ts';
+import { classKinds, plural, references, resolve, unresolvedRow, type Location, type ToolResult } from './tools.ts';
 
 const run = promisify(execFile);
 
@@ -83,12 +83,14 @@ export async function calls(
   const seen = new Set([symbol.id]);
   let precision = 'lsp';
   const deadline = Date.now() + toolMs;
+  const unknown = new Map<string, Position[]>();
 
   const visit = async (from: CodeSymbol, level: number): Promise<void> => {
     const indent = '  '.repeat(level - 1);
     if (direction === 'in') {
       const found = await callersOf(ws, from, deadline);
       if (found.precision !== 'lsp') precision = found.precision;
+      if (found.unconfirmed.length > 0) unknown.set(from.name, [...(unknown.get(from.name) ?? []), ...found.unconfirmed]);
       const homes = found.callers.flatMap((c) => (c.home && !isTestCase(c.home) ? [c.home] : []));
       const followed = new Set(level < depth ? nearestFirst(homes, [from.file]).map((s) => s.id) : []);
       if ((level < depth && followed.size < homes.length) || found.callers.length > limit) cut = true;
@@ -121,7 +123,8 @@ export async function calls(
 
   const what = direction === 'in' ? 'caller' : 'callee';
   const header = `calls ${direction} · ${symbol.id} · ${plural(rows.length, what)} · ${precision}${note ? ` · ${note}` : ''}`;
-  return shown(header, rows, options.budget ?? defaultBudget, !cut && precision === 'lsp');
+  const answer = shown(header, rows, options.budget ?? defaultBudget, !cut && precision === 'lsp' && unknown.size === 0);
+  return { ...answer, text: answer.text + unconfirmedLines(ws, unknown) };
 }
 
 /**
@@ -169,6 +172,7 @@ export async function impact(
   const deadline = Date.now() + toolMs;
   // What a level left out, by time or by maxFollow.
   const notes: string[] = [];
+  const unknown = new Map<string, Position[]>();
   for (let step = 1; step <= depth && level.length > 0; step++) {
     const next: CodeSymbol[] = [];
     // A level's searches run a few at a time; their answers are read in order.
@@ -178,6 +182,7 @@ export async function impact(
     if (searches.length < level.length) notes.push(`callers of ${searches.length} of ${level.length} at level ${step} searched in time`);
     for (const { symbol, found } of searches) {
       if (found.precision !== 'lsp') precision = found.precision;
+      if (found.unconfirmed.length > 0) unknown.set(symbol.name, [...(unknown.get(symbol.name) ?? []), ...found.unconfirmed]);
       for (const caller of found.callers) {
         if (isTestFile(caller.file)) tests.add(caller.file);
         const id = caller.home?.id ?? `${caller.file} (top level)`;
@@ -212,7 +217,8 @@ export async function impact(
   const header =
     `impact · since ${since} · ${plural(changed.size, 'symbol')} changed in ${plural(files.size, 'file')}` +
     ` · ${plural(tests.size, 'test file')} · ${precision}${stopped}`;
-  return shown(header, rows, budget, notes.length === 0 && precision === 'lsp');
+  const answer = shown(header, rows, budget, notes.length === 0 && precision === 'lsp' && unknown.size === 0);
+  return { ...answer, text: answer.text + unconfirmedLines(ws, unknown) };
 }
 
 /** A row of `calls` or `impact`, the same without its lines, and the places it names. */
@@ -233,10 +239,10 @@ async function callersOf(
   symbol: CodeSymbol,
   deadline: number,
   receiver?: CodeSymbol,
-): Promise<{ callers: Caller[]; precision: string }> {
+): Promise<{ callers: Caller[]; precision: string; unconfirmed: Position[] }> {
   // Dispatch matters here: a call through an interface reaches its implementations.
   // Only uses as a value are resolved, which spares imports, exports and types.
-  const { found, precision } = await references(ws, symbol, { viaSupertypes: true, where: isValueUseAt, deadline });
+  const { found, precision, unconfirmed = [] } = await references(ws, symbol, { viaSupertypes: true, where: isValueUseAt, deadline });
   const byHome = new Map<string, Caller>();
   for (const site of [...found, ...(await constructorCalls(ws, symbol, deadline, receiver))]) {
     const home = ws.index.containing(site.file, site.line + 1);
@@ -250,7 +256,20 @@ async function callersOf(
     if (!byHome.has(key)) byHome.set(key, caller);
   }
   const callers = [...byHome.values()].sort((a, b) => a.file.localeCompare(b.file) || (a.lines[0] ?? 0) - (b.lines[0] ?? 0));
-  return { callers, precision };
+  return { callers, precision, unconfirmed };
+}
+
+// Uses the compiler could not resolve of the first three symbols that have
+// them, a line each: they may be calls too, so the answer is not complete.
+function unconfirmedLines(ws: Workspace, of: Map<string, Position[]>): string {
+  const label = (file: string, line: number) => {
+    const home = ws.index.containing(file, line);
+    return home ? `${line}·${home.name}` : `${line}`;
+  };
+  const named = [...of].filter(([, mentions]) => mentions.length > 0);
+  const lines = named.slice(0, 3).map(([name, mentions]) => `unconfirmed uses of ${name}, the compiler cannot tell: ${unresolvedRow(mentions, label)}`);
+  if (named.length > 3) lines.push(`unconfirmed uses of ${named.length - 3} more; run refs on one for them`);
+  return lines.map((line) => `\n${line}`).join('');
 }
 
 // Where the TS or JS constructor [symbol] runs: on [receiver] and its
