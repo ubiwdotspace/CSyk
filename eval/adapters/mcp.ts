@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
@@ -21,6 +24,17 @@ export function uvToolBin(from: string): string {
     bin = execFileSync('uvx', ['-q', '--from', from, 'python', '-c', script], { encoding: 'utf8' }).trim();
     bins.set(from, bin);
   }
+  return bin;
+}
+
+/**
+ * The bin folder of the npm [packages], exact versions, installed once into a
+ * folder of their own: a run never depends on what is installed globally.
+ */
+export function npmToolBin(...packages: string[]): string {
+  const dir = join(tmpdir(), 'csyk-agent', 'npm', packages.join('+').replace(/[^\w.@+-]/g, '_'));
+  const bin = join(dir, 'node_modules/.bin');
+  if (!existsSync(bin)) execFileSync('npm', ['install', '--prefix', dir, '--no-audit', '--no-fund', '--silent', ...packages], { stdio: 'ignore' });
   return bin;
 }
 

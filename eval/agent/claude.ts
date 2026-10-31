@@ -1,12 +1,14 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { appendFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { note, skill } from '../../src/guide.ts';
 import { buildGraphifyGraph, graphifyFrom, graphifyRules } from '../adapters/graphify.ts';
-import { uvToolBin } from '../adapters/mcp.ts';
+import { npmToolBin, uvToolBin } from '../adapters/mcp.ts';
 import { serenaFrom, serenaOptions } from '../adapters/serena.ts';
 import { watchResources } from '../harness/resources.ts';
 import { countTokens } from '../harness/tokens.ts';
@@ -21,6 +23,10 @@ const tools = 'Read,Grep,Glob';
 export type Setup = {
   mcp?: Record<string, unknown>;
   allowed: string[];
+  /** Built-in tools besides Read, Grep and Glob, such as LSP. */
+  tools?: string[];
+  /** A plugin's manifest, loaded with --plugin-dir. */
+  plugin?: Record<string, unknown>;
   settings?: unknown;
   guide?: string;
   files?: Record<string, string>;
@@ -55,8 +61,8 @@ export type ClaudeRun = {
 /**
  * The setups for a workspace at [workspace]: b0 (Claude Code's built-in
  * tools only), CSyk in several configurations, run from the build that
- * buildCsyk makes, and Serena and Graphify as their own Claude Code setups
- * install them.
+ * buildCsyk makes, and Serena, Graphify, the official TypeScript LSP plugin
+ * and CodeGraph as their own Claude Code setups install them.
  */
 export function setups(workspace: string): Record<string, Setup> {
   const csyk = ['node', join(root, 'dist/cli.js')];
@@ -103,6 +109,39 @@ export function setups(workspace: string): Record<string, Setup> {
         },
       };
     },
+    // The official typescript-lsp plugin (claude-plugins-official): the same server entry as
+    // its marketplace listing, loaded as a plugin folder, for Claude Code's LSP tool. Its README
+    // installs typescript-language-server with `typescript`; TypeScript 6 here, since 7 has no
+    // tsserver for it to run and its initialize fails.
+    get 'lsp-plugin'(): Setup {
+      const bin = npmToolBin('typescript-language-server@6.0.2', 'typescript@6.0.3');
+      const languages = { ts: 'typescript', tsx: 'typescriptreact', js: 'javascript', jsx: 'javascriptreact', mts: 'typescript', cts: 'typescript', mjs: 'javascript', cjs: 'javascript' };
+      const server = {
+        command: join(bin, 'typescript-language-server'),
+        args: ['--stdio'],
+        extensionToLanguage: Object.fromEntries(Object.entries(languages).map(([ext, id]) => [`.${ext}`, id])),
+      };
+      return { allowed: [], tools: ['LSP'], plugin: { name: 'typescript-lsp', version: '1.0.0', lspServers: { typescript: server } } };
+    },
+    // CodeGraph as `codegraph install --yes` sets it up for Claude Code: its MCP server, always
+    // loaded, allowed, the block it writes into CLAUDE.md and its prompt hook, with the graph
+    // built anew for each issue (`codegraph init`). Telemetry off: nothing leaves the machine.
+    get codegraph(): Setup {
+      const bin = npmToolBin('@colbymchenry/codegraph@1.6.2');
+      const codegraph = join(bin, 'codegraph');
+      const env = { CODEGRAPH_TELEMETRY: '0' };
+      return {
+        mcp: { codegraph: { type: 'stdio', command: codegraph, args: ['serve', '--mcp'], alwaysLoad: true, env } },
+        allowed: ['mcp__codegraph__*'],
+        settings: { hooks: { UserPromptSubmit: [{ hooks: [{ type: 'command', command: `CODEGRAPH_TELEMETRY=0 ${codegraph} prompt-hook` }] }] } },
+        guide: codegraphBlock(bin),
+        prepare: async () => {
+          await exclude(workspace, '.codegraph/');
+          await rm(join(workspace, '.codegraph'), { recursive: true, force: true });
+          await promisify(execFile)(codegraph, ['init', '--yes'], { cwd: workspace, env: { ...process.env, ...env }, maxBuffer: 64 * 1024 * 1024 });
+        },
+      };
+    },
     b0: { allowed: [] },
     csyk: {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
@@ -137,6 +176,12 @@ export function setups(workspace: string): Record<string, Setup> {
         'for its uses and callers, impact after edits, grep for text. Read a whole file only when you need most of it.',
     },
   };
+}
+
+// The block `codegraph install` writes into CLAUDE.md, read from the installed release.
+function codegraphBlock(bin: string): string {
+  const template = join(bin, '../@colbymchenry', `codegraph-${process.platform}-${process.arch}`, 'lib/dist/installer/instructions-template.js');
+  return (createRequire(import.meta.url)(template) as { CODEGRAPH_INSTRUCTIONS_BLOCK: string }).CODEGRAPH_INSTRUCTIONS_BLOCK;
 }
 
 // Keeps [pattern] out of git in [workspace], so the checkout's clean before the next issue leaves it.
@@ -178,6 +223,12 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
   await mkdir(scratch, { recursive: true });
   const mcpFile = join(scratch, `mcp-${process.pid}.json`);
   await writeFile(mcpFile, JSON.stringify({ mcpServers: setup.mcp ?? {} }));
+  const pluginDir = join(scratch, `plugin-${process.pid}`);
+  if (setup.plugin) {
+    await mkdir(join(pluginDir, '.claude-plugin'), { recursive: true });
+    await writeFile(join(pluginDir, '.claude-plugin/plugin.json'), JSON.stringify(setup.plugin));
+  }
+  const given = [tools, ...(setup.tools ?? [])].join(',');
   const args = [
     '-p',
     prompt,
@@ -189,15 +240,16 @@ export async function runClaude(prompt: string, cwd: string, setup: Setup, model
     '--max-turns',
     maxTurns,
     '--tools',
-    tools,
+    given,
     '--allowedTools',
-    [tools, ...setup.allowed].join(','),
+    [given, ...setup.allowed].join(','),
     '--strict-mcp-config',
     '--mcp-config',
     mcpFile,
     '--no-session-persistence',
     ...(process.env.ANTHROPIC_API_KEY ? ['--bare'] : ['--setting-sources', 'project']),
     ...(setup.settings ? ['--settings', JSON.stringify(setup.settings)] : []),
+    ...(setup.plugin ? ['--plugin-dir', pluginDir] : []),
     ...(setup.guide ? ['--append-system-prompt', setup.guide] : []),
   ];
   const start = performance.now();
