@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, open, readdir, readFile, rename, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listFiles } from '../workspace/files.ts';
@@ -107,7 +107,9 @@ export class SymbolIndex {
         }),
       );
     }
-    if (options.snapshot) await index.save(options.snapshot);
+    // A snapshot that still holds exactly these files is not written again.
+    const unchanged = saved && index.reused === files.length && Object.keys(saved.files).length === files.length;
+    if (options.snapshot && !unchanged) await index.save(options.snapshot);
   }
 
   /**
@@ -136,13 +138,27 @@ export class SymbolIndex {
 
   /** Saves the index to [path], for the next start. */
   async save(path: string): Promise<void> {
-    const files: Snapshot['files'] = {};
-    for (const [file, state] of this.states) files[file] = { ...state, symbols: this.byFile.get(file) ?? [] };
-    const snapshot: Snapshot = { version: await indexVersion(), files };
     await mkdir(dirname(path), { recursive: true });
-    // Written aside and renamed, so a reader never sees half a file.
-    await writeFile(`${path}.tmp`, JSON.stringify(snapshot));
-    await rename(`${path}.tmp`, path);
+    // Written a file at a time: the whole index as one string doubled the
+    // memory of a large workspace (vscode: 230 MB to 510 MB). Written aside,
+    // under a name of its own, and renamed, so a reader never sees half a file.
+    const aside = `${path}.${process.pid}-${++saves}.tmp`;
+    const out = await open(aside, 'w');
+    try {
+      let chunk = `{"version":${JSON.stringify(await indexVersion())},"files":{`;
+      let first = true;
+      for (const [file, state] of this.states) {
+        chunk += `${first ? '' : ','}${JSON.stringify(file)}:${JSON.stringify({ ...state, symbols: this.byFile.get(file) ?? [] })}`;
+        first = false;
+        if (chunk.length < 1 << 20) continue;
+        await out.write(chunk);
+        chunk = '';
+      }
+      await out.write(`${chunk}}}`);
+    } finally {
+      await out.close();
+    }
+    await rename(aside, path);
   }
 
   get files(): string[] {
@@ -315,6 +331,7 @@ async function readSnapshot(path: string): Promise<Snapshot | undefined> {
 }
 
 let version: Promise<string> | undefined;
+let saves = 0;
 
 // A hash of the code that turns files into symbols: a snapshot made by other
 // code is not reused.

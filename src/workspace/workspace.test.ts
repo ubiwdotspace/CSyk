@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { estimateTokens } from '../token/budget.ts';
 import { Session } from '../token/session.ts';
 import { runTool } from '../tools/dispatch.ts';
-import { Workspace } from './workspace.ts';
+import { snapshotPath, Workspace } from './workspace.ts';
 
 const folder = (files: Record<string, string>) => {
   const root = mkdtempSync(join(tmpdir(), 'csyk-ws-'));
@@ -24,6 +24,16 @@ describe('Workspace', () => {
     expect(ws.index.reused).toBe(1);
     expect(ws.index.named('c')).toHaveLength(1);
     await ws.close();
+    // Nothing changed since: the saved index is read, not written again.
+    const saved = statSync(snapshotPath(root)).mtimeMs;
+    await (await Workspace.open(root, { persist: true })).close();
+    expect(statSync(snapshotPath(root)).mtimeMs).toBe(saved);
+    // A deleted file is a change: it leaves the saved index.
+    rmSync(join(root, 'a.ts'));
+    await (await Workspace.open(root, { persist: true })).close();
+    const last = await Workspace.open(root, { persist: true });
+    expect([last.index.reused, last.index.named('a')]).toEqual([1, []]);
+    await last.close();
   });
 
   it('finds the name exactly as asked first, whatever its kind', async () => {
