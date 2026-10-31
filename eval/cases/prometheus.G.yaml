@@ -403,3 +403,419 @@ cases:
       - { file: "promql/engine_internal_test.go", lines: [89, 196] }
       - { file: "promql/engine.go", lines: [2599, 2666] }
       - { file: "promql/engine.go", lines: [2669, 3266] }
+  - id: G31
+    query: "discovery/digitalocean/digitalocean.go:250"
+    expect:
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [206, 267] }
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [144, 165] }
+      - { file: "discovery/digitalocean/digitalocean_db_test.go", lines: [28, 95] }
+      - { file: "discovery/digitalocean/digitalocean_db_test.go", lines: [97, 143] }
+      - { file: "discovery/digitalocean/digitalocean_test.go", lines: [44, 144] }
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [118, 120] }
+  - id: G32
+    query: "storage/generic.go:168 storage/generic.go:189"
+    expect:
+      - { file: "storage/generic.go", lines: [167, 179] }
+      - { file: "storage/generic.go", lines: [188, 191] }
+      - { file: "storage/generic.go", lines: [872, 876] }
+      - { file: "storage/generic.go", lines: [879, 883] }
+      - { file: "storage/fanout_test.go", lines: [388, 446] }
+      - { file: "storage/generic.go", lines: [677, 680] }
+      - { file: "storage/generic.go", lines: [717, 726] }
+      - { file: "storage/generic.go", lines: [769, 852] }
+      - { file: "storage/generic_test.go", lines: [231, 262] }
+      - { file: "storage/merge_test.go", lines: [1850, 1859] }
+      - { file: "storage/merge_test.go", lines: [1861, 2414] }
+      - { file: "storage/merge_test.go", lines: [2416, 2453] }
+      - { file: "storage/remote/read_test.go", lines: [323, 652] }
+      - { file: "storage/secondary.go", lines: [144, 159] }
+      - { file: "tsdb/block_test.go", lines: [533, 587] }
+      - { file: "tsdb/ooo_head_read_test.go", lines: [1177, 1231] }
+      - { file: "tsdb/querier_bench_test.go", lines: [373, 434] }
+      - { file: "tsdb/querier_test.go", lines: [4258, 4267] }
+      - { file: "web/api/v1/search.go", lines: [522, 545] }
+      - { file: "web/api/v1/search_test.go", lines: [1599, 1605] }
+      - { file: "storage/secondary.go", lines: [74, 80] }
+      - { file: "tsdb/ooo_head_read.go", lines: [617, 625] }
+      - { file: "web/api/v1/search.go", lines: [665, 681] }
+      - { file: "web/api/v1/search_test.go", lines: [275, 277] }
+      - { file: "storage/secondary.go", lines: [83, 89] }
+      - { file: "tsdb/ooo_head_read.go", lines: [628, 636] }
+      - { file: "tsdb/querier_test.go", lines: [4416, 4503] }
+      - { file: "tsdb/querier_test.go", lines: [4508, 4543] }
+      - { file: "web/api/v1/search.go", lines: [641, 657] }
+      - { file: "web/api/v1/search_test.go", lines: [279, 281] }
+      - { file: "tsdb/querier_test.go", lines: [4269, 4301] }
+      - { file: "tsdb/querier_test.go", lines: [4303, 4363] }
+      - { file: "tsdb/querier_test.go", lines: [4401, 4409] }
+      - { file: "web/api/v1/search.go", lines: [547, 633] }
+      - { file: "web/api/v1/search_test.go", lines: [1756, 1774] }
+  - id: G33
+    query: "tsdb/tsdbutil/dir_locker_testutil.go:46"
+    expect:
+      - { file: "tsdb/tsdbutil/dir_locker_testutil.go", lines: [31, 86] }
+      - { file: "tsdb/agent/db_test.go", lines: [892, 912] }
+      - { file: "tsdb/db_test.go", lines: [1785, 1798] }
+      - { file: "tsdb/tsdbutil/dir_locker_test.go", lines: [25, 38] }
+  - id: G34
+    query: "model/rulefmt/rulefmt.go:327 model/rulefmt/rulefmt.go:392"
+    expect:
+      - { file: "model/rulefmt/rulefmt.go", lines: [295, 340] }
+      - { file: "model/rulefmt/rulefmt.go", lines: [385, 401] }
+      - { file: "model/rulefmt/rulefmt.go", lines: [202, 291] }
+      - { file: "cmd/promtool/main.go", lines: [930, 962] }
+      - { file: "cmd/promtool/main_test.go", lines: [211, 244] }
+      - { file: "cmd/promtool/main_test.go", lines: [246, 253] }
+      - { file: "model/rulefmt/rulefmt_test.go", lines: [37, 47] }
+      - { file: "model/rulefmt/rulefmt_test.go", lines: [49, 74] }
+      - { file: "model/rulefmt/rulefmt_test.go", lines: [76, 137] }
+      - { file: "rules/manager.go", lines: [364, 366] }
+      - { file: "rules/manager.go", lines: [649, 680] }
+      - { file: "rules/manager_test.go", lines: [928, 1010] }
+      - { file: "model/rulefmt/rulefmt.go", lines: [101, 156] }
+      - { file: "cmd/promtool/main.go", lines: [624, 657] }
+      - { file: "cmd/promtool/main.go", lines: [872, 889] }
+      - { file: "rules/manager.go", lines: [373, 442] }
+      - { file: "cmd/prometheus/main.go", lines: [390, 1700] }
+      - { file: "rules/manager_test.go", lines: [2788, 2797] }
+  - id: G35
+    query: "discovery/moby/docker.go:140 discovery/moby/docker.go:89"
+    expect:
+      - { file: "discovery/moby/docker.go", lines: [132, 200] }
+      - { file: "discovery/moby/docker.go", lines: [86, 90] }
+      - { file: "discovery/moby/docker.go", lines: [96, 98] }
+      - { file: "discovery/moby/docker_test.go", lines: [31, 228] }
+      - { file: "discovery/moby/docker_test.go", lines: [230, 519] }
+      - { file: "discovery/moby/docker_test.go", lines: [527, 590] }
+      - { file: "discovery/moby/moby_test.go", lines: [52, 148] }
+      - { file: "cmd/promtool/sd.go", lines: [41, 128] }
+      - { file: "discovery/consul/consul_test.go", lines: [41, 49] }
+      - { file: "discovery/moby/moby_test.go", lines: [199, 210] }
+      - { file: "discovery/registry.go", lines: [265, 281] }
+      - { file: "discovery/manager.go", lines: [566, 615] }
+      - { file: "cmd/promtool/main.go", lines: [99, 498] }
+      - { file: "discovery/consul/consul_test.go", lines: [51, 65] }
+      - { file: "discovery/consul/consul_test.go", lines: [67, 89] }
+      - { file: "discovery/consul/consul_test.go", lines: [91, 177] }
+      - { file: "discovery/consul/consul_test.go", lines: [179, 188] }
+      - { file: "discovery/consul/consul_test.go", lines: [278, 286] }
+      - { file: "discovery/manager.go", lines: [77, 91] }
+      - { file: "discovery/manager_test.go", lines: [41, 49] }
+      - { file: "documentation/examples/custom-sd/adapter-usage/main.go", lines: [247, 292] }
+      - { file: "documentation/examples/custom-sd/adapter/adapter_test.go", lines: [225, 244] }
+      - { file: "notifier/manager_test.go", lines: [704, 837] }
+      - { file: "scrape/manager_test.go", lines: [1358, 1392] }
+  - id: G36
+    query: "model/textparse/promparse.go:350 model/textparse/promparse.go:155"
+    expect:
+      - { file: "model/textparse/promparse.go", lines: [348, 351] }
+      - { file: "model/textparse/promparse.go", lines: [89, 167] }
+      - { file: "model/textparse/promparse.go", lines: [355, 457] }
+      - { file: "model/textparse/promparse.go", lines: [460, 518] }
+      - { file: "model/textparse/promparse.go", lines: [522, 554] }
+      - { file: "model/textparse/openmetrics2parse.go", lines: [468, 620] }
+      - { file: "model/textparse/openmetricsparse.go", lines: [445, 577] }
+      - { file: "cmd/promtool/backfill.go", lines: [33, 70] }
+      - { file: "cmd/promtool/backfill.go", lines: [88, 229] }
+      - { file: "model/textparse/benchmark_test.go", lines: [230, 316] }
+      - { file: "model/textparse/benchmark_test.go", lines: [375, 441] }
+      - { file: "model/textparse/benchmark_test.go", lines: [474, 518] }
+      - { file: "model/textparse/interface_test.go", lines: [303, 357] }
+      - { file: "model/textparse/nhcbparse.go", lines: [180, 252] }
+      - { file: "model/textparse/nhcbparse_test.go", lines: [1189, 1270] }
+      - { file: "model/textparse/openmetrics2parse_test.go", lines: [331, 380] }
+      - { file: "model/textparse/openmetrics2parse_test.go", lines: [842, 1113] }
+      - { file: "model/textparse/openmetrics2parse_test.go", lines: [1149, 1154] }
+      - { file: "model/textparse/openmetrics2parse_test.go", lines: [1828, 1843] }
+      - { file: "model/textparse/openmetrics2parse_test.go", lines: [2217, 2313] }
+      - { file: "model/textparse/openmetricsparse_test.go", lines: [784, 1086] }
+      - { file: "model/textparse/openmetricsparse_test.go", lines: [1088, 1102] }
+      - { file: "model/textparse/openmetricsparse_test.go", lines: [1104, 1173] }
+      - { file: "model/textparse/promparse_test.go", lines: [471, 558] }
+      - { file: "model/textparse/promparse_test.go", lines: [560, 574] }
+      - { file: "model/textparse/promparse_test.go", lines: [576, 633] }
+      - { file: "model/textparse/promparse_test.go", lines: [635, 641] }
+      - { file: "model/textparse/protobufparse_test.go", lines: [5753, 5836] }
+      - { file: "model/textparse/protobufparse_test.go", lines: [5916, 5938] }
+      - { file: "model/textparse/protobufparse_test.go", lines: [5940, 6017] }
+      - { file: "model/textparse/protobufparse_test.go", lines: [6019, 6056] }
+      - { file: "scrape/scrape.go", lines: [1779, 2086] }
+      - { file: "scrape/scrape_append_v2.go", lines: [91, 404] }
+      - { file: "scrape/scrape_test.go", lines: [3739, 3772] }
+      - { file: "util/fuzzing/fuzz_test.go", lines: [47, 75] }
+      - { file: "util/fuzzing/fuzz_test.go", lines: [78, 106] }
+      - { file: "util/fuzzing/fuzz_test.go", lines: [295, 347] }
+      - { file: "web/federate_test.go", lines: [308, 507] }
+      - { file: "model/textparse/openmetricsparse.go", lines: [290, 370] }
+  - id: G37
+    query: "util/strutil/jarowinkler.go:100"
+    expect:
+      - { file: "util/strutil/jarowinkler.go", lines: [86, 103] }
+      - { file: "util/strutil/jarowinkler_bench_test.go", lines: [35, 44] }
+      - { file: "util/strutil/jarowinkler_bench_test.go", lines: [64, 72] }
+      - { file: "util/strutil/jarowinkler_bench_test.go", lines: [77, 93] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [24, 88] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [90, 112] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [163, 209] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [211, 240] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [299, 328] }
+      - { file: "web/api/v1/search_filters.go", lines: [113, 116] }
+      - { file: "storage/generic.go", lines: [287, 297] }
+      - { file: "storage/generic.go", lines: [328, 353] }
+      - { file: "storage/generic.go", lines: [449, 485] }
+      - { file: "web/api/v1/search_filters.go", lines: [163, 165] }
+      - { file: "web/api/v1/search_filters.go", lines: [215, 225] }
+      - { file: "web/api/v1/search_filters.go", lines: [244, 261] }
+      - { file: "web/api/v1/search_filters.go", lines: [276, 293] }
+      - { file: "web/api/v1/search_filters.go", lines: [303, 324] }
+      - { file: "web/api/v1/search_filters_bench_test.go", lines: [55, 64] }
+      - { file: "web/api/v1/search_filters_bench_test.go", lines: [84, 118] }
+      - { file: "web/api/v1/search_filters_test.go", lines: [144, 197] }
+      - { file: "web/api/v1/search_filters_test.go", lines: [199, 239] }
+      - { file: "web/api/v1/search_test.go", lines: [1200, 1267] }
+  - id: G38
+    query: "util/junitxml/junitxml.go:46 util/junitxml/junitxml.go:53"
+    expect:
+      - { file: "util/junitxml/junitxml.go", lines: [45, 49] }
+      - { file: "util/junitxml/junitxml.go", lines: [51, 55] }
+      - { file: "cmd/promtool/unittest.go", lines: [54, 85] }
+      - { file: "util/junitxml/junitxml_test.go", lines: [52, 66] }
+      - { file: "cmd/promtool/unittest.go", lines: [87, 150] }
+      - { file: "cmd/promtool/main.go", lines: [99, 498] }
+      - { file: "cmd/promtool/unittest.go", lines: [50, 52] }
+      - { file: "cmd/promtool/unittest_test.go", lines: [29, 217] }
+      - { file: "util/junitxml/junitxml_test.go", lines: [23, 50] }
+  - id: G39
+    query: "tsdb/fileutil/direct_io_writer.go:195"
+    expect:
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [185, 218] }
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [145, 183] }
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [220, 228] }
+      - { file: "tsdb/chunks/chunks.go", lines: [474, 478] }
+      - { file: "tsdb/fileutil/direct_io_writer_test.go", lines: [71, 197] }
+      - { file: "tsdb/chunks/chunks.go", lines: [367, 391] }
+  - id: G40
+    query: "util/gate/gate.go:33 util/gate/gate.go:28"
+    expect:
+      - { file: "util/gate/gate.go", lines: [32, 39] }
+      - { file: "util/gate/gate.go", lines: [25, 29] }
+      - { file: "storage/remote/read_handler.go", lines: [84, 132] }
+      - { file: "storage/remote/read_handler_test.go", lines: [963, 1109] }
+      - { file: "storage/remote/read_handler.go", lines: [52, 82] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [3260, 4005] }
+      - { file: "storage/remote/read_handler_test.go", lines: [53, 219] }
+      - { file: "storage/remote/read_handler_test.go", lines: [221, 279] }
+      - { file: "storage/remote/read_handler_test.go", lines: [281, 342] }
+      - { file: "storage/remote/read_handler_test.go", lines: [344, 806] }
+      - { file: "storage/remote/write_handler_test.go", lines: [49, 146] }
+      - { file: "storage/remote/write_handler_test.go", lines: [148, 292] }
+      - { file: "storage/remote/write_handler_test.go", lines: [294, 340] }
+      - { file: "storage/remote/write_handler_test.go", lines: [351, 885] }
+      - { file: "storage/remote/write_handler_test.go", lines: [891, 983] }
+      - { file: "storage/remote/write_handler_test.go", lines: [986, 1020] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1026, 1067] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1070, 1104] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1106, 1160] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1162, 1180] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1183, 1267] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1269, 1291] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1293, 1338] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1732, 1790] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1793, 1860] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1880, 1923] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1925, 1992] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1994, 2141] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [56, 442] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [444, 468] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [557, 605] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [610, 637] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [686, 937] }
+      - { file: "tsdb/db_test.go", lines: [2665, 2743] }
+      - { file: "web/api/v1/api.go", lines: [308, 421] }
+  - id: G41
+    query: "tsdb/fileutil/flock_unix.go:45 tsdb/fileutil/flock_unix.go:31"
+    expect:
+      - { file: "tsdb/fileutil/flock_unix.go", lines: [42, 54] }
+      - { file: "tsdb/fileutil/flock_unix.go", lines: [27, 32] }
+      - { file: "tsdb/fileutil/flock.go", lines: [31, 41] }
+      - { file: "tsdb/fileutil/flock_test.go", lines: [26, 63] }
+      - { file: "tsdb/tsdbutil/dir_locker.go", lines: [91, 101] }
+      - { file: "tsdb/tsdbutil/dir_locker.go", lines: [69, 88] }
+      - { file: "tsdb/agent/db.go", lines: [927, 937] }
+      - { file: "tsdb/db.go", lines: [1005, 1265] }
+      - { file: "tsdb/db.go", lines: [2520, 2552] }
+      - { file: "tsdb/db_test.go", lines: [1741, 1753] }
+      - { file: "tsdb/tsdbutil/dir_locker_test.go", lines: [25, 38] }
+  - id: G42
+    query: "discovery/azure/metrics.go:41"
+    expect:
+      - { file: "discovery/azure/metrics.go", lines: [33, 56] }
+      - { file: "discovery/azure/azure.go", lines: [123, 125] }
+      - { file: "cmd/promtool/sd.go", lines: [41, 128] }
+      - { file: "discovery/azure/azure_test.go", lines: [591, 774] }
+      - { file: "discovery/consul/consul_test.go", lines: [41, 49] }
+      - { file: "discovery/moby/moby_test.go", lines: [199, 210] }
+      - { file: "discovery/registry.go", lines: [265, 281] }
+  - id: G43
+    query: "tsdb/chunkenc/xor.go:300"
+    expect:
+      - { file: "tsdb/chunkenc/xor.go", lines: [290, 303] }
+      - { file: "tsdb/chunkenc/xor.go", lines: [128, 140] }
+      - { file: "tsdb/chunkenc/xor.go", lines: [102, 126] }
+      - { file: "tsdb/chunkenc/xor.go", lines: [146, 148] }
+  - id: G44
+    query: "util/httputil/context.go:50"
+    expect:
+      - { file: "util/httputil/context.go", lines: [34, 51] }
+      - { file: "web/api/v1/api.go", lines: [625, 729] }
+      - { file: "web/api/v1/api.go", lines: [1201, 1331] }
+      - { file: "web/web.go", lines: [798, 875] }
+      - { file: "web/api/v1/api.go", lines: [443, 554] }
+      - { file: "web/api/v1/api_test.go", lines: [976, 1144] }
+      - { file: "web/api/v1/api_test.go", lines: [1251, 4001] }
+      - { file: "web/api/v1/api_test.go", lines: [5086, 5139] }
+      - { file: "web/api/v1/api_test.go", lines: [5313, 5322] }
+      - { file: "web/api/v1/api_test.go", lines: [5559, 5602] }
+      - { file: "web/web.go", lines: [333, 628] }
+  - id: G45
+    query: "model/relabel/relabel.go:212"
+    expect:
+      - { file: "model/relabel/relabel.go", lines: [207, 213] }
+      - { file: "config/config_test.go", lines: [91, 1852] }
+      - { file: "model/relabel/relabel.go", lines: [35, 40] }
+      - { file: "model/relabel/relabel.go", lines: [108, 118] }
+      - { file: "model/relabel/relabel_test.go", lines: [29, 761] }
+      - { file: "model/relabel/relabel_test.go", lines: [763, 862] }
+      - { file: "notifier/manager_test.go", lines: [239, 366] }
+      - { file: "notifier/manager_test.go", lines: [368, 409] }
+      - { file: "notifier/manager_test.go", lines: [411, 455] }
+      - { file: "notifier/manager_test.go", lines: [1205, 1280] }
+      - { file: "rules/alerting_test.go", lines: [788, 837] }
+      - { file: "scrape/manager_test.go", lines: [63, 624] }
+      - { file: "scrape/scrape_test.go", lines: [496, 538] }
+      - { file: "scrape/scrape_test.go", lines: [1561, 1585] }
+      - { file: "scrape/scrape_test.go", lines: [6470, 6511] }
+      - { file: "scrape/scrape_test.go", lines: [6519, 6558] }
+      - { file: "scrape/scrape_test.go", lines: [6567, 6683] }
+      - { file: "scrape/scrape_test.go", lines: [7288, 7372] }
+      - { file: "scrape/scrape_test.go", lines: [8544, 8586] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [1526, 1577] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [3260, 4005] }
+      - { file: "storage/remote/write_test.go", lines: [260, 369] }
+      - { file: "web/api/v1/api_test.go", lines: [176, 212] }
+      - { file: "web/api/v1/api_test.go", lines: [1251, 4001] }
+      - { file: "scrape/scrape_test.go", lines: [490, 494] }
+      - { file: "scrape/scrape_test.go", lines: [1555, 1559] }
+      - { file: "scrape/scrape_test.go", lines: [6464, 6468] }
+      - { file: "scrape/scrape_test.go", lines: [6513, 6517] }
+      - { file: "scrape/scrape_test.go", lines: [6561, 6565] }
+      - { file: "scrape/scrape_test.go", lines: [7282, 7286] }
+      - { file: "scrape/scrape_test.go", lines: [8538, 8542] }
+      - { file: "web/api/v1/api.go", lines: [1805, 1822] }
+      - { file: "web/api/v1/api.go", lines: [1998, 2035] }
+      - { file: "web/api/v1/search_test.go", lines: [1277, 1279] }
+      - { file: "web/api/v1/api_test.go", lines: [439, 593] }
+  - id: G46
+    query: "promql/estimate.go:505 promql/estimate.go:307"
+    expect:
+      - { file: "promql/estimate.go", lines: [484, 509] }
+      - { file: "promql/estimate.go", lines: [303, 308] }
+      - { file: "promql/estimate.go", lines: [411, 477] }
+      - { file: "promql/estimate.go", lines: [61, 299] }
+      - { file: "promql/estimate.go", lines: [527, 597] }
+      - { file: "promql/estimate.go", lines: [602, 627] }
+      - { file: "cmd/prometheus/main_test.go", lines: [60, 107] }
+      - { file: "promql/estimate_bench_test.go", lines: [30, 73] }
+      - { file: "promql/estimate_resource_test.go", lines: [36, 77] }
+      - { file: "promql/estimate_resource_test.go", lines: [179, 207] }
+      - { file: "promql/estimate_resource_test.go", lines: [219, 297] }
+      - { file: "promql/estimate_resource_test.go", lines: [299, 308] }
+      - { file: "promql/estimate_resource_test.go", lines: [327, 343] }
+      - { file: "promql/estimate_test.go", lines: [49, 69] }
+      - { file: "promql/estimate_test.go", lines: [71, 99] }
+      - { file: "promql/estimate_test.go", lines: [110, 238] }
+      - { file: "promql/estimate_test.go", lines: [249, 293] }
+      - { file: "promql/estimate_test.go", lines: [300, 320] }
+      - { file: "promql/estimate_test.go", lines: [322, 342] }
+      - { file: "promql/estimate_test.go", lines: [344, 367] }
+      - { file: "promql/estimate_test.go", lines: [369, 389] }
+      - { file: "promql/estimate_test.go", lines: [392, 450] }
+      - { file: "promql/estimate_test.go", lines: [453, 486] }
+      - { file: "promql/estimate_test.go", lines: [495, 517] }
+      - { file: "promql/estimate_test.go", lines: [521, 544] }
+      - { file: "promql/estimate_test.go", lines: [552, 570] }
+      - { file: "promql/estimate_test.go", lines: [577, 662] }
+      - { file: "promql/estimate_test.go", lines: [667, 698] }
+      - { file: "promql/estimate_test.go", lines: [702, 728] }
+      - { file: "promql/estimate_test.go", lines: [762, 792] }
+      - { file: "promql/estimate_test.go", lines: [881, 907] }
+      - { file: "promql/estimate_test.go", lines: [912, 949] }
+      - { file: "promql/estimate_test.go", lines: [955, 977] }
+      - { file: "promql/estimate_test.go", lines: [982, 1001] }
+      - { file: "promql/estimate_test.go", lines: [1003, 1022] }
+      - { file: "promql/estimate_test.go", lines: [1024, 1074] }
+      - { file: "promql/estimate_test.go", lines: [1129, 1140] }
+      - { file: "promql/estimate_test.go", lines: [1142, 1185] }
+      - { file: "web/api/v1/api.go", lines: [1002, 1022] }
+  - id: G47
+    query: "tsdb/repair.go:113 tsdb/repair.go:131"
+    expect:
+      - { file: "tsdb/repair.go", lines: [30, 124] }
+      - { file: "tsdb/repair.go", lines: [126, 140] }
+      - { file: "tsdb/db.go", lines: [1005, 1265] }
+      - { file: "tsdb/compact_test.go", lines: [2536, 2594] }
+      - { file: "tsdb/db.go", lines: [919, 939] }
+      - { file: "tsdb/db_append_v2_test.go", lines: [1836, 1908] }
+      - { file: "tsdb/db_test.go", lines: [107, 134] }
+  - id: G48
+    query: "tsdb/chunkenc/histogram_meta.go:150"
+    expect:
+      - { file: "tsdb/chunkenc/histogram_meta.go", lines: [143, 155] }
+      - { file: "tsdb/chunkenc/histogram_meta.go", lines: [22, 33] }
+      - { file: "tsdb/chunkenc/float_histogram.go", lines: [521, 617] }
+      - { file: "tsdb/chunkenc/histogram.go", lines: [558, 670] }
+      - { file: "tsdb/chunkenc/histogram_meta_test.go", lines: [432, 530] }
+  - id: G49
+    query: "storage/remote/codec.go:1011"
+    expect:
+      - { file: "storage/remote/codec.go", lines: [974, 1025] }
+      - { file: "storage/remote/codec_test.go", lines: [737, 766] }
+      - { file: "storage/remote/write_otlp_handler.go", lines: [174, 207] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [3260, 4005] }
+      - { file: "storage/remote/read_handler_test.go", lines: [53, 219] }
+      - { file: "storage/remote/read_handler_test.go", lines: [221, 279] }
+      - { file: "storage/remote/read_handler_test.go", lines: [281, 342] }
+      - { file: "storage/remote/read_handler_test.go", lines: [344, 806] }
+      - { file: "storage/remote/write_handler_test.go", lines: [49, 146] }
+      - { file: "storage/remote/write_handler_test.go", lines: [148, 292] }
+      - { file: "storage/remote/write_handler_test.go", lines: [294, 340] }
+      - { file: "storage/remote/write_handler_test.go", lines: [351, 885] }
+      - { file: "storage/remote/write_handler_test.go", lines: [891, 983] }
+      - { file: "storage/remote/write_handler_test.go", lines: [986, 1020] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1026, 1067] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1070, 1104] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1106, 1160] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1162, 1180] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1183, 1267] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1269, 1291] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1293, 1338] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1732, 1790] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1793, 1860] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1880, 1923] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1925, 1992] }
+      - { file: "storage/remote/write_handler_test.go", lines: [1994, 2141] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [56, 442] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [444, 468] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [557, 605] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [610, 637] }
+      - { file: "storage/remote/write_otlp_handler_test.go", lines: [686, 937] }
+  - id: G50
+    query: "tsdb/compact.go:355"
+    expect:
+      - { file: "tsdb/compact.go", lines: [350, 399] }
+      - { file: "tsdb/compact.go", lines: [285, 344] }
+      - { file: "tsdb/compact.go", lines: [255, 283] }
+      - { file: "tsdb/compact_test.go", lines: [154, 176] }
+      - { file: "tsdb/compact_test.go", lines: [190, 248] }
+      - { file: "tsdb/compact_test.go", lines: [250, 518] }
+      - { file: "tsdb/compact_test.go", lines: [520, 568] }

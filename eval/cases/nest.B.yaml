@@ -122,3 +122,83 @@ cases:
     query: "ExteExceptionsHandler"
     expect:
       - { file: "packages/core/exceptions/external-exceptions-handler.ts", lines: [11, 42] }
+  - id: B31
+    query: "math module"
+    expect:
+      - { file: "sample/03-microservices/src/math/math.module.ts", lines: [6, 12] }
+  - id: B32
+    query: "initialize context"
+    expect:
+      - { file: "packages/core/repl/repl-context.ts", lines: [53, 75] }
+  - id: B33
+    query: "MqttTopicLengthExceededException"
+    expect:
+      - { file: "packages/microservices/errors/max-mqtt-topic-length-exceeded.exception.ts", lines: [4, 10] }
+  - id: B34
+    query: "has on module destroy hook"
+    expect:
+      - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [14, 18] }
+  - id: B35
+    query: "ClieProviderAsyncOptions"
+    expect:
+      - { file: "packages/microservices/module/interfaces/clients-module.interface.ts", lines: [21, 31] }
+  - id: B36
+    query: "lazy controller"
+    expect:
+      - { file: "integration/lazy-modules/src/lazy.controller.ts", lines: [4, 28] }
+  - id: B37
+    query: "is comment only"
+    expect:
+      - { file: "packages/core/router/sse-stream.ts", lines: [54, 61] }
+  - id: B38
+    query: "MiddBuilder"
+    expect:
+      - { file: "packages/core/middleware/builder.ts", lines: [19, 183] }
+  - id: B39
+    query: "drain timeout exception"
+    expect:
+      - { file: "packages/microservices/errors/drain-timeout.exception.ts", lines: [4, 10] }
+  - id: B40
+    query: "ModuleForwardRef"
+    expect:
+      - { file: "integration/scopes/src/durable/durable.controller.ts", lines: [21, 24] }
+  - id: B41
+    query: "SocketPortException"
+    expect:
+      - { file: "packages/websockets/errors/invalid-socket-port.exception.ts", lines: [3, 7] }
+  - id: B42
+    query: "get socket ref"
+    expect:
+      - { file: "packages/microservices/ctx-host/tcp.context.ts", lines: [18, 20] }
+  - id: B43
+    query: "github event"
+    expect:
+      - { file: "integration/security/src/hooks.controller.ts", lines: [15, 18] }
+  - id: B44
+    query: "create pipes ws param decorator"
+    expect:
+      - { file: "packages/websockets/utils/param.utils.ts", lines: [37, 96] }
+  - id: B45
+    query: "UnknElementException"
+    expect:
+      - { file: "packages/core/errors/exceptions/unknown-element.exception.ts", lines: [3, 12] }
+  - id: B46
+    query: "memory storage"
+    expect:
+      - { file: "packages/platform-fastify/multipart/storage/memory.storage.ts", lines: [9, 34] }
+  - id: B47
+    query: "not implemented exception"
+    expect:
+      - { file: "packages/common/exceptions/not-implemented.exception.ts", lines: [11, 54] }
+  - id: B48
+    query: "duplicate module"
+    expect:
+      - { file: "integration/route-conflict/src/duplicate/duplicate.module.ts", lines: [5, 8] }
+  - id: B49
+    query: "is factory provider"
+    expect:
+      - { file: "packages/core/injector/helpers/provider-classifier.ts", lines: [22, 26] }
+  - id: B50
+    query: "destroy streamable file"
+    expect:
+      - { file: "packages/core/helpers/destroy-streamable-file.ts", lines: [8, 16] }

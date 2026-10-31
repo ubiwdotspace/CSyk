@@ -122,3 +122,83 @@ cases:
     query: "Goddess with Weapons in Her Hair"
     expect:
       - { file: "lib/logic/data/wonders_data/search/taj_mahal_search_data.dart", lines: [92, 1603] }
+  - id: E31
+    query: "Tripod incense burner with makara"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E32
+    query: "Shard with Three Goddesses"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/taj_mahal_search_data.dart", lines: [92, 1603] }
+  - id: E33
+    query: "Panel with Horse Heads"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }
+  - id: E34
+    query: "Brush holder decorated with garden scene"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E35
+    query: "Bottle with Gilded Flowers"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/taj_mahal_search_data.dart", lines: [92, 1603] }
+  - id: E36
+    query: "Jar with Cover (one of a pair)"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E37
+    query: "Album of Hindu deities"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/taj_mahal_search_data.dart", lines: [92, 1603] }
+  - id: E38
+    query: "Stamp seal (scaraboid) with divine symbol"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/petra_search_data.dart", lines: [78, 835] }
+  - id: E39
+    query: "Two Vases in the Shape of a Mother Monkey with her Young"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }
+  - id: E40
+    query: "Bottle with Peony Scroll"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E41
+    query: "Bronze simpulum (ladle)"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/colosseum_search_data.dart", lines: [69, 1483] }
+  - id: E42
+    query: "Silver antoninianus of Aurelian"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/colosseum_search_data.dart", lines: [69, 1483] }
+  - id: E43
+    query: "Funerary Cone of Pa-ba-sa"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }
+  - id: E44
+    query: "Vessel with ritual scene"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/machu_picchu_search_data.dart", lines: [87, 938] }
+  - id: E45
+    query: "Candle Stand in the Shape of a Fantastic Animal"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E46
+    query: "Stela of the Overseer of the Fortress Intef"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }
+  - id: E47
+    query: "Faience figurine of a lion"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }
+  - id: E48
+    query: "Wine Pot in Shape of a Peach"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/great_wall_search_data.dart", lines: [111, 2075] }
+  - id: E49
+    query: "Bronze fitting, possible from a cart or chariot"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/colosseum_search_data.dart", lines: [69, 1483] }
+  - id: E50
+    query: "Head with tripartite wig, probably from a shabti"
+    expect:
+      - { file: "lib/logic/data/wonders_data/search/pyramids_giza_search_data.dart", lines: [99, 1623] }

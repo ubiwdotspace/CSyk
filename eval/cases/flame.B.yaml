@@ -122,3 +122,83 @@ cases:
     query: "apply parent data"
     expect:
       - { file: "packages/flame/lib/src/game/widget_components.dart", lines: [31, 37] }
+  - id: B31
+    query: "compute gap"
+    expect:
+      - { file: "examples/games/trex/lib/obstacle/obstacle.dart", lines: [28, 33] }
+  - id: B32
+    query: "hover target"
+    expect:
+      - { file: "doc/flame/examples/lib/pointer_events.dart", lines: [22, 56] }
+  - id: B33
+    query: "has world ref"
+    expect:
+      - { file: "packages/flame/lib/src/components/mixins/has_world_ref.dart", lines: [12, 43] }
+  - id: B34
+    query: "ToolButtonRenderState"
+    expect:
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/toolbar_button.dart", lines: [73, 79] }
+  - id: B35
+    query: "updaElement"
+    expect:
+      - { file: "packages/flame/lib/src/components/text_component.dart", lines: [42, 45] }
+  - id: B36
+    query: "mesh component"
+    expect:
+      - { file: "packages/flame_3d/lib/src/components/mesh_component.dart", lines: [13, 36] }
+  - id: B37
+    query: "create padded atlas"
+    expect:
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [94, 192] }
+  - id: B38
+    query: "image stories"
+    expect:
+      - { file: "examples/lib/stories/image/image.dart", lines: [9, 60] }
+  - id: B39
+    query: "clamp zoom"
+    expect:
+      - { file: "examples/lib/stories/camera_and_viewport/zoom_example.dart", lines: [25, 27] }
+  - id: B40
+    query: "CreaTemplate"
+    expect:
+      - { file: "packages/flame_cli/lib/src/create_templates.dart", lines: [6, 383] }
+  - id: B41
+    query: "BatchBleedExample"
+    expect:
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [8, 194] }
+  - id: B42
+    query: "creaDefault"
+    expect:
+      - { file: "packages/flame/lib/src/text/renderers/text_renderer_factory.dart", lines: [15, 23] }
+  - id: B43
+    query: "local to canvas"
+    expect:
+      - { file: "packages/flame_studio/lib/src/core/gizmo/canvas_mapping.dart", lines: [24, 62] }
+  - id: B44
+    query: "ToMatrix4"
+    expect:
+      - { file: "packages/flame_test/lib/src/close_to_matrix4.dart", lines: [22, 24] }
+  - id: B45
+    query: "parallax stories"
+    expect:
+      - { file: "examples/lib/stories/parallax/parallax.dart", lines: [15, 102] }
+  - id: B46
+    query: "update cache"
+    expect:
+      - { file: "packages/flame/lib/src/cache/value_cache.dart", lines: [21, 25] }
+  - id: B47
+    query: "LottieStories"
+    expect:
+      - { file: "examples/lib/stories/bridge_libraries/flame_lottie/lottie.dart", lines: [7, 23] }
+  - id: B48
+    query: "SecoTapCancelEvent"
+    expect:
+      - { file: "packages/flame/lib/src/events/messages/secondary_tap_cancel_event.dart", lines: [16, 21] }
+  - id: B49
+    query: "SpriPainter"
+    expect:
+      - { file: "packages/flame/lib/src/widgets/sprite_painter.dart", lines: [8, 48] }
+  - id: B50
+    query: "FCSParallaxExample"
+    expect:
+      - { file: "examples/lib/stories/parallax/no_fcs_parallax_example.dart", lines: [7, 44] }

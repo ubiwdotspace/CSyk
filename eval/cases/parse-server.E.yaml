@@ -122,3 +122,83 @@ cases:
     query: "This is the name of the target class for the field."
     expect:
       - { file: "src/GraphQL/loaders/schemaTypes.js", lines: [229, 229] }
+  - id: E31
+    query: "This is the date in which the object was created."
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [603, 603] }
+  - id: E32
+    query: "Cannot call success() after response has already been sent. Make sure to call su"
+    expect:
+      - { file: "src/Routers/FunctionsRouter.js", lines: [145, 162] }
+  - id: E33
+    query: "This is the point to be specified."
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [812, 812] }
+  - id: E34
+    query: "Trying to schedule a push while server is not configured."
+    expect:
+      - { file: "src/StatusHandler.js", lines: [136, 181] }
+  - id: E35
+    query: "This is the lessThanOrEqualTo operator to specify a constraint to select the obj"
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [837, 838] }
+  - id: E36
+    query: "Parse Server option pages.localizationJsonPath must be a string."
+    expect:
+      - { file: "src/Config.js", lines: [325, 380] }
+  - id: E37
+    query: "The SchemaBytesFieldInput is used to specify a field of type bytes for an object"
+    expect:
+      - { file: "src/GraphQL/loaders/schemaTypes.js", lines: [212, 213] }
+  - id: E38
+    query: "The PolygonWhereInput input type is used in operations that involve filtering ob"
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [1168, 1169] }
+  - id: E39
+    query: "The SchemaPolygonField is used to return information of a Polygon field."
+    expect:
+      - { file: "src/GraphQL/loaders/schemaTypes.js", lines: [203, 203] }
+  - id: E40
+    query: "Security log disabled"
+    expect:
+      - { file: "src/Security/CheckGroups/CheckGroupServerConfig.js", lines: [40, 40] }
+  - id: E41
+    query: "Vk appIds or appSecret is incorrect."
+    expect:
+      - { file: "src/Adapters/Auth/vkontakte.js", lines: [11, 33] }
+  - id: E42
+    query: "The SchemaNumberField is used to return information of a Number field."
+    expect:
+      - { file: "src/GraphQL/loaders/schemaTypes.js", lines: [77, 77] }
+  - id: E43
+    query: "This is the nearSphere operator to specify a constraint to select the objects wh"
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [1129, 1130] }
+  - id: E44
+    query: "Email of the user that should receive the reset email"
+    expect:
+      - { file: "src/GraphQL/loaders/usersMutations.js", lines: [252, 252] }
+  - id: E45
+    query: "Field of required type was not provided."
+    expect:
+      - { file: "src/GraphQL/ParseGraphQLServer.js", lines: [127, 133] }
+  - id: E46
+    query: "No channel to unsub from"
+    expect:
+      - { file: "src/Adapters/MessageQueue/EventEmitterMQ.js", lines: [6, 14] }
+  - id: E47
+    query: "This is the language to tetermine the list of stop words and the rules for token"
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [723, 724] }
+  - id: E48
+    query: "This is the greaterThanOrEqualTo operator to specify a constraint to select the "
+    expect:
+      - { file: "src/GraphQL/loaders/defaultGraphQLTypes.js", lines: [849, 850] }
+  - id: E49
+    query: "The SchemaStringFieldInput is used to specify a field of type string for an obje"
+    expect:
+      - { file: "src/GraphQL/loaders/schemaTypes.js", lines: [50, 51] }
+  - id: E50
+    query: "Unable to ensure uniqueness for idempotency request ID: "
+    expect:
+      - { file: "src/Controllers/DatabaseController.js", lines: [2102, 2105] }

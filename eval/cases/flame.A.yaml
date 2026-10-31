@@ -125,3 +125,90 @@ cases:
     query: "SpawnComponentWorld"
     expect:
       - { file: "examples/lib/stories/components/spawn_component_example.dart", lines: [16, 55] }
+  - id: A31
+    query: "EnemyCreator"
+    expect:
+      - { file: "examples/games/rogue_shooter/lib/components/enemy_creator.dart", lines: [7, 28] }
+      - { file: "packages/flame_bloc/example/lib/src/game/components/enemy_creator.dart", lines: [8, 23] }
+  - id: A32
+    query: "PathFinderData"
+    expect:
+      - { file: "packages/flame_isolate/example/lib/brains/path_finder.dart", lines: [25, 90] }
+  - id: A33
+    query: "RaycastResult"
+    expect:
+      - { file: "packages/flame/lib/src/experimental/raycast_result.dart", lines: [13, 82] }
+  - id: A34
+    query: "_isGreen"
+    expect:
+      - { file: "examples/lib/stories/bridge_libraries/flame_behavior_tree/traffic_example.dart", lines: [6, 6] }
+  - id: A35
+    query: "CardMoveEffect"
+    expect:
+      - { file: "doc/tutorials/klondike/app/lib/step5/components/card.dart", lines: [486, 497] }
+  - id: A36
+    query: "_follow"
+    expect:
+      - { file: "examples/lib/stories/bridge_libraries/flame_forge2d/widget_example.dart", lines: [248, 252] }
+      - { file: "packages/flame_cli/lib/src/commands/logs_command.dart", lines: [86, 103] }
+  - id: A37
+    query: "Decorator"
+    expect:
+      - { file: "packages/flame/lib/src/rendering/decorator.dart", lines: [30, 96] }
+      - { file: "packages/flame_behavior_tree/behavior_tree/lib/src/decorators/decorator.dart", lines: [4, 10] }
+  - id: A38
+    query: "CompositeHitbox"
+    expect:
+      - { file: "packages/flame/lib/src/collisions/hitboxes/composite_hitbox.dart", lines: [11, 19] }
+  - id: A39
+    query: "hideNodeByName"
+    expect:
+      - { file: "packages/flame_3d/lib/src/model/model_component.dart", lines: [71, 78] }
+  - id: A40
+    query: "renderResult"
+    expect:
+      - { file: "examples/lib/stories/collision_detection/raycast_example.dart", lines: [80, 99] }
+      - { file: "examples/lib/stories/collision_detection/raycast_light_example.dart", lines: [110, 128] }
+      - { file: "examples/lib/stories/collision_detection/raytrace_example.dart", lines: [185, 204] }
+  - id: A41
+    query: "RogueShooterWidget"
+    expect:
+      - { file: "examples/games/rogue_shooter/lib/rogue_shooter_widget.dart", lines: [5, 15] }
+  - id: A42
+    query: "BlockElement"
+    expect:
+      - { file: "packages/flame/lib/src/text/elements/block_element.dart", lines: [8, 9] }
+  - id: A43
+    query: "ForegroundFogPostProcess"
+    expect:
+      - { file: "examples/games/crystal_ball/lib/src/game/post_processes/foreground_fog.dart", lines: [9, 51] }
+  - id: A44
+    query: "OpacityEffectExample"
+    expect:
+      - { file: "examples/lib/stories/effects/opacity_effect_example.dart", lines: [7, 52] }
+  - id: A45
+    query: "DepthStencilState"
+    expect:
+      - { file: "packages/flame_3d/lib/src/graphics/backend/gpu_enums.dart", lines: [51, 62] }
+  - id: A46
+    query: "GameView"
+    expect:
+      - { file: "packages/flame_bloc/example/lib/src/game.dart", lines: [25, 42] }
+  - id: A47
+    query: "WidgetComponentParentData"
+    expect:
+      - { file: "packages/flame/lib/src/game/widget_components.dart", lines: [10, 20] }
+  - id: A48
+    query: "computeGap"
+    expect:
+      - { file: "examples/games/trex/lib/obstacle/obstacle.dart", lines: [28, 33] }
+  - id: A49
+    query: "Broadphase"
+    expect:
+      - { file: "packages/flame/lib/src/collisions/broadphase/broadphase.dart", lines: [18, 51] }
+  - id: A50
+    query: "_drawSprite"
+    expect:
+      - { file: "doc/tutorials/klondike/app/lib/step3/components/card.dart", lines: [169, 192] }
+      - { file: "doc/tutorials/klondike/app/lib/step4/components/card.dart", lines: [180, 203] }
+      - { file: "doc/tutorials/klondike/app/lib/step5/components/card.dart", lines: [215, 238] }

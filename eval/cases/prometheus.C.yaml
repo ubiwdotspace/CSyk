@@ -272,3 +272,205 @@ cases:
       - { file: "util/logging/file_test.go", lines: [48, 48] }
       - { file: "util/logging/file_test.go", lines: [77, 77] }
       - { file: "util/logging/file_test.go", lines: [84, 84] }
+  - id: C31
+    query: "dockerMetrics"
+    expect:
+      - { file: "discovery/moby/docker.go", lines: [87, 87] }
+      - { file: "discovery/moby/docker.go", lines: [133, 133] }
+      - { file: "discovery/moby/metrics_docker.go", lines: [20, 20] }
+      - { file: "discovery/moby/metrics_docker.go", lines: [27, 27] }
+      - { file: "discovery/moby/metrics_docker.go", lines: [32, 32] }
+  - id: C32
+    query: "Buckets"
+    expect:
+      - { file: "promql/quantile.go", lines: [67, 67] }
+      - { file: "promql/quantile.go", lines: [105, 105] }
+      - { file: "promql/quantile.go", lines: [533, 533] }
+      - { file: "promql/quantile.go", lines: [637, 637] }
+      - { file: "promql/quantile.go", lines: [685, 685] }
+      - { file: "promql/quantile_test.go", lines: [30, 30] }
+      - { file: "promql/quantile_test.go", lines: [62, 62] }
+      - { file: "promql/quantile_test.go", lines: [68, 68] }
+      - { file: "promql/quantile_test.go", lines: [69, 69] }
+      - { file: "promql/quantile_test.go", lines: [98, 98] }
+      - { file: "promql/quantile_test.go", lines: [99, 99] }
+      - { file: "promql/quantile_test.go", lines: [128, 128] }
+      - { file: "promql/quantile_test.go", lines: [129, 129] }
+      - { file: "promql/quantile_test.go", lines: [176, 176] }
+      - { file: "promql/quantile_test.go", lines: [177, 177] }
+      - { file: "promql/quantile_test.go", lines: [224, 224] }
+      - { file: "promql/quantile_test.go", lines: [225, 225] }
+      - { file: "promql/quantile_test.go", lines: [284, 284] }
+      - { file: "promql/quantile_test.go", lines: [285, 285] }
+      - { file: "promql/quantile_test.go", lines: [357, 357] }
+      - { file: "promql/quantile_test.go", lines: [364, 364] }
+      - { file: "promql/quantile_test.go", lines: [373, 373] }
+      - { file: "promql/quantile_test.go", lines: [374, 374] }
+      - { file: "promql/quantile_test.go", lines: [375, 375] }
+      - { file: "promql/quantile_test.go", lines: [376, 376] }
+      - { file: "promql/quantile_test.go", lines: [377, 377] }
+      - { file: "promql/quantile_test.go", lines: [378, 378] }
+  - id: C33
+    query: "swarmLabel"
+    expect:
+      - { file: "discovery/moby/nodes.go", lines: [30, 30] }
+      - { file: "discovery/moby/services.go", lines: [32, 32] }
+      - { file: "discovery/moby/services.go", lines: [55, 55] }
+      - { file: "discovery/moby/tasks.go", lines: [32, 32] }
+      - { file: "discovery/moby/tasks.go", lines: [39, 39] }
+      - { file: "discovery/moby/tasks.go", lines: [62, 62] }
+  - id: C34
+    query: "Refresh"
+    expect:
+      - { file: "discovery/http/http.go", lines: [146, 146] }
+      - { file: "discovery/http/http_test.go", lines: [62, 62] }
+      - { file: "discovery/http/http_test.go", lines: [113, 113] }
+      - { file: "discovery/http/http_test.go", lines: [148, 148] }
+      - { file: "discovery/http/http_test.go", lines: [476, 476] }
+  - id: C35
+    query: "MetadataMetricsCollector"
+    expect:
+      - { file: "scrape/metrics.go", lines: [26, 26] }
+      - { file: "scrape/metrics.go", lines: [66, 66] }
+      - { file: "scrape/metrics.go", lines: [353, 353] }
+      - { file: "scrape/metrics.go", lines: [359, 359] }
+  - id: C36
+    query: "stEncoder"
+    expect:
+      - { file: "tsdb/chunkenc/float_histogram_st.go", lines: [136, 136] }
+      - { file: "tsdb/chunkenc/float_histogram_st.go", lines: [176, 176] }
+      - { file: "tsdb/chunkenc/histogram_st.go", lines: [124, 124] }
+      - { file: "tsdb/chunkenc/histogram_st.go", lines: [164, 164] }
+      - { file: "tsdb/chunkenc/st.go", lines: [60, 60] }
+  - id: C37
+    query: "labels"
+    expect:
+      - { file: "tsdb/head.go", lines: [2393, 2393] }
+      - { file: "tsdb/head.go", lines: [2398, 2398] }
+      - { file: "tsdb/head.go", lines: [2406, 2406] }
+      - { file: "tsdb/head.go", lines: [2415, 2415] }
+      - { file: "tsdb/head_append.go", lines: [844, 844] }
+      - { file: "tsdb/head_append.go", lines: [1115, 1115] }
+      - { file: "tsdb/head_append.go", lines: [1262, 1262] }
+      - { file: "tsdb/head_append_v2.go", lines: [369, 369] }
+      - { file: "tsdb/head_read.go", lines: [150, 150] }
+      - { file: "tsdb/head_read.go", lines: [204, 204] }
+      - { file: "tsdb/head_read.go", lines: [328, 328] }
+      - { file: "tsdb/head_read.go", lines: [469, 469] }
+      - { file: "tsdb/head_wal.go", lines: [150, 150] }
+      - { file: "tsdb/head_wal.go", lines: [545, 545] }
+      - { file: "tsdb/head_wal.go", lines: [1359, 1359] }
+      - { file: "tsdb/head_wal.go", lines: [1922, 1922] }
+      - { file: "tsdb/ooo_head_read.go", lines: [72, 72] }
+      - { file: "tsdb/ooo_head_read.go", lines: [533, 533] }
+  - id: C38
+    query: "bucketLimitAppender"
+    expect:
+      - { file: "scrape/scrape.go", lines: [726, 726] }
+      - { file: "scrape/scrape_test.go", lines: [968, 968] }
+      - { file: "scrape/scrape_test.go", lines: [984, 984] }
+      - { file: "scrape/scrape_test.go", lines: [3868, 3868] }
+      - { file: "scrape/target.go", lines: [442, 442] }
+      - { file: "scrape/target_test.go", lines: [739, 739] }
+  - id: C39
+    query: "StoreSamplesRequest"
+    expect:
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/opentsdb/client.go", lines: [76, 76] }
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/opentsdb/client.go", lines: [84, 84] }
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/opentsdb/client_test.go", lines: [40, 40] }
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/opentsdb/client_test.go", lines: [52, 52] }
+  - id: C40
+    query: "ErrDuplicateRecordingLabelSet"
+    expect:
+      - { file: "rules/recording.go", lines: [112, 112] }
+      - { file: "rules/recording_test.go", lines: [179, 179] }
+  - id: C41
+    query: "PrometheusQueryOpts"
+    expect:
+      - { file: "promql/engine.go", lines: [222, 222] }
+      - { file: "promql/engine.go", lines: [230, 230] }
+      - { file: "promql/engine.go", lines: [242, 242] }
+      - { file: "promql/engine.go", lines: [249, 249] }
+      - { file: "promql/engine.go", lines: [253, 253] }
+      - { file: "promql/engine.go", lines: [257, 257] }
+      - { file: "promql/engine.go", lines: [263, 263] }
+      - { file: "promql/engine.go", lines: [266, 266] }
+      - { file: "promql/engine.go", lines: [271, 271] }
+      - { file: "promql/engine.go", lines: [276, 276] }
+  - id: C42
+    query: "mskMetrics"
+    expect:
+      - { file: "discovery/aws/aws.go", lines: [395, 395] }
+      - { file: "discovery/aws/metrics_msk.go", lines: [24, 24] }
+      - { file: "discovery/aws/metrics_msk.go", lines: [27, 27] }
+      - { file: "discovery/aws/metrics_msk.go", lines: [32, 32] }
+      - { file: "discovery/aws/msk.go", lines: [120, 120] }
+      - { file: "discovery/aws/msk.go", lines: [206, 206] }
+  - id: C43
+    query: "DatabasesRole"
+    expect:
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [76, 76] }
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [195, 195] }
+      - { file: "discovery/digitalocean/digitalocean_db_test.go", lines: [37, 37] }
+      - { file: "discovery/digitalocean/digitalocean_db_test.go", lines: [130, 130] }
+  - id: C44
+    query: "querierAdapter"
+    expect:
+      - { file: "storage/generic.go", lines: [89, 89] }
+      - { file: "storage/generic.go", lines: [94, 94] }
+      - { file: "storage/generic.go", lines: [96, 96] }
+      - { file: "storage/generic.go", lines: [107, 107] }
+      - { file: "storage/merge_test.go", lines: [1508, 1508] }
+  - id: C45
+    query: "TestDirLockerUsage"
+    expect:
+      - { file: "tsdb/agent/db_test.go", lines: [893, 893] }
+      - { file: "tsdb/db_test.go", lines: [1786, 1786] }
+      - { file: "tsdb/tsdbutil/dir_locker_test.go", lines: [26, 26] }
+  - id: C46
+    query: "ruleGroups"
+    expect:
+      - { file: "model/rulefmt/rulefmt.go", lines: [101, 101] }
+      - { file: "model/rulefmt/rulefmt.go", lines: [352, 352] }
+  - id: C47
+    query: "DockerSDConfig"
+    expect:
+      - { file: "config/config_test.go", lines: [1195, 1195] }
+      - { file: "discovery/moby/docker.go", lines: [59, 59] }
+      - { file: "discovery/moby/docker.go", lines: [69, 69] }
+      - { file: "discovery/moby/docker.go", lines: [86, 86] }
+      - { file: "discovery/moby/docker.go", lines: [93, 93] }
+      - { file: "discovery/moby/docker.go", lines: [96, 96] }
+      - { file: "discovery/moby/docker.go", lines: [101, 101] }
+      - { file: "discovery/moby/docker.go", lines: [106, 106] }
+      - { file: "discovery/moby/docker.go", lines: [108, 108] }
+      - { file: "discovery/moby/docker.go", lines: [132, 132] }
+      - { file: "discovery/moby/docker_test.go", lines: [42, 42] }
+      - { file: "discovery/moby/docker_test.go", lines: [241, 241] }
+      - { file: "discovery/moby/docker_test.go", lines: [538, 538] }
+      - { file: "discovery/moby/moby_test.go", lines: [87, 87] }
+  - id: C48
+    query: "intern"
+    expect:
+      - { file: "storage/remote/intern_test.go", lines: [30, 30] }
+      - { file: "storage/remote/intern_test.go", lines: [41, 41] }
+      - { file: "storage/remote/intern_test.go", lines: [47, 47] }
+      - { file: "storage/remote/intern_test.go", lines: [58, 58] }
+      - { file: "storage/remote/intern_test.go", lines: [73, 73] }
+      - { file: "storage/remote/intern_test.go", lines: [84, 84] }
+  - id: C49
+    query: "tCompPosBuckets"
+    expect:
+      - { file: "model/textparse/openmetrics2lex.l.go", lines: [1935, 1935] }
+      - { file: "model/textparse/promparse.go", lines: [159, 159] }
+  - id: C50
+    query: "jaroWinklerWorkspace"
+    expect:
+      - { file: "util/strutil/jarowinkler.go", lines: [35, 35] }
+      - { file: "util/strutil/jarowinkler.go", lines: [42, 42] }
+      - { file: "util/strutil/jarowinkler.go", lines: [53, 53] }
+      - { file: "util/strutil/jarowinkler.go", lines: [54, 54] }
+      - { file: "util/strutil/jarowinkler.go", lines: [59, 59] }
+      - { file: "util/strutil/jarowinkler.go", lines: [120, 120] }
+      - { file: "util/strutil/jarowinkler.go", lines: [195, 195] }
+      - { file: "util/strutil/jarowinkler_test.go", lines: [121, 121] }

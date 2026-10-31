@@ -134,3 +134,87 @@ cases:
     query: "get_case_costs"
     expect:
       - { file: "src/dispatch/case_cost/views.py", lines: [20, 23] }
+  - id: A31
+    query: "IncidentCostTypePagination"
+    expect:
+      - { file: "src/dispatch/incident_cost_type/models.py", lines: [68, 70] }
+  - id: A32
+    query: "send_task_notification"
+    expect:
+      - { file: "src/dispatch/task/flows.py", lines: [92, 126] }
+  - id: A33
+    query: "delete_event"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_google/calendar/plugin.py", lines: [71, 72] }
+  - id: A34
+    query: "mark_document_as_readonly"
+    expect:
+      - { file: "src/dispatch/document/flows.py", lines: [281, 323] }
+  - id: A35
+    query: "EntityTypeCreate"
+    expect:
+      - { file: "src/dispatch/entity_type/models.py", lines: [66, 68] }
+  - id: A36
+    query: "delete_filter"
+    expect:
+      - { file: "src/dispatch/search_filter/views.py", lines: [101, 114] }
+      - { file: "src/dispatch/signal/views.py", lines: [263, 276] }
+  - id: A37
+    query: "update_group"
+    expect:
+      - { file: "src/dispatch/group/flows.py", lines: [91, 165] }
+  - id: A38
+    query: "ack_handle_escalation_submission_event"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [1549, 1562] }
+  - id: A39
+    query: "ServiceFeedbackUpdate"
+    expect:
+      - { file: "src/dispatch/feedback/service/models.py", lines: [58, 59] }
+  - id: A40
+    query: "TestStoragePlugin"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_test/storage.py", lines: [4, 39] }
+  - id: A41
+    query: "generate_slug"
+    expect:
+      - { file: "src/dispatch/organization/models.py", lines: [31, 34] }
+  - id: A42
+    query: "calculate_score"
+    expect:
+      - { file: "src/dispatch/forms/scoring.py", lines: [4, 33] }
+  - id: A43
+    query: "oncall_shift_feedback_ucan"
+    expect:
+      - { file: "src/dispatch/feedback/service/scheduled.py", lines: [36, 45] }
+  - id: A44
+    query: "get_all_expired_reminders_by_project_id"
+    expect:
+      - { file: "src/dispatch/feedback/service/reminder/service.py", lines: [11, 22] }
+  - id: A45
+    query: "export_case_timeline"
+    expect:
+      - { file: "src/dispatch/event/flows.py", lines: [129, 143] }
+      - { file: "src/dispatch/event/service.py", lines: [569, 838] }
+  - id: A46
+    query: "NameStr"
+    expect:
+      - { file: "src/dispatch/models.py", lines: [18, 18] }
+      - { file: "src/dispatch/database/revisions/tenant/versions/2022-10-19_3b0f5b81376f.py", lines: [22, 22] }
+      - { file: "src/dispatch/database/revisions/tenant/versions/2022-10-26_4b65941d065a.py", lines: [19, 19] }
+  - id: A47
+    query: "PluginEvent"
+    expect:
+      - { file: "src/dispatch/plugin/models.py", lines: [69, 85] }
+  - id: A48
+    query: "create_investigation"
+    expect:
+      - { file: "src/dispatch/plugins/bases/investigation_tooling.py", lines: [18, 28] }
+  - id: A49
+    query: "send_case_triage_reminder"
+    expect:
+      - { file: "src/dispatch/case/messaging.py", lines: [86, 121] }
+  - id: A50
+    query: "CaseCostTypePagination"
+    expect:
+      - { file: "src/dispatch/case_cost_type/models.py", lines: [60, 61] }

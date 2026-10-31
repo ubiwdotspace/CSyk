@@ -129,3 +129,89 @@ cases:
     query: "emptyJSONValues"
     expect:
       - { file: "core/field_json.go", lines: [152, 154] }
+  - id: A31
+    query: "AuthOrigin"
+    expect:
+      - { file: "core/auth_origin_model.go", lines: [23, 25] }
+  - id: A32
+    query: "collectionIdChecksum"
+    expect:
+      - { file: "migrations/1717233558_v0.23_migrate3.go", lines: [13, 15] }
+  - id: A33
+    query: "ModifierFactoryFunc"
+    expect:
+      - { file: "tools/picker/modifiers.go", lines: [11, 11] }
+  - id: A34
+    query: "DefaultDBConnect"
+    expect:
+      - { file: "core/db_connect.go", lines: [10, 22] }
+  - id: A35
+    query: "getColor"
+    expect:
+      - { file: "core/log_printer.go", lines: [17, 24] }
+  - id: A36
+    query: "vmsPool"
+    expect:
+      - { file: "plugins/jsvm/pool.go", lines: [15, 19] }
+  - id: A37
+    query: "Reread"
+    expect:
+      - { file: "apis/middlewares_body_limit.go", lines: [145, 152] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [15, 15] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [66, 78] }
+  - id: A38
+    query: "ParseUnverifiedJWT"
+    expect:
+      - { file: "tools/security/jwt.go", lines: [14, 25] }
+  - id: A39
+    query: "CollectionNameMFAs"
+    expect:
+      - { file: "core/mfa_model.go", lines: [19, 19] }
+  - id: A40
+    query: "getAttrs"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/attrs.go", lines: [66, 87] }
+  - id: A41
+    query: "NameMailcow"
+    expect:
+      - { file: "tools/auth/mailcow.go", lines: [20, 20] }
+  - id: A42
+    query: "Unbind"
+    expect:
+      - { file: "tools/router/route.go", lines: [52, 73] }
+      - { file: "tools/hook/hook.go", lines: [116, 128] }
+      - { file: "tools/router/group.go", lines: [78, 109] }
+  - id: A43
+    query: "recordConfirmVerification"
+    expect:
+      - { file: "apis/record_auth_verification_confirm.go", lines: [12, 66] }
+  - id: A44
+    query: "ListIterator"
+    expect:
+      - { file: "tools/filesystem/blob/bucket.go", lines: [105, 110] }
+  - id: A45
+    query: "RecordProxy"
+    expect:
+      - { file: "core/record_proxy.go", lines: [8, 14] }
+  - id: A46
+    query: "fetchPrimaryEmail"
+    expect:
+      - { file: "tools/auth/bitbucket.go", lines: [103, 139] }
+      - { file: "tools/auth/gitee.go", lines: [103, 144] }
+  - id: A47
+    query: "NewFromBytes"
+    expect:
+      - { file: "tools/tokenizer/tokenizer.go", lines: [32, 34] }
+  - id: A48
+    query: "replaceWithExpression"
+    expect:
+      - { file: "core/record_field_resolver_replace_expr.go", lines: [13, 17] }
+  - id: A49
+    query: "WriteSSE"
+    expect:
+      - { file: "tools/subscriptions/message.go", lines: [20, 37] }
+  - id: A50
+    query: "CreateViewFields"
+    expect:
+      - { file: "core/app.go", lines: [273, 273] }
+      - { file: "core/view.go", lines: [82, 124] }

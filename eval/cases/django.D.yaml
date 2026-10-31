@@ -212,3 +212,162 @@ cases:
       - { file: "django/core/management/base.py", lines: [182, 187] }
       - { file: "django/core/management/commands/compilemessages.py", lines: [12, 17] }
       - { file: "django/core/management/commands/compilemessages.py", lines: [20, 26] }
+  - id: D31
+    query: "sensitive_post_parameters"
+    direction: in
+    expect:
+      - { file: "django/contrib/auth/admin.py", lines: [1, 252] }
+      - { file: "django/contrib/auth/views.py", lines: [1, 380] }
+      - { file: "tests/view_tests/views.py", lines: [1, 444] }
+      - { file: "tests/view_tests/tests/test_debug.py", lines: [2150, 2162] }
+      - { file: "django/contrib/auth/admin.py", lines: [113, 119] }
+      - { file: "django/contrib/auth/admin.py", lines: [149, 235] }
+      - { file: "django/contrib/auth/views.py", lines: [73, 130] }
+      - { file: "django/contrib/auth/views.py", lines: [255, 340] }
+      - { file: "django/contrib/auth/views.py", lines: [354, 373] }
+      - { file: "tests/view_tests/tests/test_debug.py", lines: [2146, 2148] }
+      - { file: "tests/view_tests/tests/test_debug.py", lines: [2152, 2154] }
+      - { file: "tests/view_tests/views.py", lines: [163, 178] }
+      - { file: "tests/view_tests/views.py", lines: [181, 196] }
+      - { file: "tests/view_tests/views.py", lines: [199, 209] }
+      - { file: "tests/view_tests/views.py", lines: [221, 236] }
+      - { file: "tests/view_tests/views.py", lines: [239, 254] }
+      - { file: "tests/view_tests/views.py", lines: [313, 329] }
+      - { file: "tests/view_tests/views.py", lines: [418, 430] }
+  - id: D32
+    query: "timeuntil"
+    direction: in
+    expect:
+      - { file: "django/contrib/humanize/templatetags/humanize.py", lines: [305, 346] }
+      - { file: "django/template/defaultfilters.py", lines: [825, 833] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [124, 138] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [140, 146] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [148, 153] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [155, 158] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [160, 164] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [166, 174] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [176, 179] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [181, 209] }
+  - id: D33
+    query: "add_item"
+    direction: out
+    expect:
+      - { file: "django/utils/feedgenerator.py", lines: [190, 191] }
+      - { file: "django/utils/encoding.py", lines: [107, 135] }
+  - id: D34
+    query: "get_accessor_name"
+    direction: in
+    expect:
+      - { file: "django/db/models/fields/reverse_related.py", lines: [211, 213] }
+  - id: D35
+    query: "get_formats"
+    direction: out
+    expect:
+      - { file: "django/utils/formats.py", lines: [100, 141] }
+  - id: D36
+    query: "delete_cached_value"
+    direction: in
+    expect:
+      - { file: "tests/model_fields/test_mixins.py", lines: [54, 58] }
+  - id: D37
+    query: "check_file_based_cache_is_absolute"
+    direction: out
+    expect:
+      - { file: "django/core/checks/messages.py", lines: [70, 72] }
+  - id: D38
+    query: "get_default_renderer"
+    direction: in
+    expect:
+      - { file: "django/forms/forms.py", lines: [73, 134] }
+      - { file: "django/forms/formsets.py", lines: [82, 111] }
+      - { file: "django/forms/utils.py", lines: [124, 126] }
+      - { file: "django/forms/utils.py", lines: [150, 158] }
+      - { file: "django/forms/widgets.py", lines: [378, 381] }
+      - { file: "django/template/autoreload.py", lines: [33, 45] }
+      - { file: "tests/forms_tests/tests/test_forms.py", lines: [5013, 5015] }
+      - { file: "tests/forms_tests/tests/test_formsets.py", lines: [1569, 1596] }
+      - { file: "tests/forms_tests/tests/test_formsets.py", lines: [1598, 1621] }
+  - id: D39
+    query: "get_units"
+    direction: out
+    expect:
+      - { file: "django/contrib/gis/gdal/srs.py", lines: [241, 254] }
+      - { file: "django/contrib/gis/gdal/srs.py", lines: [45, 349] }
+  - id: D40
+    query: "invalid_block_tag"
+    direction: in
+    expect:
+      - { file: "django/template/base.py", lines: [629, 708] }
+  - id: D41
+    query: "csrf_input"
+    direction: out
+    expect:
+      - { file: "django/utils/html.py", lines: [136, 146] }
+      - { file: "django/middleware/csrf.py", lines: [96, 114] }
+  - id: D42
+    query: "get_exception_response"
+    direction: in
+    expect:
+      - { file: "django/core/handlers/exception.py", lines: [64, 160] }
+  - id: D43
+    query: "serialize_messages"
+    direction: out
+    expect:
+      - { file: "django/contrib/messages/storage/cookie.py", lines: [11, 26] }
+  - id: D44
+    query: "send_mass_mail"
+    direction: in
+    expect:
+      - { file: "tests/mail/tests.py", lines: [2274, 2295] }
+      - { file: "tests/mail/tests.py", lines: [2297, 2307] }
+      - { file: "tests/mail/tests.py", lines: [2310, 2333] }
+      - { file: "tests/mail/tests.py", lines: [2336, 2350] }
+      - { file: "tests/mail/tests.py", lines: [2353, 2366] }
+      - { file: "tests/mail/tests.py", lines: [2369, 2379] }
+      - { file: "tests/mail/tests.py", lines: [2382, 2396] }
+      - { file: "tests/mail/tests.py", lines: [2399, 2407] }
+      - { file: "tests/mail/tests.py", lines: [2410, 2418] }
+      - { file: "tests/mail/tests.py", lines: [2432, 2437] }
+      - { file: "tests/mail/tests.py", lines: [3082, 3094] }
+  - id: D45
+    query: "render_flatpage"
+    direction: out
+    expect:
+      - { file: "django/contrib/auth/views.py", lines: [184, 196] }
+      - { file: "django/template/loader.py", lines: [22, 49] }
+      - { file: "django/template/loader.py", lines: [5, 19] }
+      - { file: "django/utils/safestring.py", lines: [64, 78] }
+      - { file: "django/http/response.py", lines: [379, 449] }
+  - id: D46
+    query: "from_datetime"
+    direction: in
+    expect:
+      - { file: "django/db/backends/oracle/base.py", lines: [428, 477] }
+      - { file: "django/db/backends/oracle/operations.py", lines: [580, 603] }
+  - id: D47
+    query: "clean_ipv6_address"
+    direction: out
+    expect:
+      - { file: "django/utils/ipv6.py", lines: [9, 14] }
+      - { file: "django/core/exceptions.py", lines: [144, 247] }
+  - id: D48
+    query: "async_only_middleware"
+    direction: in
+    expect:
+      - { file: "tests/middleware_exceptions/middleware.py", lines: [30, 33] }
+      - { file: "tests/middleware_exceptions/middleware.py", lines: [51, 54] }
+      - { file: "tests/middleware_exceptions/middleware.py", lines: [81, 85] }
+      - { file: "tests/middleware_exceptions/middleware.py", lines: [100, 103] }
+      - { file: "tests/middleware_exceptions/middleware.py", lines: [118, 125] }
+      - { file: "tests/test_client/tests.py", lines: [59, 65] }
+  - id: D49
+    query: "makedirs"
+    direction: out
+    expect:
+      - { file: "django/utils/_os.py", lines: [13, 51] }
+  - id: D50
+    query: "build_widget_attrs"
+    direction: in
+    expect:
+      - { file: "django/forms/boundfield.py", lines: [30, 47] }
+      - { file: "django/forms/boundfield.py", lines: [85, 113] }

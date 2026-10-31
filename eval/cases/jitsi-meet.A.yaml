@@ -130,3 +130,88 @@ cases:
     query: "LanguageSelector"
     expect:
       - { file: "react/features/subtitles/components/web/LanguageSelector.tsx", lines: [44, 105] }
+  - id: A31
+    query: "targetLangFile"
+    expect:
+      - { file: "lang/update-translation.js", lines: [8, 8] }
+  - id: A32
+    query: "SuspendedOverlay"
+    expect:
+      - { file: "react/features/overlay/components/web/SuspendedOverlay.tsx", lines: [13, 37] }
+  - id: A33
+    query: "WaitForOwnerDialog"
+    expect:
+      - { file: "react/features/authentication/components/native/WaitForOwnerDialog.tsx", lines: [42, 96] }
+      - { file: "react/features/authentication/components/web/WaitForOwnerDialog.tsx", lines: [36, 99] }
+  - id: A34
+    query: "ExpandedLabelPopup"
+    expect:
+      - { file: "react/features/conference/components/native/ExpandedLabelPopup.tsx", lines: [15, 34] }
+  - id: A35
+    query: "_stopListeningForUserInteraction"
+    expect:
+      - { file: "react/features/base/user-interaction/middleware.ts", lines: [78, 86] }
+  - id: A36
+    query: "useTrackStreamingStatus"
+    expect:
+      - { file: "react/features/base/tracks/hooks.any.ts", lines: [15, 43] }
+  - id: A37
+    query: "setScreenshareFramerate"
+    expect:
+      - { file: "react/features/screen-share/actions.any.ts", lines: [14, 19] }
+  - id: A38
+    query: "DimensionsDetector"
+    expect:
+      - { file: "react/features/base/responsive-ui/components/DimensionsDetector.native.tsx", lines: [35, 68] }
+  - id: A39
+    query: "_suspendDetected"
+    expect:
+      - { file: "react/features/power-monitor/reducer.ts", lines: [53, 55] }
+  - id: A40
+    query: "_applyBackgroundEffect"
+    expect:
+      - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [202, 208] }
+  - id: A41
+    query: "TimeElapsed"
+    expect:
+      - { file: "react/features/speaker-stats/components/native/TimeElapsed.tsx", lines: [31, 48] }
+      - { file: "react/features/speaker-stats/components/web/TimeElapsed.tsx", lines: [25, 34] }
+  - id: A42
+    query: "ADD_PENDING_INVITE_REQUEST"
+    expect:
+      - { file: "react/features/invite/actionTypes.ts", lines: [10, 10] }
+  - id: A43
+    query: "ChatCounter"
+    expect:
+      - { file: "react/features/chat/components/web/ChatCounter.tsx", lines: [30, 51] }
+  - id: A44
+    query: "GifsMenuFooter"
+    expect:
+      - { file: "react/features/gifs/components/native/GifsMenuFooter.tsx", lines: [13, 25] }
+  - id: A45
+    query: "ILocalRecordingManager"
+    expect:
+      - { file: "react/features/recording/components/Recording/LocalRecordingManager.native.ts", lines: [3, 13] }
+      - { file: "react/features/recording/components/Recording/LocalRecordingManager.web.ts", lines: [20, 40] }
+  - id: A46
+    query: "AbstractMuteEveryoneElsesVideoButton"
+    expect:
+      - { file: "react/features/video-menu/components/AbstractMuteEveryoneElsesVideoButton.ts", lines: [20, 37] }
+  - id: A47
+    query: "VideoTrack"
+    expect:
+      - { file: "react/features/base/media/components/native/VideoTrack.tsx", lines: [14, 28] }
+      - { file: "react/features/base/media/components/web/VideoTrack.tsx", lines: [135, 177] }
+  - id: A48
+    query: "shouldReloadAudioFiles"
+    expect:
+      - { file: "react/features/base/sounds/middleware.any.ts", lines: [98, 115] }
+  - id: A49
+    query: "filterSubtree"
+    expect:
+      - { file: "react/features/base/settings/reducer.ts", lines: [117, 117] }
+  - id: A50
+    query: "Notification"
+    expect:
+      - { file: "react/features/notifications/components/native/Notification.tsx", lines: [44, 235] }
+      - { file: "react/features/notifications/components/web/Notification.tsx", lines: [179, 376] }

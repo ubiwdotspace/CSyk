@@ -126,3 +126,66 @@ cases:
     query: "http2FancyWriter"
     expect:
       - { file: "middleware/wrap_writer.go", lines: [240, 242] }
+  - id: A31
+    query: "URLFormatCtxKey"
+    expect:
+      - { file: "middleware/url_format.go", lines: [14, 14] }
+  - id: A32
+    query: "FileServer"
+    expect:
+      - { file: "_examples/fileserver/main.go", lines: [48, 65] }
+  - id: A33
+    query: "Chain"
+    expect:
+      - { file: "chain.go", lines: [6, 8] }
+  - id: A34
+    query: "RouteCtxKey"
+    expect:
+      - { file: "context.go", lines: [37, 37] }
+  - id: A35
+    query: "SupressNotFound"
+    expect:
+      - { file: "middleware/supress_notfound.go", lines: [15, 27] }
+  - id: A36
+    query: "Sunset"
+    expect:
+      - { file: "middleware/sunset.go", lines: [22, 37] }
+  - id: A37
+    query: "Options"
+    expect:
+      - { file: "chi.go", lines: [103, 103] }
+      - { file: "mux.go", lines: [167, 169] }
+  - id: A38
+    query: "patParamKeys"
+    expect:
+      - { file: "tree.go", lines: [803, 819] }
+  - id: A39
+    query: "GetHead"
+    expect:
+      - { file: "middleware/get_head.go", lines: [10, 39] }
+  - id: A40
+    query: "ErrForbidden"
+    expect:
+      - { file: "_examples/versions/data/errors.go", lines: [12, 12] }
+  - id: A41
+    query: "Timeout"
+    expect:
+      - { file: "middleware/timeout.go", lines: [32, 48] }
+  - id: A42
+    query: "WithValue"
+    expect:
+      - { file: "middleware/value.go", lines: [9, 17] }
+  - id: A43
+    query: "AllowContentEncoding"
+    expect:
+      - { file: "middleware/content_encoding.go", lines: [10, 34] }
+  - id: A44
+    query: "customHandler"
+    expect:
+      - { file: "_examples/custom-handler/main.go", lines: [26, 35] }
+  - id: A45
+    query: "String"
+    expect:
+      - { file: "context.go", lines: [188, 190] }
+      - { file: "middleware/middleware.go", lines: [21, 23] }
+      - { file: "mux_test.go", lines: [2109, 2111] }

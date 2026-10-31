@@ -540,3 +540,326 @@ cases:
       - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [59, 82] }
       - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [84, 101] }
       - { file: "packages/core/test/hooks/on-module-destroy.hook.spec.ts", lines: [103, 110] }
+  - id: G31
+    query: "integration/scopes/src/request-chain/interceptors/logging.interceptor.ts:18"
+    expect:
+      - { file: "integration/scopes/src/request-chain/interceptors/logging.interceptor.ts", lines: [14, 20] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [25, 34] }
+      - { file: "packages/core/interceptors/interceptors-context-creator.ts", lines: [42, 63] }
+      - { file: "packages/core/interceptors/interceptors-context-creator.ts", lines: [65, 85] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [11, 36] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [31, 31] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [35, 35] }
+      - { file: "packages/core/helpers/context-creator.ts", lines: [17, 42] }
+      - { file: "packages/core/helpers/external-context-creator.ts", lines: [289, 331] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [363, 411] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [1, 168] }
+      - { file: "packages/core/test/guards/guards-context-creator.spec.ts", lines: [1, 207] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [1, 192] }
+      - { file: "packages/core/test/pipes/pipes-context-creator.spec.ts", lines: [1, 145] }
+      - { file: "packages/core/test/router/router-exception-filters.spec.ts", lines: [1, 170] }
+      - { file: "packages/microservices/context/rpc-context-creator.ts", lines: [296, 333] }
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [219, 256] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [61, 62] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [70, 78] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [79, 95] }
+      - { file: "packages/core/interceptors/interceptors-context-creator.ts", lines: [56, 57] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [101, 106] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [109, 121] }
+      - { file: "packages/core/test/interceptors/interceptors-context-creator.spec.ts", lines: [122, 130] }
+  - id: G32
+    query: "packages/microservices/helpers/grpc-helpers.ts:17"
+    expect:
+      - { file: "packages/microservices/helpers/grpc-helpers.ts", lines: [5, 23] }
+      - { file: "packages/microservices/client/client-grpc.ts", lines: [323, 338] }
+      - { file: "packages/microservices/server/server-grpc.ts", lines: [822, 845] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [1, 64] }
+      - { file: "packages/microservices/client/client-grpc.ts", lines: [325, 328] }
+      - { file: "packages/microservices/server/server-grpc.ts", lines: [824, 827] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [10, 16] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [23, 31] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [38, 45] }
+      - { file: "packages/microservices/test/helpers/grpc-helpers.spec.ts", lines: [52, 59] }
+      - { file: "packages/microservices/client/client-grpc.ts", lines: [297, 321] }
+      - { file: "packages/microservices/server/server-grpc.ts", lines: [154, 166] }
+      - { file: "packages/microservices/test/server/server-grpc.spec.ts", lines: [1, 2023] }
+      - { file: "packages/microservices/test/server/server-grpc.spec.ts", lines: [1863, 1863] }
+  - id: G33
+    query: "packages/common/decorators/core/bind.decorator.ts:15"
+    expect:
+      - { file: "packages/common/decorators/core/bind.decorator.ts", lines: [11, 20] }
+      - { file: "packages/common/test/decorators/bind.decorator.spec.ts", lines: [7, 8] }
+  - id: G34
+    query: "integration/websockets/src/request.filter.ts:10"
+    expect:
+      - { file: "integration/websockets/src/request.filter.ts", lines: [6, 11] }
+      - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [42, 60] }
+      - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [20, 40] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [1, 76] }
+      - { file: "packages/core/exceptions/base-exception-filter-context.ts", lines: [33, 33] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [17, 20] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [23, 32] }
+      - { file: "packages/core/test/exceptions/base-exception-filter.spec.ts", lines: [33, 38] }
+  - id: G35
+    query: "packages/websockets/context/ws-context-creator.ts:228 packages/websockets/context/ws-context-creator.ts:274"
+    expect:
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [219, 256] }
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [258, 286] }
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [201, 208] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [1, 372] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [248, 254] }
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [58, 141] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [284, 287] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [291, 302] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [139, 224] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [379, 447] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [80, 90] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [91, 101] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [102, 112] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [119, 124] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [135, 140] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [161, 166] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [167, 172] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [205, 210] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [350, 359] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [361, 370] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [166, 181] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [401, 446] }
+      - { file: "packages/websockets/test/context/ws-context-creator.spec.ts", lines: [290, 305] }
+  - id: G36
+    query: "integration/graphql-code-first/src/recipes/recipes.service.ts:16"
+    expect:
+      - { file: "integration/graphql-code-first/src/recipes/recipes.service.ts", lines: [14, 18] }
+      - { file: "integration/graphql-code-first/src/recipes/recipes.resolver.ts", lines: [33, 40] }
+  - id: G37
+    query: "packages/platform-express/multer/interceptors/any-files.interceptor.ts:65"
+    expect:
+      - { file: "packages/platform-express/multer/interceptors/any-files.interceptor.ts", lines: [29, 73] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [1, 88] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [9, 12] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [20, 32] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [33, 43] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [44, 74] }
+      - { file: "packages/platform-express/test/multer/interceptors/any-files.interceptor.spec.ts", lines: [77, 79] }
+  - id: G38
+    query: "packages/core/exceptions/external-exceptions-handler.ts:20 packages/core/exceptions/external-exceptions-handler.ts:26"
+    expect:
+      - { file: "packages/core/exceptions/external-exceptions-handler.ts", lines: [14, 22] }
+      - { file: "packages/core/exceptions/external-exceptions-handler.ts", lines: [24, 29] }
+      - { file: "packages/core/helpers/external-proxy.ts", lines: [6, 20] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [1, 130] }
+      - { file: "packages/core/helpers/external-proxy.ts", lines: [11, 19] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [19, 19] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [28, 31] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [38, 43] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [50, 50] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [60, 60] }
+      - { file: "packages/core/exceptions/external-exception-filter-context.ts", lines: [24, 46] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [45, 51] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [54, 61] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [66, 69] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [71, 71] }
+      - { file: "packages/core/helpers/external-context-creator.ts", lines: [95, 199] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [1, 78] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [16, 16] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [24, 26] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [35, 37] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [45, 45] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [51, 54] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [63, 69] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [1, 168] }
+      - { file: "packages/core/helpers/external-context-creator.ts", lines: [142, 148] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [36, 40] }
+      - { file: "packages/core/test/exceptions/external-exception-filter-context.spec.ts", lines: [49, 53] }
+  - id: G39
+    query: "packages/core/repl/repl-context.ts:78 packages/core/repl/repl-context.ts:157"
+    expect:
+      - { file: "packages/core/repl/repl-context.ts", lines: [77, 112] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [145, 163] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [53, 75] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [56, 74] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [165, 185] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [181, 183] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [29, 186] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [39, 47] }
+  - id: G40
+    query: "packages/core/router/sse-stream.ts:45 packages/core/router/sse-stream.ts:23"
+    expect:
+      - { file: "packages/core/router/sse-stream.ts", lines: [43, 52] }
+      - { file: "packages/core/router/sse-stream.ts", lines: [19, 25] }
+      - { file: "packages/core/router/sse-stream.ts", lines: [202, 211] }
+      - { file: "packages/core/router/sse-stream.ts", lines: [216, 250] }
+      - { file: "packages/core/router/router-response-controller.ts", lines: [124, 387] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [1, 630] }
+      - { file: "packages/core/router/router-response-controller.ts", lines: [291, 294] }
+      - { file: "packages/core/router/router-response-controller.ts", lines: [320, 324] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [41, 73] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [75, 96] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [98, 124] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [126, 150] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [152, 182] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [184, 208] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [210, 220] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [227, 228] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [222, 236] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [250, 269] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [272, 292] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [295, 310] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [313, 327] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [330, 348] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [351, 365] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [368, 382] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [385, 397] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [407, 421] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [424, 436] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [438, 447] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [449, 471] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [473, 495] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [497, 513] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [515, 540] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [542, 559] }
+      - { file: "packages/core/test/router/sse-stream.spec.ts", lines: [610, 614] }
+  - id: G41
+    query: "sample/26-queues/src/main.ts:6"
+    expect:
+      - { file: "sample/26-queues/src/main.ts", lines: [4, 8] }
+      - { file: "sample/26-queues/src/main.ts", lines: [1, 10] }
+  - id: G42
+    query: "packages/platform-express/multer/interceptors/files.interceptor.ts:59"
+    expect:
+      - { file: "packages/platform-express/multer/interceptors/files.interceptor.ts", lines: [32, 82] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [1, 91] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [9, 12] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [20, 34] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [35, 46] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [47, 77] }
+      - { file: "packages/platform-express/test/multer/interceptors/files.interceptor.spec.ts", lines: [80, 82] }
+  - id: G43
+    query: "sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts:21 sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts:97"
+    expect:
+      - { file: "sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts", lines: [10, 37] }
+      - { file: "sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts", lines: [39, 101] }
+      - { file: "sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts", lines: [1, 110] }
+  - id: G44
+    query: "packages/websockets/utils/param.utils.ts:22"
+    expect:
+      - { file: "packages/websockets/utils/param.utils.ts", lines: [17, 35] }
+      - { file: "packages/websockets/decorators/connected-socket.decorator.ts", lines: [1, 10] }
+      - { file: "packages/websockets/decorators/connected-socket.decorator.ts", lines: [7, 9] }
+      - { file: "integration/websockets/e2e/global-scoped-enhancers.spec.ts", lines: [133, 137] }
+      - { file: "integration/websockets/src/core.gateway.ts", lines: [10, 16] }
+      - { file: "integration/websockets/src/request-scope.gateway.ts", lines: [78, 83] }
+      - { file: "integration/websockets/src/request-scope.gateway.ts", lines: [85, 88] }
+      - { file: "integration/websockets/src/request-scope.gateway.ts", lines: [90, 96] }
+      - { file: "packages/websockets/test/decorators/connected-socket.decorator.spec.ts", lines: [6, 6] }
+      - { file: "packages/websockets/test/decorators/message-body.decorator.spec.ts", lines: [30, 30] }
+      - { file: "packages/websockets/test/decorators/message-body.decorator.spec.ts", lines: [33, 33] }
+  - id: G45
+    query: "sample/34-hmr-esm/src/cats/cats.controller.ts:16"
+    expect:
+      - { file: "sample/34-hmr-esm/src/cats/cats.controller.ts", lines: [14, 18] }
+      - { file: "sample/34-hmr-esm/src/cats/cats.controller.spec.ts", lines: [1, 55] }
+      - { file: "sample/34-hmr-esm/src/cats/cats.controller.spec.ts", lines: [37, 52] }
+  - id: G46
+    query: "packages/platform-fastify/multipart/storage/memory.storage.ts:31"
+    expect:
+      - { file: "packages/platform-fastify/multipart/storage/memory.storage.ts", lines: [9, 34] }
+      - { file: "packages/platform-fastify/multipart/multipart/multipart.parser.ts", lines: [62, 72] }
+      - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [1, 133] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [1, 79] }
+      - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [21, 25] }
+      - { file: "packages/platform-fastify/test/multipart/multipart/multipart.utils.spec.ts", lines: [27, 31] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [16, 17] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [32, 33] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [44, 45] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [62, 63] }
+      - { file: "packages/platform-fastify/test/multipart/storage/memory.storage.spec.ts", lines: [73, 74] }
+      - { file: "packages/platform-fastify/multipart/multipart/multipart-interceptor.factory.ts", lines: [139, 184] }
+      - { file: "packages/platform-fastify/multipart/multipart/multipart-interceptor.factory.ts", lines: [144, 154] }
+  - id: G47
+    query: "packages/common/decorators/http/header.decorator.ts:25"
+    expect:
+      - { file: "packages/common/decorators/http/header.decorator.ts", lines: [18, 30] }
+      - { file: "integration/hello-world/src/errors/errors.controller.ts", lines: [15, 19] }
+      - { file: "integration/hello-world/src/hello/hello.controller.ts", lines: [10, 14] }
+      - { file: "integration/hello-world/src/host-array/host-array.controller.ts", lines: [13, 17] }
+      - { file: "integration/hello-world/src/host/host.controller.ts", lines: [13, 17] }
+      - { file: "integration/nest-application/sse/src/late-headers.module.ts", lines: [66, 70] }
+      - { file: "integration/nest-application/sse/src/late-headers.module.ts", lines: [92, 96] }
+      - { file: "integration/security/src/app.controller.ts", lines: [44, 49] }
+      - { file: "packages/common/test/decorators/header.decorator.spec.ts", lines: [6, 8] }
+      - { file: "packages/common/test/decorators/header.decorator.spec.ts", lines: [1, 19] }
+  - id: G48
+    query: "sample/06-mongoose/src/cats/cats.service.ts:14 sample/06-mongoose/src/cats/cats.service.ts:34"
+    expect:
+      - { file: "sample/06-mongoose/src/cats/cats.service.ts", lines: [12, 15] }
+      - { file: "sample/06-mongoose/src/cats/cats.service.ts", lines: [31, 36] }
+      - { file: "sample/06-mongoose/src/cats/cats.controller.spec.ts", lines: [1, 147] }
+      - { file: "sample/06-mongoose/src/cats/cats.controller.ts", lines: [11, 14] }
+      - { file: "sample/06-mongoose/src/cats/cats.service.spec.ts", lines: [1, 152] }
+      - { file: "sample/06-mongoose/src/cats/cats.service.spec.ts", lines: [41, 58] }
+      - { file: "sample/06-mongoose/src/cats/cats.controller.ts", lines: [31, 34] }
+      - { file: "sample/06-mongoose/src/cats/cats.service.spec.ts", lines: [134, 149] }
+      - { file: "sample/06-mongoose/src/cats/cats.controller.spec.ts", lines: [36, 54] }
+      - { file: "sample/06-mongoose/src/cats/cats.controller.spec.ts", lines: [130, 144] }
+  - id: G49
+    query: "packages/core/injector/helpers/provider-classifier.ts:11"
+    expect:
+      - { file: "packages/core/injector/helpers/provider-classifier.ts", lines: [9, 13] }
+      - { file: "packages/core/injector/instance-wrapper.ts", lines: [565, 593] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [1, 132] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [10, 17] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [19, 26] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [28, 34] }
+      - { file: "packages/core/test/injector/helpers/provider-classifier.spec.ts", lines: [36, 40] }
+      - { file: "packages/core/injector/module.ts", lines: [544, 557] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1, 1399] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1086, 1096] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1100, 1109] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1111, 1119] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1121, 1138] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1140, 1156] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1158, 1166] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1168, 1178] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1182, 1199] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1202, 1216] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1220, 1231] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1380, 1389] }
+      - { file: "packages/core/test/injector/instance-wrapper.spec.ts", lines: [1391, 1396] }
+  - id: G50
+    query: "packages/core/helpers/destroy-streamable-file.ts:9"
+    expect:
+      - { file: "packages/core/helpers/destroy-streamable-file.ts", lines: [8, 16] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [50, 88] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [540, 634] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [60, 77] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [587, 633] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [25, 34] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [1, 332] }
+      - { file: "packages/microservices/context/rpc-context-creator.ts", lines: [170, 215] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [27, 27] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [189, 195] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [198, 204] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [207, 213] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [216, 228] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [231, 260] }
+      - { file: "packages/core/test/interceptors/interceptors-consumer.spec.ts", lines: [269, 271] }
+      - { file: "packages/microservices/context/rpc-context-creator.ts", lines: [204, 205] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [250, 327] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1, 1336] }
+      - { file: "packages/core/router/router-execution-context.ts", lines: [302, 306] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [719, 724] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [741, 746] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [767, 772] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [793, 798] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [815, 820] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [847, 860] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1039, 1044] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1075, 1080] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1100, 1105] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1133, 1138] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1171, 1176] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1208, 1213] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1247, 1252] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1288, 1293] }
+      - { file: "packages/core/test/router/router-execution-context.spec.ts", lines: [1320, 1323] }

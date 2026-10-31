@@ -123,3 +123,83 @@ cases:
     query: "AppIcons"
     expect:
       - { file: "lib/ui/common/app_icons.dart", lines: [30, 51] }
+  - id: A31
+    query: "NativeWidgetService"
+    expect:
+      - { file: "lib/logic/native_widget_service.dart", lines: [5, 28] }
+  - id: A32
+    query: "_CollectionListState"
+    expect:
+      - { file: "lib/ui/screens/collection/widgets/_collection_list.dart", lines: [22, 111] }
+  - id: A33
+    query: "getSelfHostedImageUrl"
+    expect:
+      - { file: "lib/logic/data/artifact_data.dart", lines: [38, 38] }
+  - id: A34
+    query: "_Insets"
+    expect:
+      - { file: "lib/styles/styles.dart", lines: [222, 234] }
+  - id: A35
+    query: "IllustrationPiece"
+    expect:
+      - { file: "lib/ui/wonder_illustrations/common/illustration_piece.dart", lines: [8, 62] }
+  - id: A36
+    query: "NeverAnimate"
+    expect:
+      - { file: "lib/logic/common/animate_utils.dart", lines: [4, 9] }
+  - id: A37
+    query: "_ButtonPressEffectState"
+    expect:
+      - { file: "lib/ui/common/controls/buttons.dart", lines: [222, 239] }
+  - id: A38
+    query: "_buildInput"
+    expect:
+      - { file: "lib/ui/screens/artifact/artifact_search/widgets/_search_input.dart", lines: [129, 191] }
+  - id: A39
+    query: "RenderBlendMask"
+    expect:
+      - { file: "lib/ui/common/blend_mask.dart", lines: [25, 46] }
+  - id: A40
+    query: "SimpleCheckbox"
+    expect:
+      - { file: "lib/ui/common/controls/checkbox.dart", lines: [4, 45] }
+  - id: A41
+    query: "ContextUtils"
+    expect:
+      - { file: "lib/ui/common/utils/context_utils.dart", lines: [3, 19] }
+  - id: A42
+    query: "ArtifactSearchHelper"
+    expect:
+      - { file: "lib/_tools/artifact_search_helper.dart", lines: [18, 23] }
+  - id: A43
+    query: "ImagePaths"
+    expect:
+      - { file: "lib/assets.dart", lines: [18, 35] }
+  - id: A44
+    query: "JsonPrefsFile"
+    expect:
+      - { file: "lib/logic/common/json_prefs_file.dart", lines: [5, 19] }
+  - id: A45
+    query: "_SlidingImageStack"
+    expect:
+      - { file: "lib/ui/screens/editorial/widgets/_sliding_image_stack.dart", lines: [3, 71] }
+  - id: A46
+    query: "loadIfChanged"
+    expect:
+      - { file: "lib/logic/locale_logic.dart", lines: [29, 34] }
+  - id: A47
+    query: "_buildOpacityTween"
+    expect:
+      - { file: "lib/ui/screens/home/widgets/_animated_arrow_button.dart", lines: [46, 49] }
+  - id: A48
+    query: "flatPyramid"
+    expect:
+      - { file: "lib/ui/common/curved_clippers.dart", lines: [3, 3] }
+  - id: A49
+    query: "OkModal"
+    expect:
+      - { file: "lib/ui/common/modals/app_modals.dart", lines: [30, 52] }
+  - id: A50
+    query: "_handleMouseScroll"
+    expect:
+      - { file: "lib/ui/common/previous_next_navigation.dart", lines: [46, 59] }

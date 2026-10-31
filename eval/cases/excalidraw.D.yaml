@@ -219,3 +219,142 @@ cases:
       - { file: "packages/excalidraw/components/TTDDialog/utils/TTDStreamFetch.ts", lines: [36, 46] }
       - { file: "packages/excalidraw/components/TTDDialog/utils/TTDStreamFetch.ts", lines: [48, 82] }
       - { file: "packages/excalidraw/errors.ts", lines: [73, 90] }
+  - id: D31
+    query: "getGenericFontFamilyFallback"
+    direction: in
+    expect:
+      - { file: "packages/common/src/constants.ts", lines: [185, 200] }
+  - id: D32
+    query: "updateStatuses"
+    direction: out
+    expect:
+      - { file: "packages/common/src/versionedSnapshotStore.ts", lines: [48, 50] }
+  - id: D33
+    query: "flush"
+    direction: in
+    expect:
+      - { file: "packages/excalidraw/components/App.tsx", lines: [4293, 4507] }
+      - { file: "packages/excalidraw/tests/appStateHooks.test.tsx", lines: [22, 41] }
+      - { file: "packages/excalidraw/tests/appStateHooks.test.tsx", lines: [35, 39] }
+  - id: D34
+    query: "registerAll"
+    direction: out
+    expect:
+      - { file: "packages/excalidraw/actions/manager.tsx", lines: [81, 83] }
+  - id: D35
+    query: "curveLengthAtParameter"
+    direction: in
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [2866, 2871] }
+      - { file: "packages/math/src/curve.ts", lines: [516, 560] }
+  - id: D36
+    query: "resolveKeyboardEventToOperation"
+    direction: out
+    expect:
+      - { file: "packages/common/src/keys.ts", lines: [139, 143] }
+      - { file: "packages/element/src/Scene.ts", lines: [147, 149] }
+      - { file: "packages/element/src/flowchart.ts", lines: [747, 753] }
+      - { file: "packages/element/src/flowchart.ts", lines: [691, 745] }
+      - { file: "packages/element/src/flowchart.ts", lines: [470, 580] }
+      - { file: "packages/element/src/flowchart.ts", lines: [462, 468] }
+      - { file: "packages/element/src/selection.ts", lines: [157, 209] }
+      - { file: "packages/element/src/typeChecks.ts", lines: [286, 295] }
+      - { file: "packages/excalidraw/components/App.flowchart.ts", lines: [184, 197] }
+  - id: D37
+    query: "convertFromVecToUint8Array"
+    direction: in
+    expect:
+      - { file: "packages/excalidraw/subset/woff2/woff2-loader.ts", lines: [31, 67] }
+      - { file: "packages/excalidraw/subset/woff2/woff2-loader.ts", lines: [47, 50] }
+      - { file: "packages/excalidraw/subset/woff2/woff2-loader.ts", lines: [51, 54] }
+  - id: D38
+    query: "ellipseLineIntersectionPoints"
+    direction: out
+    expect:
+      - { file: "packages/math/src/point.ts", lines: [22, 25] }
+      - { file: "packages/math/src/point.ts", lines: [108, 115] }
+  - id: D39
+    query: "triangleIncludesPoint"
+    direction: in
+    expect:
+      - { file: "packages/element/src/heading.ts", lines: [231, 281] }
+  - id: D40
+    query: "scheduleNextFrame"
+    direction: out
+    expect:
+      - { file: "packages/excalidraw/renderer/animation.ts", lines: [137, 156] }
+      - { file: "packages/excalidraw/renderer/animation.ts", lines: [158, 207] }
+  - id: D41
+    query: "setCollaborators"
+    direction: in
+    expect:
+      - { file: "excalidraw-app/collab/Portal.tsx", lines: [37, 61] }
+      - { file: "excalidraw-app/collab/Portal.tsx", lines: [56, 58] }
+  - id: D42
+    query: "getCurrentPoints"
+    direction: out
+    expect:
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [143, 145] }
+      - { file: "packages/math/src/point.ts", lines: [22, 25] }
+  - id: D43
+    query: "kurtosis"
+    direction: in
+    expect:
+      - { file: "packages/element/src/convertToShape.ts", lines: [321, 358] }
+      - { file: "packages/math/tests/pca.test.ts", lines: [1, 201] }
+      - { file: "packages/math/tests/pca.test.ts", lines: [193, 196] }
+      - { file: "packages/element/src/convertToShape.ts", lines: [355, 355] }
+      - { file: "packages/math/tests/pca.test.ts", lines: [182, 187] }
+      - { file: "packages/math/tests/pca.test.ts", lines: [195, 195] }
+  - id: D44
+    query: "generateKeyBetween"
+    direction: out
+    expect:
+      - { file: "packages/fractional-indexing/src/index.ts", lines: [109, 125] }
+      - { file: "packages/fractional-indexing/src/index.ts", lines: [95, 102] }
+      - { file: "packages/fractional-indexing/src/index.ts", lines: [19, 62] }
+      - { file: "packages/fractional-indexing/src/index.ts", lines: [170, 199] }
+      - { file: "packages/fractional-indexing/src/index.ts", lines: [133, 162] }
+  - id: D45
+    query: "measureOnce"
+    direction: in
+    expect:
+      - { file: "scripts/stats/perf.mjs", lines: [1, 1082] }
+  - id: D46
+    query: "rectangleIntersectLineSegment"
+    direction: out
+    expect:
+      - { file: "packages/math/src/point.ts", lines: [22, 25] }
+      - { file: "packages/math/src/segment.ts", lines: [28, 33] }
+      - { file: "packages/math/src/segment.ts", lines: [149, 167] }
+  - id: D47
+    query: "lineSegmentPointAt"
+    direction: in
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [2852, 2863] }
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [2874, 2881] }
+      - { file: "packages/math/src/segment.ts", lines: [119, 127] }
+  - id: D48
+    query: "linesIntersectAt"
+    direction: out
+    expect:
+      - { file: "packages/math/src/point.ts", lines: [22, 25] }
+  - id: D49
+    query: "errorSplash"
+    direction: in
+    expect:
+      - { file: "excalidraw-app/components/TopErrorBoundary.tsx", lines: [22, 24] }
+  - id: D50
+    query: "deconstructRectanguloidElement"
+    direction: out
+    expect:
+      - { file: "packages/element/src/stickyNote.ts", lines: [214, 225] }
+      - { file: "packages/element/src/utils.ts", lines: [73, 91] }
+      - { file: "packages/element/src/utils.ts", lines: [528, 549] }
+      - { file: "packages/element/src/utils.ts", lines: [93, 121] }
+      - { file: "packages/math/src/curve.ts", lines: [15, 22] }
+      - { file: "packages/math/src/curve.ts", lines: [361, 392] }
+      - { file: "packages/math/src/curve.ts", lines: [394, 412] }
+      - { file: "packages/math/src/point.ts", lines: [22, 25] }
+      - { file: "packages/math/src/rectangle.ts", lines: [6, 11] }
+      - { file: "packages/math/src/segment.ts", lines: [28, 33] }

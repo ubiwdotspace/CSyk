@@ -200,3 +200,127 @@ cases:
     direction: out
     expect:
       - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [33, 48] }
+  - id: D31
+    query: "get_by_slug_or_raise"
+    direction: in
+    expect:
+      - { file: "src/dispatch/auth/service.py", lines: [151, 200] }
+      - { file: "src/dispatch/auth/permissions.py", lines: [73, 106] }
+  - id: D32
+    query: "update_case_priority"
+    direction: out
+    expect:
+      - { file: "src/dispatch/auth/permissions.py", lines: [109, 134] }
+      - { file: "src/dispatch/case/priority/service.py", lines: [15, 17] }
+      - { file: "src/dispatch/case/priority/service.py", lines: [133, 149] }
+  - id: D33
+    query: "_build_participants_table"
+    direction: in
+    expect:
+      - { file: "src/dispatch/canvas/flows.py", lines: [45, 101] }
+      - { file: "src/dispatch/canvas/flows.py", lines: [202, 261] }
+  - id: D34
+    query: "get_oncall_at_time"
+    direction: out
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [15, 30] }
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [8, 9] }
+  - id: D35
+    query: "send_incident_closed_information_review_reminder"
+    direction: in
+    expect:
+      - { file: "src/dispatch/incident/flows.py", lines: [563, 613] }
+  - id: D36
+    query: "create_evergreen_reminder"
+    direction: out
+    expect:
+      - { file: "src/dispatch/plugin/service.py", lines: [52, 63] }
+      - { file: "src/dispatch/plugin/models.py", lines: [101, 111] }
+  - id: D37
+    query: "ack_oncall_shift_feedback_submission_event"
+    direction: in
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/feedback/interactive.py", lines: [372, 473] }
+  - id: D38
+    query: "create_individual"
+    direction: out
+    expect:
+      - { file: "src/dispatch/individual/service.py", lines: [35, 44] }
+      - { file: "src/dispatch/individual/service.py", lines: [127, 149] }
+  - id: D39
+    query: "get_all_types"
+    direction: in
+    expect:
+      - { file: "src/dispatch/ai/prompt/views.py", lines: [35, 38] }
+  - id: D40
+    query: "add_role"
+    direction: out
+    expect:
+      - { file: "src/dispatch/participant/service.py", lines: [28, 30] }
+      - { file: "src/dispatch/participant_role/models.py", lines: [26, 27] }
+      - { file: "src/dispatch/participant_role/service.py", lines: [69, 74] }
+  - id: D41
+    query: "assign_role_flow"
+    direction: in
+    expect:
+      - { file: "src/dispatch/case/flows.py", lines: [1140, 1174] }
+      - { file: "src/dispatch/incident/flows.py", lines: [861, 941] }
+  - id: D42
+    query: "get_or_create_by_weblink"
+    direction: out
+    expect:
+      - { file: "src/dispatch/ticket/service.py", lines: [17, 19] }
+      - { file: "src/dispatch/ticket/models.py", lines: [12, 18] }
+  - id: D43
+    query: "build_and_log_error"
+    direction: in
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/bolt.py", lines: [37, 97] }
+  - id: D44
+    query: "find_links"
+    direction: out
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_google/docs/plugin.py", lines: [31, 59] }
+  - id: D45
+    query: "get_all_by_type_and_status"
+    direction: in
+    expect:
+      - { file: "src/dispatch/plugin/service.py", lines: [128, 169] }
+  - id: D46
+    query: "split_search_result"
+    direction: out
+    expect:
+      - { file: "src/dispatch/search/fulltext/composite_search.py", lines: [69, 70] }
+  - id: D47
+    query: "find_entities"
+    direction: in
+    expect:
+      - { file: "src/dispatch/signal/flows.py", lines: [45, 210] }
+      - { file: "src/dispatch/entity_type/flows.py", lines: [10, 37] }
+      - { file: "src/dispatch/entity_type/service.py", lines: [59, 103] }
+      - { file: "tests/entity/test_entity_service.py", lines: [214, 255] }
+      - { file: "tests/entity/test_entity_service.py", lines: [258, 268] }
+      - { file: "tests/entity/test_entity_service.py", lines: [271, 298] }
+      - { file: "tests/entity/test_entity_service.py", lines: [301, 324] }
+  - id: D48
+    query: "process_organization_signals"
+    direction: out
+    expect:
+      - { file: "src/dispatch/database/core.py", lines: [259, 272] }
+      - { file: "src/dispatch/signal/service.py", lines: [904, 920] }
+      - { file: "src/dispatch/signal/flows.py", lines: [367, 385] }
+  - id: D49
+    query: "get_month_range"
+    direction: in
+    expect:
+      - { file: "src/dispatch/incident/views.py", lines: [534, 593] }
+  - id: D50
+    query: "send_oncall_shift_feedback_message"
+    direction: out
+    expect:
+      - { file: "src/dispatch/plugin/service.py", lines: [52, 63] }
+      - { file: "src/dispatch/feedback/service/reminder/service.py", lines: [34, 46] }
+      - { file: "src/dispatch/feedback/service/reminder/models.py", lines: [41, 43] }
+      - { file: "src/dispatch/feedback/service/reminder/service.py", lines: [25, 31] }
+      - { file: "src/dispatch/feedback/service/reminder/models.py", lines: [12, 23] }
+      - { file: "src/dispatch/plugin/models.py", lines: [101, 111] }

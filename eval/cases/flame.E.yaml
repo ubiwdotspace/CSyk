@@ -122,3 +122,83 @@ cases:
     query: "Tap to switch the traffic light."
     expect:
       - { file: "examples/lib/stories/bridge_libraries/flame_behavior_tree/traffic_example.dart", lines: [29, 65] }
+  - id: E31
+    query: "You need to provide either a factory or a multiFactory, not both."
+    expect:
+      - { file: "packages/flame/lib/src/components/spawn_component.dart", lines: [25, 47] }
+  - id: E32
+    query: "Keep printing new output until the game is stopped or Ctrl+C is "
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/logs_command.dart", lines: [16, 33] }
+  - id: E33
+    query: "Either duration or speed must be given, but not both."
+    expect:
+      - { file: "packages/flame_behavior_tree/lib/src/nodes/move_to.dart", lines: [40, 53] }
+  - id: E34
+    query: "Expected a length of 3 for vertices"
+    expect:
+      - { file: "packages/flame_3d/lib/src/parser/obj/surface_tool.dart", lines: [34, 64] }
+  - id: E35
+    query: "The class of the component"
+    expect:
+      - { file: "packages/flame_studio/lib/src/core/inspector/component_inspectors.dart", lines: [20, 63] }
+  - id: E36
+    query: "Concave polygon ray intersection"
+    expect:
+      - { file: "packages/flame/benchmark/ray_intersection_benchmark.dart", lines: [37, 37] }
+  - id: E37
+    query: "Start the drag on a component instead of a position: its id, "
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/input_commands.dart", lines: [102, 136] }
+  - id: E38
+    query: "Sets up the game world"
+    expect:
+      - { file: "packages/flame_3d/example/lib/commands/setup_command.dart", lines: [11, 11] }
+  - id: E39
+    query: "The game returned an empty snapshot."
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/snapshot_command.dart", lines: [161, 250] }
+  - id: E40
+    query: "No Flame game was found. Make sure that the game is running in debug "
+    expect:
+      - { file: "packages/flame_cli/lib/src/flame_connection.dart", lines: [33, 82] }
+  - id: E41
+    query: "The platforms supported by the game, as a comma separated list, "
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [28, 83] }
+  - id: E42
+    query: "The intersection can only be performed between shapes"
+    expect:
+      - { file: "packages/flame/lib/src/collisions/hitboxes/shape_hitbox.dart", lines: [162, 175] }
+  - id: E43
+    query: "Pass only one of --count, --at-least and --gone."
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/wait_command.dart", lines: [236, 314] }
+  - id: E44
+    query: "Tap to show only this overlay"
+    expect:
+      - { file: "packages/flame_devtools/lib/widgets/overlay_navigation.dart", lines: [36, 90] }
+  - id: E45
+    query: "Line was not evaluated"
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/src/structure/dialogue_line.dart", lines: [64, 67] }
+  - id: E46
+    query: "Open the Flutter DevTools for the running game in the browser, where "
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/devtools_command.dart", lines: [64, 67] }
+  - id: E47
+    query: "The organization responsible for the game, in reverse domain "
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [28, 83] }
+  - id: E48
+    query: "The properties of the selected component"
+    expect:
+      - { file: "packages/flame_studio/lib/src/widgets/dock/dock_layout.dart", lines: [20, 37] }
+  - id: E49
+    query: "Print the type, attributes and other details of a component."
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/inspect_command.dart", lines: [18, 19] }
+  - id: E50
+    query: "Show an overlay, in addition to the ones already shown."
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/overlay_commands.dart", lines: [70, 72] }

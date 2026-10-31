@@ -331,3 +331,188 @@ cases:
       - { file: "django/db/migrations/operations/models.py", lines: [1139, 1139] }
       - { file: "django/db/migrations/operations/models.py", lines: [1196, 1196] }
       - { file: "django/utils/copy.py", lines: [4, 4] }
+  - id: C31
+    query: "module"
+    expect:
+      - { file: "django/apps/config.py", lines: [267, 267] }
+      - { file: "django/contrib/admin/apps.py", lines: [27, 27] }
+  - id: C32
+    query: "add_httponly_message"
+    expect:
+      - { file: "django/core/checks/security/sessions.py", lines: [43, 43] }
+      - { file: "django/core/checks/security/sessions.py", lines: [51, 51] }
+      - { file: "django/core/checks/security/sessions.py", lines: [60, 60] }
+  - id: C33
+    query: "get_level_tags"
+    expect:
+      - { file: "django/contrib/messages/apps.py", lines: [3, 3] }
+      - { file: "django/contrib/messages/apps.py", lines: [11, 11] }
+      - { file: "django/contrib/messages/storage/base.py", lines: [5, 5] }
+  - id: C34
+    query: "supports_color"
+    expect:
+      - { file: "django/core/management/color.py", lines: [118, 118] }
+      - { file: "django/core/management/commands/listurls.py", lines: [74, 74] }
+      - { file: "tests/admin_scripts/tests.py", lines: [2082, 2082] }
+  - id: C35
+    query: "normalize_email"
+    expect:
+      - { file: "django/contrib/auth/models.py", lines: [151, 151] }
+      - { file: "tests/auth_tests/models/custom_user.py", lines: [25, 25] }
+      - { file: "tests/auth_tests/models/custom_user.py", lines: [38, 38] }
+      - { file: "tests/auth_tests/test_models.py", lines: [134, 134] }
+      - { file: "tests/auth_tests/test_models.py", lines: [138, 138] }
+      - { file: "tests/auth_tests/test_models.py", lines: [142, 142] }
+  - id: C36
+    query: "_get_no_autofield_sequence_name"
+    expect:
+      - { file: "django/db/backends/oracle/operations.py", lines: [519, 519] }
+      - { file: "django/db/backends/oracle/operations.py", lines: [541, 541] }
+      - { file: "django/db/backends/oracle/operations.py", lines: [659, 659] }
+  - id: C37
+    query: "localize_input"
+    expect:
+      - { file: "django/forms/widgets.py", lines: [358, 358] }
+      - { file: "django/forms/widgets.py", lines: [667, 667] }
+      - { file: "tests/forms_tests/field_tests/test_decimalfield.py", lines: [214, 214] }
+      - { file: "tests/forms_tests/field_tests/test_floatfield.py", lines: [123, 123] }
+      - { file: "tests/i18n/tests.py", lines: [29, 29] }
+      - { file: "tests/i18n/tests.py", lines: [1247, 1247] }
+      - { file: "tests/i18n/tests.py", lines: [1271, 1271] }
+  - id: C38
+    query: "XViewMiddleware"
+    expect:
+      - { file: "tests/admin_docs/views.py", lines: [1, 1] }
+      - { file: "tests/admin_docs/views.py", lines: [6, 6] }
+      - { file: "tests/deprecation/test_middleware_mixin.py", lines: [6, 6] }
+      - { file: "tests/deprecation/test_middleware_mixin.py", lines: [56, 56] }
+  - id: C39
+    query: "page_not_found"
+    expect:
+      - { file: "django/conf/urls/__init__.py", lines: [8, 8] }
+      - { file: "tests/view_tests/tests/test_defaults.py", lines: [9, 9] }
+      - { file: "tests/view_tests/tests/test_defaults.py", lines: [188, 188] }
+      - { file: "tests/view_tests/tests/test_defaults.py", lines: [198, 198] }
+      - { file: "tests/view_tests/urls.py", lines: [18, 18] }
+  - id: C40
+    query: "BTreeIndex"
+    expect:
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [4, 4] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [137, 137] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [140, 140] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [143, 143] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [149, 149] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [458, 458] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [463, 463] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [473, 473] }
+      - { file: "tests/postgres_tests/test_indexes.py", lines: [479, 479] }
+      - { file: "tests/postgres_tests/test_operations.py", lines: [17, 17] }
+      - { file: "tests/postgres_tests/test_operations.py", lines: [117, 117] }
+  - id: C41
+    query: "program"
+    expect:
+      - { file: "django/core/management/commands/compilemessages.py", lines: [79, 79] }
+      - { file: "django/core/management/commands/compilemessages.py", lines: [81, 81] }
+      - { file: "django/core/management/commands/compilemessages.py", lines: [182, 182] }
+      - { file: "django/core/management/commands/compilemessages.py", lines: [191, 191] }
+      - { file: "django/core/management/commands/compilemessages.py", lines: [194, 194] }
+  - id: C42
+    query: "PreparedGeometry"
+    expect:
+      - { file: "django/contrib/gis/geos/geometry.py", lines: [17, 17] }
+      - { file: "django/contrib/gis/geos/geometry.py", lines: [470, 470] }
+  - id: C43
+    query: "timeuntil"
+    expect:
+      - { file: "django/contrib/humanize/templatetags/humanize.py", lines: [333, 333] }
+      - { file: "django/template/defaultfilters.py", lines: [24, 24] }
+      - { file: "django/template/defaultfilters.py", lines: [831, 831] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [7, 7] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [135, 135] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [136, 136] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [137, 137] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [138, 138] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [146, 146] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [151, 151] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [152, 152] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [153, 153] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [157, 157] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [164, 164] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [174, 174] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [179, 179] }
+      - { file: "tests/utils_tests/test_timesince.py", lines: [209, 209] }
+  - id: C44
+    query: "WKTAdapter"
+    expect:
+      - { file: "django/contrib/gis/db/backends/base/adapter.py", lines: [12, 12] }
+      - { file: "django/contrib/gis/db/backends/mysql/operations.py", lines: [4, 4] }
+      - { file: "django/contrib/gis/db/backends/mysql/operations.py", lines: [17, 17] }
+      - { file: "django/contrib/gis/db/backends/oracle/adapter.py", lines: [3, 3] }
+      - { file: "django/contrib/gis/db/backends/oracle/adapter.py", lines: [7, 7] }
+      - { file: "django/contrib/gis/db/backends/spatialite/adapter.py", lines: [1, 1] }
+      - { file: "django/contrib/gis/db/backends/spatialite/adapter.py", lines: [5, 5] }
+  - id: C45
+    query: "add_item"
+    expect:
+      - { file: "django/contrib/syndication/views.py", lines: [216, 216] }
+      - { file: "tests/utils_tests/test_feedgenerator.py", lines: [137, 137] }
+  - id: C46
+    query: "related_name"
+    expect:
+      - { file: "django/db/models/fields/reverse_related.py", lines: [68, 68] }
+      - { file: "django/db/models/fields/reverse_related.py", lines: [144, 144] }
+      - { file: "django/db/models/fields/reverse_related.py", lines: [229, 229] }
+      - { file: "django/db/models/fields/reverse_related.py", lines: [230, 230] }
+  - id: C47
+    query: "JavaScriptCatalog"
+    expect:
+      - { file: "django/contrib/admin/sites.py", lines: [26, 26] }
+      - { file: "django/contrib/admin/sites.py", lines: [386, 386] }
+      - { file: "django/views/i18n.py", lines: [234, 234] }
+      - { file: "tests/view_tests/tests/test_i18n.py", lines: [18, 18] }
+      - { file: "tests/view_tests/tests/test_i18n.py", lines: [505, 505] }
+      - { file: "tests/view_tests/tests/test_i18n.py", lines: [522, 522] }
+      - { file: "tests/view_tests/urls.py", lines: [33, 33] }
+      - { file: "tests/view_tests/urls.py", lines: [34, 34] }
+      - { file: "tests/view_tests/urls.py", lines: [35, 35] }
+      - { file: "tests/view_tests/urls.py", lines: [36, 36] }
+      - { file: "tests/view_tests/urls.py", lines: [37, 37] }
+      - { file: "tests/view_tests/urls.py", lines: [40, 40] }
+      - { file: "tests/view_tests/urls.py", lines: [44, 44] }
+      - { file: "tests/view_tests/urls.py", lines: [48, 48] }
+      - { file: "tests/view_tests/urls.py", lines: [52, 52] }
+  - id: C48
+    query: "get_cached_value"
+    expect:
+      - { file: "tests/model_fields/test_mixins.py", lines: [30, 30] }
+      - { file: "tests/model_fields/test_mixins.py", lines: [34, 34] }
+      - { file: "tests/model_fields/test_mixins.py", lines: [41, 41] }
+  - id: C49
+    query: "check_default_cache_is_configured"
+    expect:
+      - { file: "tests/check_framework/test_caches.py", lines: [7, 7] }
+      - { file: "tests/check_framework/test_caches.py", lines: [31, 31] }
+      - { file: "tests/check_framework/test_caches.py", lines: [38, 38] }
+  - id: C50
+    query: "get_default_renderer"
+    expect:
+      - { file: "django/forms/forms.py", lines: [16, 16] }
+      - { file: "django/forms/forms.py", lines: [123, 123] }
+      - { file: "django/forms/formsets.py", lines: [6, 6] }
+      - { file: "django/forms/formsets.py", lines: [104, 104] }
+      - { file: "django/forms/utils.py", lines: [6, 6] }
+      - { file: "django/forms/utils.py", lines: [126, 126] }
+      - { file: "django/forms/utils.py", lines: [157, 157] }
+      - { file: "django/forms/widgets.py", lines: [23, 23] }
+      - { file: "django/forms/widgets.py", lines: [380, 380] }
+      - { file: "django/template/autoreload.py", lines: [34, 34] }
+      - { file: "django/template/autoreload.py", lines: [42, 42] }
+      - { file: "django/test/signals.py", lines: [111, 111] }
+      - { file: "django/test/signals.py", lines: [113, 113] }
+      - { file: "django/test/signals.py", lines: [210, 210] }
+      - { file: "django/test/signals.py", lines: [212, 212] }
+      - { file: "tests/forms_tests/tests/test_forms.py", lines: [44, 44] }
+      - { file: "tests/forms_tests/tests/test_forms.py", lines: [5015, 5015] }
+      - { file: "tests/forms_tests/tests/test_formsets.py", lines: [29, 29] }
+      - { file: "tests/forms_tests/tests/test_formsets.py", lines: [1595, 1595] }
+      - { file: "tests/forms_tests/tests/test_formsets.py", lines: [1620, 1620] }

@@ -229,3 +229,129 @@ cases:
     direction: out
     expect:
       - { file: "packages/core/errors/exception-handler.ts", lines: [6, 8] }
+  - id: D31
+    query: "listAllCommands"
+    direction: in
+    expect:
+      - { file: "packages/core/repl/repl-native-commands.ts", lines: [23, 48] }
+  - id: D32
+    query: "createChannel"
+    direction: out
+    expect:
+      - { file: "packages/microservices/client/client-rmq.ts", lines: [322, 362] }
+  - id: D33
+    query: "assignToObject"
+    direction: in
+    expect:
+      - { file: "packages/core/repl/repl.ts", lines: [11, 39] }
+      - { file: "packages/core/test/repl/assign-to-object.util.spec.ts", lines: [1, 36] }
+      - { file: "packages/core/test/repl/assign-to-object.util.spec.ts", lines: [4, 34] }
+  - id: D34
+    query: "sortTopologically"
+    direction: out
+    expect:
+      - { file: "packages/core/injector/topology-tree/topology-tree.ts", lines: [46, 54] }
+  - id: D35
+    query: "hasBeforeApplicationShutdownHook"
+    direction: in
+    expect:
+      - { file: "packages/core/hooks/before-app-shutdown.hook.ts", lines: [44, 83] }
+  - id: D36
+    query: "registerListeners"
+    direction: out
+    expect:
+      - { file: "packages/microservices/microservices-module.ts", lines: [76, 84] }
+  - id: D37
+    query: "combineStreamsAndThrowIfRetriable"
+    direction: in
+    expect:
+      - { file: "packages/microservices/server/server-kafka.ts", lines: [285, 358] }
+      - { file: "packages/microservices/server/server-kafka.ts", lines: [345, 355] }
+  - id: D38
+    query: "fromContainer"
+    direction: out
+    expect:
+      - { file: "packages/core/exceptions/external-exception-filter-context.ts", lines: [16, 74] }
+      - { file: "packages/core/guards/guards-consumer.ts", lines: [7, 60] }
+      - { file: "packages/core/guards/guards-context-creator.ts", lines: [16, 128] }
+      - { file: "packages/core/helpers/external-context-creator.ts", lines: [42, 404] }
+      - { file: "packages/core/injector/container.ts", lines: [67, 69] }
+      - { file: "packages/core/injector/container.ts", lines: [223, 225] }
+      - { file: "packages/core/interceptors/interceptors-consumer.ts", lines: [10, 89] }
+      - { file: "packages/core/interceptors/interceptors-context-creator.ts", lines: [15, 127] }
+      - { file: "packages/core/pipes/pipes-consumer.ts", lines: [10, 47] }
+      - { file: "packages/core/pipes/pipes-context-creator.ts", lines: [15, 123] }
+  - id: D39
+    query: "makeHelpMessage"
+    direction: in
+    expect:
+      - { file: "packages/core/repl/repl-context.ts", lines: [145, 163] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [158, 161] }
+  - id: D40
+    query: "evaluateCrossOriginRequest"
+    direction: out
+    expect:
+      - { file: "packages/core/security/cross-origin-protection.ts", lines: [117, 132] }
+      - { file: "packages/core/security/cross-origin-protection.ts", lines: [134, 157] }
+  - id: D41
+    query: "matchesFileType"
+    direction: in
+    expect:
+      - { file: "packages/common/pipes/file/file-type.validator.ts", lines: [150, 217] }
+  - id: D42
+    query: "renderInvoice"
+    direction: out
+    expect:
+      - { file: "sample/39-file-storage/src/invoices/render-invoice.ts", lines: [3, 3] }
+  - id: D43
+    query: "optionalRequire"
+    direction: in
+    expect:
+      - { file: "packages/core/nest-application.ts", lines: [751, 761] }
+      - { file: "packages/core/nest-application.ts", lines: [763, 779] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [1, 37] }
+      - { file: "packages/microservices/nest-microservice.ts", lines: [450, 460] }
+      - { file: "packages/core/nest-application.ts", lines: [753, 756] }
+      - { file: "packages/core/nest-application.ts", lines: [765, 768] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [4, 10] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [12, 15] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [17, 23] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [25, 29] }
+      - { file: "packages/core/test/helpers/optional-require.spec.ts", lines: [31, 35] }
+      - { file: "packages/microservices/nest-microservice.ts", lines: [452, 455] }
+  - id: D44
+    query: "isUUID"
+    direction: out
+    expect:
+      - { file: "packages/common/utils/shared.utils.ts", lines: [40, 41] }
+  - id: D45
+    query: "isEnum"
+    direction: in
+    expect:
+      - { file: "packages/common/pipes/parse-enum.pipe.ts", lines: [68, 81] }
+  - id: D46
+    query: "registerModulePathMetadata"
+    direction: out
+    expect:
+      - { file: "packages/core/injector/modules-container.ts", lines: [12, 14] }
+  - id: D47
+    query: "registerPartial"
+    direction: in
+    expect:
+      - { file: "packages/core/injector/instance-loader.ts", lines: [25, 38] }
+  - id: D48
+    query: "registerLocalInstanceRef"
+    direction: out
+    expect:
+      - { file: "packages/common/services/console-logger.service.ts", lines: [177, 971] }
+      - { file: "packages/common/services/logger.service.ts", lines: [49, 49] }
+  - id: D49
+    query: "reflectMethodMetadata"
+    direction: in
+    expect:
+      - { file: "packages/core/helpers/context-creator.ts", lines: [17, 42] }
+  - id: D50
+    query: "getMetadataByDecorator"
+    direction: out
+    expect:
+      - { file: "packages/core/injector/instance-wrapper.ts", lines: [136, 138] }

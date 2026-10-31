@@ -291,3 +291,209 @@ cases:
       - { file: "src/Routers/UsersRouter.js", lines: [831, 877] }
       - { file: "src/PromiseRouter.js", lines: [14, 113] }
       - { file: "src/Routers/AudiencesRouter.js", lines: [48, 50] }
+  - id: G31
+    query: "ci/nodeEngineCheck.js:175 ci/nodeEngineCheck.js:96"
+    expect:
+      - { file: "ci/nodeEngineCheck.js", lines: [139, 196] }
+      - { file: "ci/nodeEngineCheck.js", lines: [71, 101] }
+      - { file: "ci/nodeEngineCheck.js", lines: [1, 199] }
+      - { file: "ci/nodeEngineCheck.js", lines: [131, 136] }
+  - id: G32
+    query: "src/Adapters/Logger/WinstonLogger.js:108 src/Adapters/Logger/WinstonLogger.js:34"
+    expect:
+      - { file: "src/Adapters/Logger/WinstonLogger.js", lines: [105, 111] }
+      - { file: "src/Adapters/Logger/WinstonLogger.js", lines: [10, 66] }
+      - { file: "src/Adapters/Logger/WinstonLoggerAdapter.js", lines: [18, 23] }
+      - { file: "src/Adapters/Logger/WinstonLogger.js", lines: [68, 103] }
+      - { file: "src/Adapters/Logger/WinstonLoggerAdapter.js", lines: [6, 61] }
+      - { file: "src/Adapters/Logger/WinstonLoggerAdapter.js", lines: [7, 12] }
+  - id: G33
+    query: "src/cryptoUtils.js:31 src/cryptoUtils.js:7"
+    expect:
+      - { file: "src/cryptoUtils.js", lines: [22, 33] }
+      - { file: "src/cryptoUtils.js", lines: [6, 14] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [242, 254] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [275, 297] }
+      - { file: "src/Controllers/UserController.js", lines: [39, 62] }
+      - { file: "src/Controllers/UserController.js", lines: [237, 253] }
+      - { file: "src/cryptoUtils.js", lines: [36, 38] }
+      - { file: "src/RestWrite.js", lines: [1, 2670] }
+      - { file: "src/Controllers/FilesController.js", lines: [17, 55] }
+      - { file: "src/cryptoUtils.js", lines: [41, 43] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [127, 185] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [228, 240] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [118, 126] }
+      - { file: "src/Controllers/UserController.js", lines: [199, 224] }
+      - { file: "src/Controllers/UserController.js", lines: [213, 219] }
+      - { file: "src/Controllers/UserController.js", lines: [255, 305] }
+      - { file: "src/StatusHandler.js", lines: [76, 129] }
+  - id: G34
+    query: "src/RestQuery.js:1309 src/RestQuery.js:1364"
+    expect:
+      - { file: "src/RestQuery.js", lines: [1200, 1310] }
+      - { file: "src/RestQuery.js", lines: [1346, 1378] }
+      - { file: "src/RestQuery.js", lines: [1104, 1123] }
+      - { file: "src/RestQuery.js", lines: [1, 1412] }
+      - { file: "src/RestQuery.js", lines: [1302, 1304] }
+      - { file: "src/RestQuery.js", lines: [1349, 1349] }
+  - id: G35
+    query: "src/Controllers/index.js:94"
+    expect:
+      - { file: "src/Controllers/index.js", lines: [80, 99] }
+      - { file: "src/Controllers/index.js", lines: [28, 55] }
+      - { file: "src/ParseServer.ts", lines: [58, 573] }
+  - id: G36
+    query: "src/Routers/ClassesRouter.js:49 src/Routers/ClassesRouter.js:243"
+    expect:
+      - { file: "src/Routers/ClassesRouter.js", lines: [22, 51] }
+      - { file: "src/Routers/ClassesRouter.js", lines: [233, 249] }
+      - { file: "src/Routers/AggregateRouter.js", lines: [159, 163] }
+      - { file: "src/Routers/AudiencesRouter.js", lines: [40, 71] }
+      - { file: "src/Routers/InstallationsRouter.js", lines: [29, 45] }
+      - { file: "src/Routers/RolesRouter.js", lines: [8, 24] }
+      - { file: "src/Routers/SessionsRouter.js", lines: [116, 138] }
+      - { file: "src/Routers/UsersRouter.js", lines: [831, 877] }
+      - { file: "src/Routers/ClassesRouter.js", lines: [234, 236] }
+      - { file: "src/Routers/RolesRouter.js", lines: [9, 11] }
+      - { file: "src/Routers/SessionsRouter.js", lines: [120, 122] }
+      - { file: "src/Routers/UsersRouter.js", lines: [832, 834] }
+      - { file: "src/PromiseRouter.js", lines: [14, 113] }
+      - { file: "src/ParseServer.ts", lines: [376, 411] }
+  - id: G37
+    query: "src/Routers/AnalyticsRouter.js:16 src/Routers/AnalyticsRouter.js:10"
+    expect:
+      - { file: "src/Routers/AnalyticsRouter.js", lines: [15, 18] }
+      - { file: "src/Routers/AnalyticsRouter.js", lines: [9, 12] }
+      - { file: "src/PromiseRouter.js", lines: [14, 113] }
+      - { file: "src/ParseServer.ts", lines: [376, 411] }
+  - id: G38
+    query: "benchmark/MongoLatencyWrapper.js:57 benchmark/MongoLatencyWrapper.js:94"
+    expect:
+      - { file: "benchmark/MongoLatencyWrapper.js", lines: [30, 72] }
+      - { file: "benchmark/MongoLatencyWrapper.js", lines: [79, 133] }
+      - { file: "benchmark/MongoLatencyWrapper.js", lines: [118, 120] }
+      - { file: "benchmark/performance.js", lines: [121, 204] }
+      - { file: "benchmark/performance.js", lines: [312, 327] }
+      - { file: "benchmark/performance.js", lines: [332, 355] }
+      - { file: "benchmark/performance.js", lines: [360, 386] }
+      - { file: "benchmark/performance.js", lines: [391, 416] }
+      - { file: "benchmark/performance.js", lines: [421, 441] }
+      - { file: "benchmark/performance.js", lines: [446, 461] }
+      - { file: "benchmark/performance.js", lines: [466, 491] }
+      - { file: "benchmark/performance.js", lines: [497, 552] }
+      - { file: "benchmark/performance.js", lines: [560, 637] }
+      - { file: "benchmark/performance.js", lines: [723, 748] }
+      - { file: "benchmark/performance.js", lines: [758, 802] }
+      - { file: "benchmark/performance.js", lines: [811, 834] }
+      - { file: "benchmark/performance.js", lines: [843, 868] }
+  - id: G39
+    query: "src/Push/PushWorker.js:48 src/Push/PushWorker.js:86"
+    expect:
+      - { file: "src/Push/PushWorker.js", lines: [43, 55] }
+      - { file: "src/Push/PushWorker.js", lines: [57, 98] }
+      - { file: "src/Push/PushWorker.js", lines: [22, 99] }
+      - { file: "src/Push/PushWorker.js", lines: [36, 39] }
+      - { file: "src/Push/PushWorker.js", lines: [49, 54] }
+      - { file: "src/Push/PushWorker.js", lines: [72, 76] }
+      - { file: "src/Push/PushWorker.js", lines: [91, 96] }
+      - { file: "src/Controllers/index.js", lines: [172, 208] }
+  - id: G40
+    query: "src/cli/utils/commander.js:66"
+    expect:
+      - { file: "src/cli/utils/commander.js", lines: [62, 74] }
+      - { file: "src/cli/utils/commander.js", lines: [1, 144] }
+  - id: G41
+    query: "src/Controllers/HooksController.js:133 src/Controllers/HooksController.js:228"
+    expect:
+      - { file: "src/Controllers/HooksController.js", lines: [119, 141] }
+      - { file: "src/Controllers/HooksController.js", lines: [187, 255] }
+      - { file: "src/Controllers/HooksController.js", lines: [143, 165] }
+      - { file: "src/Controllers/HooksController.js", lines: [167, 184] }
+      - { file: "src/Controllers/HooksController.js", lines: [145, 151] }
+      - { file: "src/Controllers/HooksController.js", lines: [153, 161] }
+      - { file: "src/Controllers/HooksController.js", lines: [169, 174] }
+      - { file: "src/Controllers/HooksController.js", lines: [176, 181] }
+      - { file: "src/Controllers/HooksController.js", lines: [104, 112] }
+      - { file: "src/Controllers/HooksController.js", lines: [29, 36] }
+      - { file: "src/Controllers/HooksController.js", lines: [114, 117] }
+      - { file: "src/Controllers/HooksController.js", lines: [32, 34] }
+  - id: G42
+    query: "src/Adapters/Auth/mfa.js:249 src/Adapters/Auth/mfa.js:148"
+    expect:
+      - { file: "src/Adapters/Auth/mfa.js", lines: [242, 254] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [127, 185] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [228, 240] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [186, 201] }
+      - { file: "src/Adapters/Auth/mfa.js", lines: [118, 126] }
+  - id: G43
+    query: "src/Adapters/Auth/linkedin.js:103 src/Adapters/Auth/linkedin.js:87"
+    expect:
+      - { file: "src/Adapters/Auth/linkedin.js", lines: [91, 112] }
+      - { file: "src/Adapters/Auth/linkedin.js", lines: [75, 89] }
+      - { file: "src/Adapters/Auth/BaseCodeAuthAdapter.js", lines: [31, 63] }
+  - id: G44
+    query: "src/Options/parsers.js:65"
+    expect:
+      - { file: "src/Options/parsers.js", lines: [64, 69] }
+      - { file: "src/Options/parsers.js", lines: [71, 76] }
+      - { file: "resources/buildConfigDefinitions.js", lines: [191, 259] }
+      - { file: "resources/buildConfigDefinitions.js", lines: [261, 346] }
+      - { file: "resources/buildConfigDefinitions.js", lines: [264, 341] }
+  - id: G45
+    query: "src/Adapters/Storage/Postgres/sql/index.js:23"
+    expect:
+      - { file: "src/Adapters/Storage/Postgres/sql/index.js", lines: [22, 32] }
+      - { file: "src/Adapters/Storage/Postgres/sql/index.js", lines: [1, 33] }
+      - { file: "src/Adapters/Storage/Postgres/sql/index.js", lines: [7, 14] }
+      - { file: "src/Adapters/Storage/Postgres/sql/index.js", lines: [15, 17] }
+  - id: G46
+    query: "src/Routers/FunctionsRouter.js:369"
+    expect:
+      - { file: "src/Routers/FunctionsRouter.js", lines: [315, 414] }
+      - { file: "src/GraphQL/loaders/functionsMutations.js", lines: [8, 74] }
+      - { file: "src/GraphQL/loaders/schemaDirectives.js", lines: [12, 40] }
+      - { file: "src/Routers/FunctionsRouter.js", lines: [65, 85] }
+      - { file: "src/GraphQL/loaders/functionsMutations.js", lines: [52, 62] }
+      - { file: "src/GraphQL/loaders/schemaDirectives.js", lines: [18, 36] }
+      - { file: "src/GraphQL/loaders/defaultGraphQLMutations.js", lines: [7, 13] }
+      - { file: "src/GraphQL/loaders/schemaDirectives.js", lines: [9, 55] }
+      - { file: "src/GraphQL/loaders/schemaDirectives.js", lines: [54, 54] }
+      - { file: "src/PromiseRouter.js", lines: [14, 113] }
+  - id: G47
+    query: "src/AccountLockout.js:61"
+    expect:
+      - { file: "src/AccountLockout.js", lines: [45, 72] }
+      - { file: "src/AccountLockout.js", lines: [104, 120] }
+      - { file: "src/AccountLockout.js", lines: [108, 117] }
+      - { file: "src/AccountLockout.js", lines: [125, 136] }
+      - { file: "src/AccountLockout.js", lines: [129, 135] }
+  - id: G48
+    query: "src/ParseServerRESTController.js:29"
+    expect:
+      - { file: "src/ParseServerRESTController.js", lines: [13, 30] }
+      - { file: "src/ParseServerRESTController.js", lines: [33, 166] }
+      - { file: "src/ParseServerRESTController.js", lines: [126, 164] }
+      - { file: "src/ParseServerRESTController.js", lines: [50, 104] }
+      - { file: "src/ParseServerRESTController.js", lines: [56, 74] }
+  - id: G49
+    query: "src/Controllers/FilesController.js:37 src/Controllers/FilesController.js:87"
+    expect:
+      - { file: "src/Controllers/FilesController.js", lines: [17, 55] }
+      - { file: "src/Controllers/FilesController.js", lines: [73, 89] }
+      - { file: "src/Controllers/FilesController.js", lines: [75, 75] }
+  - id: G50
+    query: "src/Controllers/SchemaController.js:841 src/Controllers/SchemaController.js:1039"
+    expect:
+      - { file: "src/Controllers/SchemaController.js", lines: [832, 868] }
+      - { file: "src/Controllers/SchemaController.js", lines: [1022, 1093] }
+      - { file: "src/Controllers/SchemaController.js", lines: [979, 1007] }
+      - { file: "src/Controllers/SchemaController.js", lines: [870, 975] }
+      - { file: "src/Controllers/SchemaController.js", lines: [1009, 1020] }
+      - { file: "src/Controllers/SchemaController.js", lines: [899, 904] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [936, 1003] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [2013, 2151] }
+      - { file: "src/Controllers/SchemaController.js", lines: [1286, 1335] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [974, 974] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [2035, 2035] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [2036, 2036] }
+      - { file: "src/Controllers/DatabaseController.js", lines: [2037, 2037] }

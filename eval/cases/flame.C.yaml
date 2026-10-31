@@ -272,3 +272,213 @@ cases:
       - { file: "doc/tutorials/klondike/app/lib/step5/components/tableau_pile.dart", lines: [76, 76] }
       - { file: "doc/tutorials/klondike/app/lib/step5/klondike_world.dart", lines: [140, 140] }
       - { file: "doc/tutorials/klondike/app/lib/step5/klondike_world.dart", lines: [234, 234] }
+  - id: C31
+    query: "CompositeHitbox"
+    expect:
+      - { file: "packages/flame/lib/src/collisions/hitboxes/shape_hitbox.dart", lines: [82, 82] }
+      - { file: "packages/flame/test/collisions/collision_passthrough_test.dart", lines: [48, 48] }
+      - { file: "packages/flame/test/collisions/collision_test_helpers.dart", lines: [78, 78] }
+  - id: C32
+    query: "RaytraceExample"
+    expect:
+      - { file: "examples/lib/stories/collision_detection/collision_detection.dart", lines: [84, 84] }
+      - { file: "examples/lib/stories/collision_detection/collision_detection.dart", lines: [86, 86] }
+  - id: C33
+    query: "BlockElement"
+    expect:
+      - { file: "packages/flame/lib/src/text/elements/block_element.dart", lines: [3, 3] }
+      - { file: "packages/flame/lib/src/text/elements/group_element.dart", lines: [8, 8] }
+      - { file: "packages/flame/lib/src/text/nodes/block_node.dart", lines: [19, 19] }
+      - { file: "packages/flame/lib/src/text/nodes/text_block_node.dart", lines: [15, 15] }
+      - { file: "packages/flame/lib/src/text/nodes/text_block_node.dart", lines: [23, 23] }
+      - { file: "packages/flame/lib/text.dart", lines: [6, 6] }
+  - id: C34
+    query: "OpacityEffectExample"
+    expect:
+      - { file: "examples/lib/stories/effects/effects.dart", lines: [62, 62] }
+      - { file: "examples/lib/stories/effects/effects.dart", lines: [64, 64] }
+  - id: C35
+    query: "DepthStencilState"
+    expect:
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [250, 250] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [258, 258] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [289, 289] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [291, 291] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [292, 292] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/flutter_gpu/gpu_backend.dart", lines: [293, 293] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/gpu_backend.dart", lines: [91, 91] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [200, 200] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [225, 225] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [298, 298] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [299, 299] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [300, 300] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [301, 301] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [330, 330] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [538, 538] }
+      - { file: "packages/flame_3d/lib/src/graphics/backend/web_gpu/gpu_backend.dart", lines: [580, 580] }
+      - { file: "packages/flame_3d/lib/src/graphics/graphics_device.dart", lines: [29, 29] }
+  - id: C36
+    query: "WidgetComponentParentData"
+    expect:
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [55, 55] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [121, 121] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [122, 122] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [145, 145] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [244, 244] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [264, 264] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [290, 290] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [306, 306] }
+      - { file: "packages/flame/lib/src/game/game_render_box.dart", lines: [335, 335] }
+      - { file: "packages/flame/lib/src/game/widget_components.dart", lines: [29, 29] }
+      - { file: "packages/flame/lib/src/game/widget_components.dart", lines: [32, 32] }
+  - id: C37
+    query: "Obstacle"
+    expect:
+      - { file: "examples/games/trex/lib/obstacle/obstacle_manager.dart", lines: [15, 15] }
+      - { file: "examples/games/trex/lib/obstacle/obstacle_manager.dart", lines: [18, 18] }
+      - { file: "examples/games/trex/lib/obstacle/obstacle_manager.dart", lines: [47, 47] }
+  - id: C38
+    query: "Broadphase"
+    expect:
+      - { file: "packages/flame/benchmark/raycast_scene.dart", lines: [73, 73] }
+      - { file: "packages/flame/benchmark/raycast_scene.dart", lines: [75, 75] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/broadphase.dart", lines: [3, 3] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/broadphase.dart", lines: [7, 7] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/quadtree/quad_tree_broadphase.dart", lines: [26, 26] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/sweep/sweep.dart", lines: [4, 4] }
+      - { file: "packages/flame/lib/src/collisions/collision_detection.dart", lines: [13, 13] }
+      - { file: "packages/flame/lib/src/collisions/has_collision_detection.dart", lines: [14, 14] }
+      - { file: "packages/flame/lib/src/collisions/has_collision_detection.dart", lines: [37, 37] }
+      - { file: "packages/flame/lib/src/collisions/standard_collision_detection.dart", lines: [14, 14] }
+      - { file: "packages/flame/lib/src/collisions/standard_collision_detection.dart", lines: [15, 15] }
+      - { file: "packages/flame/test/collisions/raycast_ordering_test.dart", lines: [87, 87] }
+      - { file: "packages/flame/test/collisions/raycast_ordering_test.dart", lines: [91, 91] }
+      - { file: "packages/flame/test/collisions/raycast_ordering_test.dart", lines: [97, 97] }
+      - { file: "packages/flame/test/collisions/raycast_ordering_test.dart", lines: [124, 124] }
+  - id: C39
+    query: "MagFilter"
+    expect:
+      - { file: "packages/flame_3d/lib/src/parser/gltf/mag_filter.dart", lines: [8, 8] }
+      - { file: "packages/flame_3d/lib/src/parser/gltf/mag_filter.dart", lines: [12, 12] }
+      - { file: "packages/flame_3d/lib/src/parser/gltf/sampler.dart", lines: [12, 12] }
+      - { file: "packages/flame_3d/lib/src/parser/gltf/sampler.dart", lines: [28, 28] }
+  - id: C40
+    query: "HoverTarget"
+    expect:
+      - { file: "doc/flame/examples/lib/pointer_events.dart", lines: [11, 11] }
+      - { file: "doc/flame/examples/lib/pointer_events.dart", lines: [12, 12] }
+      - { file: "doc/flame/examples/lib/pointer_events.dart", lines: [13, 13] }
+      - { file: "doc/flame/examples/lib/pointer_events.dart", lines: [18, 18] }
+  - id: C41
+    query: "HasWorldRef"
+    expect:
+      - { file: "doc/tutorials/klondike/app/lib/step5/components/card.dart", lines: [20, 20] }
+      - { file: "examples/lib/stories/collision_detection/rays_in_shape_example.dart", lines: [168, 168] }
+      - { file: "packages/flame/lib/src/components/mixins/has_world_ref.dart", lines: [6, 6] }
+      - { file: "packages/flame/test/components/mixins/has_world_ref_test.dart", lines: [5, 5] }
+      - { file: "packages/flame/test/components/mixins/has_world_ref_test.dart", lines: [20, 20] }
+      - { file: "packages/flame/test/experimental/has_world_ref_test.dart", lines: [89, 89] }
+      - { file: "packages/flame/test/experimental/has_world_ref_test.dart", lines: [95, 95] }
+      - { file: "packages/flame/test/experimental/has_world_ref_test.dart", lines: [101, 101] }
+      - { file: "packages/flame_3d/lib/src/components/component_3d.dart", lines: [1, 1] }
+      - { file: "packages/flame_3d/lib/src/components/component_3d.dart", lines: [38, 38] }
+      - { file: "packages/flame_forge2d/lib/ray_cast_component.dart", lines: [59, 59] }
+  - id: C42
+    query: "ToolbarButton"
+    expect:
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/next_frame_button.dart", lines: [11, 11] }
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/pause_button.dart", lines: [11, 11] }
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/start_button.dart", lines: [11, 11] }
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/toolbar_button.dart", lines: [18, 18] }
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/toolbar_button.dart", lines: [63, 63] }
+      - { file: "packages/flame_studio/lib/src/widgets/toolbar/viewport_tool_button.dart", lines: [16, 16] }
+  - id: C43
+    query: "_updateElement"
+    expect:
+      - { file: "packages/flame/lib/src/components/text_component.dart", lines: [49, 49] }
+      - { file: "packages/flame/lib/src/components/text_component.dart", lines: [62, 62] }
+  - id: C44
+    query: "MeshComponent"
+    expect:
+      - { file: "packages/flame_3d/example/lib/commands/destroy_command.dart", lines: [30, 30] }
+      - { file: "packages/flame_3d/example/lib/components/crate.dart", lines: [11, 11] }
+      - { file: "packages/flame_3d/example/lib/components/player.dart", lines: [15, 15] }
+      - { file: "packages/flame_3d/example/lib/components/rendered_point_light.dart", lines: [15, 15] }
+      - { file: "packages/flame_3d/example/lib/components/room_bounds.dart", lines: [13, 13] }
+      - { file: "packages/flame_3d/example/lib/components/room_bounds.dart", lines: [25, 25] }
+      - { file: "packages/flame_3d/example/lib/components/room_bounds.dart", lines: [38, 38] }
+      - { file: "packages/flame_3d/example/lib/components/room_bounds.dart", lines: [51, 51] }
+      - { file: "packages/flame_3d/example/lib/scenarios/boxes_scenario.dart", lines: [38, 38] }
+      - { file: "packages/flame_3d/example/lib/scenarios/boxes_scenario.dart", lines: [56, 56] }
+      - { file: "packages/flame_3d/example/lib/scenarios/colors_scenario.dart", lines: [21, 21] }
+      - { file: "packages/flame_3d/example/lib/scenarios/colors_scenario.dart", lines: [31, 31] }
+      - { file: "packages/flame_3d/example/lib/scenarios/colors_scenario.dart", lines: [42, 42] }
+      - { file: "packages/flame_3d/example/lib/scenarios/culling_scenario.dart", lines: [51, 51] }
+      - { file: "packages/flame_3d/example/lib/scenarios/culling_scenario.dart", lines: [56, 56] }
+      - { file: "packages/flame_3d/example/lib/scenarios/culling_scenario.dart", lines: [77, 77] }
+      - { file: "packages/flame_3d/lib/src/components/component_3d.dart", lines: [116, 116] }
+      - { file: "packages/flame_3d/lib/src/components/line_3d.dart", lines: [11, 11] }
+      - { file: "packages/flame_3d/lib/src/components/object_3d.dart", lines: [20, 20] }
+  - id: C45
+    query: "TypledSpriteAtlas"
+    expect:
+      - { file: "packages/flame_typled/example/lib/main.dart", lines: [29, 29] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [30, 30] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [65, 65] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [69, 69] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [80, 80] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [203, 203] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [205, 205] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [209, 209] }
+      - { file: "packages/flame_typled/lib/typled_sprite_atlas.dart", lines: [213, 213] }
+      - { file: "packages/flame_typled/test/typled_sprite_atlas_test.dart", lines: [17, 17] }
+      - { file: "packages/flame_typled/test/typled_sprite_atlas_test.dart", lines: [31, 31] }
+      - { file: "packages/flame_typled/test/typled_sprite_atlas_test.dart", lines: [76, 76] }
+      - { file: "packages/flame_typled/test/typled_sprite_atlas_test.dart", lines: [89, 89] }
+  - id: C46
+    query: "TypeError"
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/jenny.dart", lines: [6, 6] }
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [189, 189] }
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [206, 206] }
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [214, 214] }
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [223, 223] }
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [232, 232] }
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [239, 239] }
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [257, 257] }
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [273, 273] }
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [293, 293] }
+      - { file: "packages/flame_jenny/jenny/lib/src/parse/parse.dart", lines: [965, 965] }
+      - { file: "packages/flame_jenny/jenny/test/utils.dart", lines: [18, 18] }
+  - id: C47
+    query: "clampZoom"
+    expect:
+      - { file: "examples/lib/stories/camera_and_viewport/zoom_example.dart", lines: [34, 34] }
+      - { file: "examples/lib/stories/camera_and_viewport/zoom_example.dart", lines: [48, 48] }
+  - id: C48
+    query: "CreateTemplate"
+    expect:
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [52, 52] }
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [54, 54] }
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [57, 57] }
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [126, 126] }
+      - { file: "packages/flame_cli/lib/src/commands/create_command.dart", lines: [194, 194] }
+      - { file: "packages/flame_cli/lib/src/create_templates.dart", lines: [15, 15] }
+      - { file: "packages/flame_cli/lib/src/create_templates.dart", lines: [22, 22] }
+      - { file: "packages/flame_cli/lib/src/create_templates.dart", lines: [48, 48] }
+      - { file: "packages/flame_cli/lib/src/create_templates.dart", lines: [132, 132] }
+      - { file: "packages/flame_cli/test/create_command_test.dart", lines: [152, 152] }
+  - id: C49
+    query: "_addTileRow"
+    expect:
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [42, 42] }
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [51, 51] }
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [63, 63] }
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [72, 72] }
+  - id: C50
+    query: "createDefault"
+    expect:
+      - { file: "packages/flame/lib/src/components/text_component.dart", lines: [34, 34] }
+      - { file: "packages/flame/lib/src/text/renderers/text_renderer_factory.dart", lines: [5, 5] }
+      - { file: "packages/flame/test/text/text_renderer_test.dart", lines: [10, 10] }
+      - { file: "packages/flame/test/text/text_renderer_test.dart", lines: [14, 14] }

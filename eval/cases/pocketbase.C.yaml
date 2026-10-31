@@ -398,3 +398,204 @@ cases:
       - { file: "migrations/1717233556_v0.23_migrate.go", lines: [636, 636] }
       - { file: "migrations/1717233556_v0.23_migrate.go", lines: [650, 650] }
       - { file: "migrations/1717233558_v0.23_migrate3.go", lines: [76, 76] }
+  - id: C31
+    query: "Modifier"
+    expect:
+      - { file: "tools/picker/excerpt_modifier.go", lines: [14, 14] }
+      - { file: "tools/picker/excerpt_modifier.go", lines: [33, 33] }
+      - { file: "tools/picker/excerpt_modifier.go", lines: [68, 68] }
+      - { file: "tools/picker/modifiers.go", lines: [11, 11] }
+      - { file: "tools/picker/modifiers.go", lines: [18, 18] }
+      - { file: "tools/picker/pick.go", lines: [86, 86] }
+      - { file: "tools/picker/pick.go", lines: [94, 94] }
+      - { file: "tools/picker/pick.go", lines: [113, 113] }
+      - { file: "tools/picker/pick.go", lines: [145, 145] }
+      - { file: "tools/picker/pick.go", lines: [170, 170] }
+      - { file: "tools/picker/pick_test.go", lines: [21, 21] }
+      - { file: "tools/router/event_test.go", lines: [519, 519] }
+  - id: C32
+    query: "getColor"
+    expect:
+      - { file: "core/log_printer.go", lines: [33, 33] }
+      - { file: "core/log_printer.go", lines: [34, 34] }
+      - { file: "core/log_printer.go", lines: [36, 36] }
+      - { file: "core/log_printer.go", lines: [37, 37] }
+      - { file: "core/log_printer.go", lines: [39, 39] }
+      - { file: "core/log_printer.go", lines: [40, 40] }
+      - { file: "core/log_printer.go", lines: [42, 42] }
+      - { file: "core/log_printer.go", lines: [43, 43] }
+      - { file: "core/log_printer.go", lines: [45, 45] }
+      - { file: "core/log_printer.go", lines: [46, 46] }
+      - { file: "core/log_printer.go", lines: [56, 56] }
+      - { file: "core/log_printer.go", lines: [62, 62] }
+  - id: C33
+    query: "vmsPool"
+    expect:
+      - { file: "plugins/jsvm/binds.go", lines: [43, 43] }
+      - { file: "plugins/jsvm/binds.go", lines: [105, 105] }
+      - { file: "plugins/jsvm/binds.go", lines: [150, 150] }
+      - { file: "plugins/jsvm/binds.go", lines: [182, 182] }
+      - { file: "plugins/jsvm/binds.go", lines: [224, 224] }
+      - { file: "plugins/jsvm/pool.go", lines: [22, 22] }
+      - { file: "plugins/jsvm/pool.go", lines: [27, 27] }
+      - { file: "plugins/jsvm/pool.go", lines: [42, 42] }
+  - id: C34
+    query: "Rereader"
+    expect:
+      - { file: "apis/middlewares_body_limit.go", lines: [146, 146] }
+      - { file: "tools/router/event.go", lines: [394, 394] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [9, 9] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [63, 63] }
+  - id: C35
+    query: "ParseUnverifiedJWT"
+    expect:
+      - { file: "apis/record_auth_email_change_confirm.go", lines: [99, 99] }
+      - { file: "apis/record_auth_password_reset_confirm.go", lines: [43, 43] }
+      - { file: "apis/record_auth_refresh.go", lines: [24, 24] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [89, 89] }
+      - { file: "core/record_query.go", lines: [488, 488] }
+      - { file: "core/record_tokens_test.go", lines: [50, 50] }
+      - { file: "core/record_tokens_test.go", lines: [156, 156] }
+      - { file: "plugins/jsvm/binds.go", lines: [738, 738] }
+      - { file: "tools/security/jwt_test.go", lines: [13, 13] }
+      - { file: "tools/security/jwt_test.go", lines: [23, 23] }
+      - { file: "tools/security/jwt_test.go", lines: [33, 33] }
+      - { file: "tools/security/jwt_test.go", lines: [43, 43] }
+  - id: C36
+    query: "CollectionNameMFAs"
+    expect:
+      - { file: "apis/collection_test.go", lines: [55, 55] }
+      - { file: "apis/collection_test.go", lines: [90, 90] }
+      - { file: "apis/collection_test.go", lines: [358, 358] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [19, 19] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [41, 41] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [68, 68] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [105, 105] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [118, 118] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [135, 135] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [167, 167] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [180, 180] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [197, 197] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [214, 214] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [258, 258] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [272, 272] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [290, 290] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [339, 339] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [353, 353] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [371, 371] }
+      - { file: "core/mfa_model.go", lines: [44, 44] }
+      - { file: "core/mfa_model.go", lines: [59, 59] }
+      - { file: "core/mfa_model.go", lines: [123, 123] }
+      - { file: "core/mfa_model_test.go", lines: [21, 21] }
+      - { file: "core/mfa_model_test.go", lines: [22, 22] }
+      - { file: "core/mfa_model_test.go", lines: [190, 190] }
+      - { file: "core/mfa_query.go", lines: [15, 15] }
+      - { file: "core/mfa_query.go", lines: [34, 34] }
+      - { file: "core/mfa_query.go", lines: [50, 50] }
+      - { file: "core/mfa_query.go", lines: [100, 100] }
+      - { file: "migrations/1640988000_init.go", lines: [90, 90] }
+      - { file: "migrations/1640988000_init.go", lines: [121, 121] }
+      - { file: "migrations/1717233556_v0.23_migrate.go", lines: [24, 24] }
+      - { file: "migrations/1717233557_v0.23_migrate2.go", lines: [17, 17] }
+      - { file: "migrations/1717233558_v0.23_migrate3.go", lines: [28, 28] }
+  - id: C37
+    query: "getAttrs"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [208, 208] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [306, 306] }
+  - id: C38
+    query: "NameMailcow"
+    expect:
+      - { file: "tools/auth/auth_test.go", lines: [229, 229] }
+      - { file: "tools/auth/mailcow.go", lines: [14, 14] }
+  - id: C39
+    query: "UnbindAll"
+    expect:
+      - { file: "tools/filesystem/filesystem.go", lines: [124, 124] }
+      - { file: "tools/filesystem/filesystem.go", lines: [129, 129] }
+      - { file: "tools/hook/hook_test.go", lines: [107, 107] }
+      - { file: "tools/hook/hook_test.go", lines: [116, 116] }
+  - id: C40
+    query: "recordConfirmVerificationForm"
+    expect:
+      - { file: "apis/record_auth_verification_confirm.go", lines: [22, 22] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [77, 77] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [83, 83] }
+  - id: C41
+    query: "ListIterator"
+    expect:
+      - { file: "tools/filesystem/blob/bucket.go", lines: [114, 114] }
+      - { file: "tools/filesystem/blob/bucket.go", lines: [187, 187] }
+      - { file: "tools/filesystem/blob/bucket.go", lines: [197, 197] }
+  - id: C42
+    query: "RecordProxy"
+    expect:
+      - { file: "apis/realtime.go", lines: [536, 536] }
+      - { file: "apis/realtime.go", lines: [571, 571] }
+      - { file: "core/auth_origin_model.go", lines: [19, 19] }
+      - { file: "core/auth_origin_model.go", lines: [146, 146] }
+      - { file: "core/base.go", lines: [1353, 1353] }
+      - { file: "core/events.go", lines: [288, 288] }
+      - { file: "core/external_auth_model.go", lines: [16, 16] }
+      - { file: "core/mfa_model.go", lines: [24, 24] }
+      - { file: "core/otp_model.go", lines: [18, 18] }
+      - { file: "core/record_proxy.go", lines: [16, 16] }
+      - { file: "core/record_proxy.go", lines: [18, 18] }
+      - { file: "core/record_query.go", lines: [19, 19] }
+      - { file: "core/record_query.go", lines: [64, 64] }
+      - { file: "core/record_query.go", lines: [146, 146] }
+  - id: C43
+    query: "NameGitee"
+    expect:
+      - { file: "tools/auth/auth_test.go", lines: [130, 130] }
+      - { file: "tools/auth/gitee.go", lines: [15, 15] }
+  - id: C44
+    query: "IgnoreParenthesis"
+    expect:
+      - { file: "tools/picker/modifiers.go", lines: [21, 21] }
+      - { file: "tools/tokenizer/tokenizer_test.go", lines: [243, 243] }
+  - id: C45
+    query: "replaceWithExpression"
+    expect:
+      - { file: "core/record_field_resolver_replace_expr.go", lines: [9, 9] }
+      - { file: "core/record_field_resolver_replace_expr.go", lines: [22, 22] }
+      - { file: "core/record_field_resolver_runner.go", lines: [291, 291] }
+  - id: C46
+    query: "WriteSSE"
+    expect:
+      - { file: "apis/realtime.go", lines: [94, 94] }
+      - { file: "apis/realtime.go", lines: [139, 139] }
+      - { file: "tools/subscriptions/message_test.go", lines: [18, 18] }
+  - id: C47
+    query: "DryRunViewResult"
+    expect:
+      - { file: "core/app.go", lines: [282, 282] }
+      - { file: "core/view.go", lines: [138, 138] }
+      - { file: "core/view.go", lines: [196, 196] }
+  - id: C48
+    query: "EmailPlaceholderAppName"
+    expect:
+      - { file: "core/collection_model_auth_templates.go", lines: [14, 14] }
+      - { file: "core/collection_model_auth_templates.go", lines: [16, 16] }
+      - { file: "core/collection_model_auth_templates.go", lines: [24, 24] }
+      - { file: "core/collection_model_auth_templates.go", lines: [29, 29] }
+      - { file: "core/collection_model_auth_templates.go", lines: [38, 38] }
+      - { file: "core/collection_model_auth_templates.go", lines: [43, 43] }
+      - { file: "core/collection_model_auth_templates.go", lines: [52, 52] }
+      - { file: "core/collection_model_auth_templates.go", lines: [57, 57] }
+      - { file: "core/collection_model_auth_templates.go", lines: [63, 63] }
+      - { file: "core/collection_model_auth_templates.go", lines: [70, 70] }
+      - { file: "core/collection_model_auth_templates.go", lines: [72, 72] }
+      - { file: "core/collection_model_auth_templates.go", lines: [76, 76] }
+      - { file: "mails/record.go", lines: [262, 262] }
+      - { file: "mails/record.go", lines: [263, 263] }
+  - id: C49
+    query: "dynamicCollectionBodyLimit"
+    expect:
+      - { file: "apis/record_crud.go", lines: [31, 31] }
+      - { file: "apis/record_crud.go", lines: [32, 32] }
+  - id: C50
+    query: "isEscapingPath"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [181, 181] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [245, 245] }
