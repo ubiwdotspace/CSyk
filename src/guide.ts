@@ -65,6 +65,9 @@ you need to be sure of, then \`calls direction=in\` if the fix may belong in a c
 - \`complete\`: every use, caller or match is listed. Nothing is left to search for: do not grep
   again to make sure.
 - \`partial: N of M mentions resolved in time\`: a very common name; narrow with an id or a path.
+- \`unconfirmed …, the compiler cannot tell: <file> <line>·<function>\`: mentions of the name the
+  compiler could not resolve (an untyped receiver, \`any\`, plain JavaScript). They may be uses, so
+  the answer is not \`complete\`; \`read\` those lines to decide, rather than grepping again.
 - \`… N more; <how>\`: the answer was cut to its token budget; the hint says how to see the rest.
 - \`[unchanged: <id>, shown at call #n]\`: you saw that source earlier in this session; reuse it.
 
