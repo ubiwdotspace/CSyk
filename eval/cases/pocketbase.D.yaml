@@ -229,3 +229,135 @@ cases:
     direction: out
     expect:
       - { file: "tools/tokenizer/tokenizer.go", lines: [37, 43] }
+  - id: D31
+    query: "WriteSSE"
+    direction: in
+    expect:
+      - { file: "apis/realtime.go", lines: [43, 166] }
+      - { file: "tools/subscriptions/message_test.go", lines: [10, 25] }
+  - id: D32
+    query: "extractIdentifiers"
+    direction: out
+    expect:
+      - { file: "core/view.go", lines: [694, 724] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [27, 29] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [58, 62] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [106, 123] }
+  - id: D33
+    query: "newMaxBytesReader"
+    direction: in
+    expect:
+      - { file: "apis/middlewares_body_limit.go", lines: [75, 90] }
+  - id: D34
+    query: "forKey"
+    direction: out
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/attrs.go", lines: [66, 87] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [177, 190] }
+  - id: D35
+    query: "NewServeCommand"
+    direction: in
+    expect:
+      - { file: "pocketbase.go", lines: [167, 173] }
+  - id: D36
+    query: "InternalServerError"
+    direction: out
+    expect:
+      - { file: "tools/router/error.go", lines: [103, 109] }
+  - id: D37
+    query: "createSuperusersCollection"
+    direction: in
+    expect:
+      - { file: "migrations/1640988000_init.go", lines: [29, 105] }
+      - { file: "migrations/1717233556_v0.23_migrate.go", lines: [73, 130] }
+  - id: D38
+    query: "collectionDryRunView"
+    direction: out
+    expect:
+      - { file: "apis/collection.go", lines: [292, 296] }
+      - { file: "apis/record_helpers.go", lines: [540, 562] }
+      - { file: "core/app.go", lines: [282, 282] }
+      - { file: "core/event_request.go", lines: [78, 80] }
+      - { file: "tools/router/event.go", lines: [191, 217] }
+      - { file: "tools/router/event.go", lines: [310, 312] }
+      - { file: "tools/router/event.go", lines: [318, 320] }
+      - { file: "tools/router/event.go", lines: [366, 423] }
+  - id: D39
+    query: "NewLinearProvider"
+    direction: in
+    expect:
+      - { file: "tools/auth/linear.go", lines: [14, 16] }
+  - id: D40
+    query: "Clients"
+    direction: out
+    expect:
+      - { file: "tools/store/store.go", lines: [112, 123] }
+  - id: D41
+    query: "createTxApp"
+    direction: in
+    expect:
+      - { file: "core/db_tx.go", lines: [25, 49] }
+  - id: D42
+    query: "UploadedFileSize"
+    direction: out
+    expect:
+      - { file: "core/validators/validators.go", lines: [42, 47] }
+  - id: D43
+    query: "NewOIDCProvider"
+    direction: in
+    expect:
+      - { file: "tools/auth/oidc.go", lines: [26, 37] }
+  - id: D44
+    query: "NewWithConfig"
+    direction: out
+    expect:
+      - { file: "core/app.go", lines: [719, 719] }
+      - { file: "core/base.go", lines: [215, 248] }
+      - { file: "modernc_versions_check.go", lines: [28, 83] }
+      - { file: "pocketbase.go", lines: [219, 249] }
+      - { file: "pocketbase.go", lines: [298, 309] }
+      - { file: "tools/hook/event.go", lines: [30, 35] }
+      - { file: "tools/hook/hook.go", lines: [65, 104] }
+      - { file: "tools/routine/routine.go", lines: [14, 36] }
+  - id: D45
+    query: "FindRateLimitRule"
+    direction: in
+    expect:
+      - { file: "apis/middlewares_rate_limit.go", lines: [28, 51] }
+      - { file: "apis/middlewares_rate_limit.go", lines: [81, 108] }
+      - { file: "core/settings_model_test.go", lines: [731, 785] }
+  - id: D46
+    query: "backupUpload"
+    direction: out
+    expect:
+      - { file: "apis/backup_upload.go", lines: [49, 58] }
+      - { file: "core/app.go", lines: [110, 110] }
+      - { file: "tools/filesystem/filesystem.go", lines: [122, 134] }
+      - { file: "tools/filesystem/filesystem.go", lines: [276, 318] }
+      - { file: "tools/router/event.go", lines: [102, 126] }
+      - { file: "tools/router/event.go", lines: [287, 290] }
+      - { file: "tools/router/event.go", lines: [310, 312] }
+  - id: D47
+    query: "executablePath"
+    direction: in
+    expect:
+      - { file: "apis/installer.go", lines: [25, 44] }
+  - id: D48
+    query: "cronsList"
+    direction: out
+    expect:
+      - { file: "core/app.go", lines: [88, 88] }
+      - { file: "tools/cron/cron.go", lines: [142, 152] }
+      - { file: "tools/cron/job.go", lines: [13, 15] }
+      - { file: "tools/router/event.go", lines: [191, 217] }
+  - id: D49
+    query: "CanTriggerOn"
+    direction: in
+    expect:
+      - { file: "tools/hook/tagged.go", lines: [58, 70] }
+      - { file: "tools/hook/tagged.go", lines: [76, 84] }
+  - id: D50
+    query: "SEARCH"
+    direction: out
+    expect:
+      - { file: "tools/router/group.go", lines: [118, 128] }

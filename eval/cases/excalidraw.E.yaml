@@ -122,3 +122,83 @@ cases:
     query: "Selection rendering is not supported for SVG"
     expect:
       - { file: "packages/excalidraw/renderer/staticSvgScene.ts", lines: [97, 851] }
+  - id: E31
+    query: "Worker URL is not defined!"
+    expect:
+      - { file: "packages/excalidraw/errors.ts", lines: [40, 47] }
+  - id: E32
+    query: "Error trying to resizing image file on insertion"
+    expect:
+      - { file: "packages/excalidraw/components/App.tsx", lines: [10390, 10512] }
+  - id: E33
+    query: "Invalid elbow points with fixed segments"
+    expect:
+      - { file: "packages/element/src/elbowArrow.ts", lines: [119, 283] }
+  - id: E34
+    query: "Updated point array length must match the arrow point length, contain "
+    expect:
+      - { file: "packages/element/src/elbowArrow.ts", lines: [890, 1138] }
+  - id: E35
+    query: "There must be selected points in order to drag them"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [469, 722] }
+  - id: E36
+    query: "Arrow must be in the scene"
+    expect:
+      - { file: "packages/element/src/arrows/focus.ts", lines: [437, 502] }
+  - id: E37
+    query: "Failed to setData on clipboardEvent"
+    expect:
+      - { file: "packages/excalidraw/clipboard.ts", lines: [587, 637] }
+  - id: E38
+    query: "There are no selected points to duplicate"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [1505, 1579] }
+  - id: E39
+    query: "New element size or position is too large"
+    expect:
+      - { file: "packages/element/src/newElement.ts", lines: [89, 174] }
+  - id: E40
+    query: "Invalid segment index while calculating elbow arrow mid point"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [981, 1023] }
+  - id: E41
+    query: "Elbow arrow segments must be either horizontal or vertical"
+    expect:
+      - { file: "packages/element/src/elbowArrow.ts", lines: [890, 1138] }
+  - id: E42
+    query: "Unknown error during generation"
+    expect:
+      - { file: "packages/excalidraw/components/App.tsx", lines: [2973, 2973] }
+  - id: E43
+    query: "Arrow element should exist if selectedLinearElement is set"
+    expect:
+      - { file: "packages/excalidraw/actions/actionFinalize.tsx", lines: [57, 420] }
+  - id: E44
+    query: "Unbalanced parentheses."
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [236, 378] }
+  - id: E45
+    query: "Unbalanced square brackets in a node label."
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [236, 378] }
+  - id: E46
+    query: "How Parser works under the hood?"
+    expect:
+      - { file: "dev-docs/sidebars.js", lines: [116, 116] }
+  - id: E47
+    query: "Change arrow properties"
+    expect:
+      - { file: "packages/excalidraw/actions/actionProperties.tsx", lines: [2060, 2060] }
+  - id: E48
+    query: "Would you like to publish these changes to npm? (Y/n): "
+    expect:
+      - { file: "scripts/release.js", lines: [191, 211] }
+  - id: E49
+    query: "Only linears built out of curves are supported"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [940, 979] }
+  - id: E50
+    query: "Freepath outline must have at least 2 points"
+    expect:
+      - { file: "packages/element/src/renderElement.ts", lines: [1362, 1416] }

@@ -358,3 +358,174 @@ cases:
       - { file: "react/features/recording/components/Recording/AbstractStartRecordingDialog.ts", lines: [785, 787] }
       - { file: "react/features/recording/components/Recording/native/RecordingTranscriptionDialog.tsx", lines: [42, 93] }
       - { file: "react/features/recording/components/Recording/web/RecordingTranscriptionDialog.tsx", lines: [41, 95] }
+  - id: G31
+    query: "react/features/settings/components/native/FormSection.tsx:33"
+    expect:
+      - { file: "react/features/settings/components/native/FormSection.tsx", lines: [31, 40] }
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [17, 112] }
+      - { file: "react/features/settings/components/native/ConferenceSection.tsx", lines: [17, 99] }
+      - { file: "react/features/settings/components/native/GeneralSection.tsx", lines: [20, 64] }
+      - { file: "react/features/settings/components/native/LinksSection.tsx", lines: [14, 55] }
+      - { file: "react/features/settings/components/native/ModeratorSection.tsx", lines: [17, 221] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [14, 130] }
+      - { file: "react/features/settings/components/native/ProfileView.tsx", lines: [32, 163] }
+      - { file: "react/features/settings/components/native/SettingsView.tsx", lines: [40, 107] }
+      - { file: "react/features/mobile/navigation/components/settings/components/SettingsNavigationContainer.tsx", lines: [38, 92] }
+      - { file: "react/features/mobile/navigation/components/settings/components/SettingsNavigationContainer.tsx", lines: [48, 50] }
+  - id: G32
+    query: "react/features/base/dialog/functions.ts:43"
+    expect:
+      - { file: "react/features/base/dialog/functions.ts", lines: [41, 45] }
+      - { file: "react/features/authentication/components/native/LoginDialog.tsx", lines: [295, 316] }
+      - { file: "react/features/recording/components/LiveStream/native/GoogleSigninForm.tsx", lines: [219, 227] }
+      - { file: "react/features/recording/components/LiveStream/native/StreamKeyForm.tsx", lines: [157, 162] }
+      - { file: "react/features/recording/components/Recording/AbstractStartRecordingDialogContent.tsx", lines: [642, 673] }
+  - id: G33
+    query: "react/features/reactions/functions.any.ts:45"
+    expect:
+      - { file: "react/features/reactions/functions.any.ts", lines: [42, 51] }
+      - { file: "react/features/reactions/middleware.ts", lines: [1, 275] }
+      - { file: "react/features/reactions/middleware.ts", lines: [142, 157] }
+  - id: G34
+    query: "react/features/settings/components/web/audio/AudioSettingsContent.tsx:35"
+    expect:
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [33, 37] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [184, 204] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [214, 231] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [125, 344] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [306, 307] }
+      - { file: "react/features/settings/components/web/audio/AudioSettingsContent.tsx", lines: [323, 324] }
+  - id: G35
+    query: "react/features/base/media/components/AbstractVideoTrack.tsx:132 react/features/base/media/components/AbstractVideoTrack.tsx:115"
+    expect:
+      - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [131, 137] }
+      - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [75, 123] }
+      - { file: "react/features/base/media/components/AbstractVideoTrack.tsx", lines: [55, 138] }
+      - { file: "react/features/base/media/components/web/VideoTrack.tsx", lines: [153, 176] }
+      - { file: "react/features/base/media/components/native/VideoTrack.tsx", lines: [21, 27] }
+  - id: G36
+    query: "react/features/file-sharing/hooks.web.ts:21"
+    expect:
+      - { file: "react/features/file-sharing/hooks.web.ts", lines: [17, 23] }
+      - { file: "react/features/toolbox/hooks.web.ts", lines: [286, 379] }
+      - { file: "react/features/toolbox/components/web/Toolbox.tsx", lines: [73, 362] }
+  - id: G37
+    query: "react/features/recent-list/reducer.ts:148"
+    expect:
+      - { file: "react/features/recent-list/reducer.ts", lines: [146, 151] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [84, 103] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [112, 135] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [90, 90] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [1, 152] }
+      - { file: "react/features/recent-list/reducer.ts", lines: [47, 62] }
+  - id: G38
+    query: "react/features/subtitles/components/web/LanguageSelector.tsx:89"
+    expect:
+      - { file: "react/features/subtitles/components/web/LanguageSelector.tsx", lines: [44, 105] }
+      - { file: "react/features/chat/components/web/ClosedCaptionsTab.tsx", lines: [80, 138] }
+      - { file: "react/features/chat/components/web/Chat.tsx", lines: [403, 471] }
+  - id: G39
+    query: "react/features/base/tracks/hooks.any.ts:35"
+    expect:
+      - { file: "react/features/base/tracks/hooks.any.ts", lines: [15, 43] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicatorIcon.tsx", lines: [42, 84] }
+      - { file: "react/features/filmstrip/components/native/Thumbnail.tsx", lines: [1, 383] }
+      - { file: "react/features/filmstrip/components/web/Thumbnail.tsx", lines: [1, 1377] }
+      - { file: "react/features/large-video/components/LargeVideo.native.tsx", lines: [1, 185] }
+      - { file: "react/features/filmstrip/components/native/Thumbnail.tsx", lines: [378, 382] }
+      - { file: "react/features/filmstrip/components/web/Thumbnail.tsx", lines: [1372, 1376] }
+      - { file: "react/features/large-video/components/LargeVideo.native.tsx", lines: [180, 184] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicator.tsx", lines: [346, 370] }
+  - id: G40
+    query: "react/features/screen-share/actions.any.ts:16"
+    expect:
+      - { file: "react/features/screen-share/actions.any.ts", lines: [14, 19] }
+      - { file: "react/features/device-selection/actions.web.ts", lines: [98, 122] }
+      - { file: "react/features/device-selection/actions.web.ts", lines: [99, 121] }
+      - { file: "react/features/settings/components/web/SettingsDialog.tsx", lines: [131, 372] }
+  - id: G41
+    query: "react/features/base/responsive-ui/components/DimensionsDetector.native.tsx:63"
+    expect:
+      - { file: "react/features/base/responsive-ui/components/DimensionsDetector.native.tsx", lines: [35, 68] }
+      - { file: "react/features/app/components/App.native.tsx", lines: [194, 204] }
+      - { file: "react/features/base/app/components/BaseApp.tsx", lines: [183, 207] }
+  - id: G42
+    query: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx:295 react/features/virtual-background/components/VirtualBackgroundPreview.tsx:186"
+    expect:
+      - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [291, 302] }
+      - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [161, 195] }
+      - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [258, 260] }
+      - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [277, 284] }
+      - { file: "react/features/base/media/components/native/Audio.ts", lines: [39, 45] }
+  - id: G43
+    query: "react/features/video-menu/components/AbstractMuteEveryoneElsesVideoButton.ts:33"
+    expect:
+      - { file: "react/features/video-menu/components/AbstractMuteEveryoneElsesVideoButton.ts", lines: [31, 36] }
+      - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [385, 407] }
+      - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [115, 437] }
+      - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
+      - { file: "react/features/toolbox/components/web/AudioMuteButton.tsx", lines: [158, 171] }
+      - { file: "react/features/toolbox/components/web/VideoMuteButton.tsx", lines: [177, 190] }
+  - id: G44
+    query: "react/features/base/settings/reducer.ts:166 react/features/base/settings/reducer.ts:123"
+    expect:
+      - { file: "react/features/base/settings/reducer.ts", lines: [160, 184] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [120, 125] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [1, 185] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [136, 149] }
+  - id: G45
+    query: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts:20"
+    expect:
+      - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [18, 37] }
+      - { file: "react/features/analytics/handlers/AmplitudeHandler.ts", lines: [12, 91] }
+      - { file: "react/features/analytics/handlers/AmplitudeHandler.ts", lines: [32, 35] }
+      - { file: "react/features/analytics/functions.ts", lines: [67, 151] }
+  - id: G46
+    query: "react/features/connection-indicator/functions.ts:35 react/features/connection-indicator/functions.ts:24"
+    expect:
+      - { file: "react/features/connection-indicator/functions.ts", lines: [34, 38] }
+      - { file: "react/features/connection-indicator/functions.ts", lines: [22, 26] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [644, 660] }
+      - { file: "react/features/connection-indicator/components/native/ConnectionIndicator.tsx", lines: [179, 204] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicator.tsx", lines: [380, 403] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicatorContent.tsx", lines: [343, 374] }
+      - { file: "react/features/video-menu/components/native/ConnectionStatusComponent.tsx", lines: [462, 474] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [230, 399] }
+      - { file: "react/features/base/participants/components/ParticipantView.native.tsx", lines: [237, 250] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [243, 393] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [424, 444] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [749, 783] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [769, 782] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [454, 467] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [393, 398] }
+  - id: G47
+    query: "react/features/chat/components/native/MessageRecipient.tsx:76"
+    expect:
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [75, 83] }
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [45, 148] }
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [91, 147] }
+  - id: G48
+    query: "react/features/base/tracks/middleware.native.ts:68 react/features/base/tracks/middleware.native.ts:37"
+    expect:
+      - { file: "react/features/base/tracks/middleware.native.ts", lines: [57, 76] }
+      - { file: "react/features/base/tracks/middleware.native.ts", lines: [29, 47] }
+      - { file: "react/features/base/tracks/middleware.native.ts", lines: [1, 77] }
+  - id: G49
+    query: "react/features/display-name/components/web/DisplayNamePrompt.tsx:102"
+    expect:
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [99, 111] }
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [34, 123] }
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [63, 90] }
+  - id: G50
+    query: "react/features/toolbox/components/web/ProfileButton.ts:49"
+    expect:
+      - { file: "react/features/toolbox/components/web/ProfileButton.ts", lines: [48, 62] }
+      - { file: "react/features/base/toolbox/components/AbstractButton.tsx", lines: [415, 436] }
+      - { file: "react/features/toolbox/components/web/AudioMuteButton.tsx", lines: [55, 191] }
+      - { file: "react/features/toolbox/components/web/ProfileButton.ts", lines: [69, 71] }
+      - { file: "react/features/toolbox/components/web/VideoMuteButton.tsx", lines: [55, 191] }
+      - { file: "react/features/chat/components/web/ChatButton.tsx", lines: [57, 66] }
+      - { file: "react/features/mobile/picture-in-picture/components/PictureInPictureButton.ts", lines: [42, 44] }
+      - { file: "react/features/participants-pane/components/native/ParticipantsPaneButton.tsx", lines: [68, 75] }
+      - { file: "react/features/participants-pane/components/web/ParticipantsPaneButton.tsx", lines: [105, 119] }
+      - { file: "react/features/toolbox/components/native/ScreenSharingIosButton.tsx", lines: [70, 79] }

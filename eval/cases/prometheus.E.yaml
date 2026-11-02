@@ -122,3 +122,83 @@ cases:
     query: "Error adding endpoint slices event handler."
     expect:
       - { file: "discovery/kubernetes/endpointslice.go", lines: [62, 188] }
+  - id: E31
+    query: "Hard upper bound on the \\"
+    expect:
+      - { file: "cmd/prometheus/main.go", lines: [390, 1700] }
+  - id: E32
+    query: "Native histogram family with mixed metrics."
+    expect:
+      - { file: "util/fuzzing/corpus_protobuf.go", lines: [170, 1911] }
+  - id: E33
+    query: "Skipping MSK cluster described without cluster information"
+    expect:
+      - { file: "discovery/aws/msk.go", lines: [300, 335] }
+  - id: E34
+    query: "Number of operations on the chunk_write_queue."
+    expect:
+      - { file: "tsdb/chunks/chunk_write_queue.go", lines: [82, 111] }
+  - id: E35
+    query: "Error during Zookeeper resync"
+    expect:
+      - { file: "util/treecache/treecache.go", lines: [130, 212] }
+  - id: E36
+    query: "Size at which to split WAL segment files. Example: 100MB"
+    expect:
+      - { file: "cmd/prometheus/main.go", lines: [390, 1700] }
+  - id: E37
+    query: "How long a remote read request spent waiting for the concurrency gate, including"
+    expect:
+      - { file: "storage/remote/read_handler.go", lines: [52, 82] }
+  - id: E38
+    query: "Failed to close Querier"
+    expect:
+      - { file: "rules/group.go", lines: [755, 878] }
+  - id: E39
+    query: "Starting rule manager..."
+    expect:
+      - { file: "rules/manager.go", lines: [234, 238] }
+  - id: E40
+    query: "Invalid labels for series."
+    expect:
+      - { file: "storage/remote/write_handler.go", lines: [149, 229] }
+  - id: E41
+    query: "This option for --enable-feature is deprecated and will be removed in a future m"
+    expect:
+      - { file: "cmd/prometheus/main.go", lines: [236, 380] }
+  - id: E42
+    query: "Error parsing commandline arguments: %s"
+    expect:
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/main.go", lines: [114, 154] }
+  - id: E43
+    query: "Error sending samples to remote storage"
+    expect:
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/main.go", lines: [303, 313] }
+  - id: E44
+    query: "Start listening for connections"
+    expect:
+      - { file: "web/web.go", lines: [730, 745] }
+  - id: E45
+    query: "Error migrating test files: %v\\n"
+    expect:
+      - { file: "promql/promqltest/cmd/migrate/main.go", lines: [24, 33] }
+  - id: E46
+    query: "The minimum number of shards that the queue is allowed to run."
+    expect:
+      - { file: "storage/remote/queue_manager.go", lines: [111, 358] }
+  - id: E47
+    query: "Failed to read series state file, skipping the fast startup"
+    expect:
+      - { file: "tsdb/head.go", lines: [747, 1005] }
+  - id: E48
+    query: "Deleting obsolete block"
+    expect:
+      - { file: "tsdb/db.go", lines: [2356, 2385] }
+  - id: E49
+    query: "Notifier manager stopped"
+    expect:
+      - { file: "cmd/prometheus/main.go", lines: [390, 1700] }
+  - id: E50
+    query: "The number of series touched by a query (per-selector sum, an upper bound on dis"
+    expect:
+      - { file: "promql/engine.go", lines: [568, 748] }

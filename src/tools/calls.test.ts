@@ -141,12 +141,33 @@ describe('calls across a project that cannot read JavaScript', () => {
     writeFileSync(join(dir, 'fail.ts'), "import log from './log';\n\nexport function fail() {\n  log.error();\n}\n");
     writeFileSync(join(dir, 'config.js'), 'export default class Config {\n  static check() {\n    return true;\n  }\n}\n');
     writeFileSync(join(dir, 'boot.ts'), "import Settings from './config';\n\nexport function boot() {\n  return Settings.check();\n}\n");
+    writeFileSync(join(dir, 'controllers.js'), 'export function getControllers() {\n  return {};\n}\n');
+    writeFileSync(join(dir, 'server.ts'), "import * as controllers from './controllers';\n\nexport function serve() {\n  return controllers.getControllers();\n}\n");
     const repo = await Workspace.open(dir);
     try {
       expect((await calls(repo, 'router.js#build')).text.split('\n').slice(1)).toEqual(['main.ts#start  4']);
       expect((await calls(repo, 'log.js#log')).text.split('\n').slice(1)).toEqual([]);
       // A static method, written on the class as the file imports it.
       expect((await calls(repo, 'config.js#Config.check')).text.split('\n').slice(1)).toEqual(['boot.ts#boot  4']);
+      // A function, written on the whole module as the file imports it.
+      expect((await calls(repo, 'controllers.js#getControllers')).text.split('\n').slice(1)).toEqual(['server.ts#serve  4']);
+    } finally {
+      await repo.close();
+    }
+  }, 30_000);
+
+  it('is not complete while a mention is one the server cannot resolve', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-unknown-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "include": ["*.ts"] }');
+    writeFileSync(join(dir, 'files.ts'), 'export class Files {\n  expand() {\n    return 1;\n  }\n  map() {\n    return 2;\n  }\n}\n');
+    writeFileSync(join(dir, 'write.ts'), 'export function save(config: any) {\n  return [config.files.expand()].map((x) => x);\n}\n');
+    const repo = await Workspace.open(dir);
+    try {
+      const expand = (await calls(repo, 'files.ts#Files.expand')).text.split('\n');
+      expect(expand[0]).not.toMatch(/complete/);
+      expect(expand.slice(1)).toEqual(['unconfirmed uses of expand, the compiler cannot tell: write.ts 2·save']);
+      // `[…].map` resolves to the language's own Array, outside the workspace: not a use.
+      expect((await calls(repo, 'files.ts#Files.map')).text).toMatch(/^calls in · files\.ts#Files\.map · 0 callers · lsp · complete$/);
     } finally {
       await repo.close();
     }

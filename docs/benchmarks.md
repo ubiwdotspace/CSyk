@@ -338,6 +338,51 @@ changed functions; Serena used 20.1% more tokens and named 1.4 points more.
 - Times are on one laptop (Apple silicon, 16 GB) that was also running other benchmarks; CPU time
   and memory change little with load, wall time does.
 
+## Against the official LSP plugin and CodeGraph
+
+Claude Code's official `typescript-lsp` plugin gives the agent an `LSP` tool: definitions,
+references, hover, symbols, implementations and call hierarchy from typescript-language-server.
+[CodeGraph](https://github.com/colbymchenry/codegraph) (1.6.2) builds a graph of the code and, as
+`codegraph install` sets it up, adds an MCP server, a block of instructions and a hook that puts an
+excerpt of the graph, with source, into every prompt.
+
+Four setups answered issues 31 to 50 of the TypeScript and JavaScript samples, 40 issues CSyk was
+never tuned on, three times each, one session at a time: Claude Code alone; with the plugin
+(typescript-language-server 6.0.2, TypeScript 6.0.3); with CodeGraph, its graph built before each
+session (not counted); with CSyk. Measured on 2026-10-31 with Claude Code 2.1.314 and Sonnet: 480
+sessions, $36. Means over each setup's 120 sessions; "against alone" compares each issue's mean
+over its three runs, with a 95% interval from resampling the issues.
+
+| | Claude Code alone | LSP plugin | CodeGraph | **CSyk** |
+|---|---|---|---|---|
+| Changed functions named | 57.9% | 58.3% | 57.3% | **60.6%** |
+| against alone | | +0.4 (−3.8 to +5.0) | −0.6 (−10.2 to +8.5) | +2.7 (−2.8 to +10.3) |
+| First file right | 88.3% | 90.8% | 87.5% | 89.2% |
+| All changed files in first five | 77.1% | 78.3% | **81.2%** | 77.5% |
+| Tokens per issue, median | 50,327 | 55,695 | 64,385 | **46,038** |
+| Tokens against alone | | +11.5% (+6.8 to +17.2) | +14.2% (+5.7 to +21.3) | **−11.2% (−18.9 to −2.6)** |
+| Median time | 13.5 s | 14.2 s | 14.3 s | **11.5 s** |
+| Peak memory, median / highest | **313 / 426 MB** | 315 / 388 MB | 1,019 / 1,677 MB | 480 / 1,087 MB |
+| CPU, median | **1.5 s** | **1.5 s** | 3.7 s | 3.4 s |
+| Cost of 120 sessions | $8.53 | $8.78 | $10.66 | **$7.99** |
+| Sessions that called the setup's own tools | – | 0 | 2 | 119 |
+
+What this shows:
+
+- **The agent did not use the plugin.** The `LSP` tool was offered in every session and never
+  called: the agent searched and read files as it does alone, and paid for the tool's description,
+  re-read on every turn, with 11.5% more tokens.
+- **CodeGraph works through its hook.** Its MCP tool was called in two sessions; the excerpt its
+  hook adds to the prompt is what changes its sessions: more of the changed files in the first five
+  (+4.1 points, 0.7 to 10.1), 14% more tokens, and about 1 GB of memory for the graph.
+- **CSyk is as accurate, for fewer tokens.** Its tools were used in 119 of 120 sessions, almost only
+  `grep` (244 calls) and `read` (61): a `grep` that names the function around each match answers
+  where to change. The functions named are level with Claude Code alone (the interval includes
+  zero); tokens, time and cost are lower, for about 170 MB more memory and 2 seconds more CPU.
+- **Installing the plugin as its README says fails today.** `npm i -g typescript-language-server
+  typescript` installs TypeScript 7, which has no tsserver; the language server then does not start
+  in a repository without its own TypeScript 6 or older. These runs pin TypeScript 6.0.3.
+
 ## Reproduce
 
 A change, at a chosen size: `npm run bench -- --tier <5|10|20|30|50> [--lang ts|py|go|dart] [--only <tools>] [--run <name>]`
@@ -358,7 +403,8 @@ npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --
 npm run loc:report
 ```
 
-`b0` is Claude Code alone and `csyk-lean` is with CSyk. Each run writes its results to a file in
+`b0` is Claude Code alone and `csyk-lean` is with CSyk; `lsp-plugin`, `codegraph`, `serena` and
+`graphify` are the others above, each installed for the run. Each run writes its results to a file in
 `eval/results/` named after the setup, dataset and language; `--run <name>` keeps repeats of the
 same setup apart. Set `CSYK_LOC_DIR` to give a run its own copies of the repositories, so two
 setups can run at the same time.

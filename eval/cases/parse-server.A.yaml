@@ -143,3 +143,90 @@ cases:
     query: "LoggerAdapter"
     expect:
       - { file: "src/Adapters/Logger/LoggerAdapter.js", lines: [9, 18] }
+  - id: A31
+    query: "evaluate"
+    expect:
+      - { file: "benchmark/compare.js", lines: [177, 233] }
+  - id: A32
+    query: "message"
+    expect:
+      - { file: "postinstall.js", lines: [1, 31] }
+  - id: A33
+    query: "onListen"
+    expect:
+      - { file: "src/Adapters/WebSocketServer/WSAdapter.js", lines: [14, 14] }
+  - id: A34
+    query: "isValidTTL"
+    expect:
+      - { file: "src/Adapters/Cache/LRUCache.js", lines: [4, 4] }
+      - { file: "src/Adapters/Cache/RedisCacheAdapter.js", lines: [13, 13] }
+  - id: A35
+    query: "createSanitizedHttpError"
+    expect:
+      - { file: "spec/Utils.spec.js", lines: [2, 2] }
+      - { file: "src/Error.js", lines: [32, 44] }
+  - id: A36
+    query: "FeaturesRouter"
+    expect:
+      - { file: "src/Routers/FeaturesRouter.js", lines: [5, 62] }
+  - id: A37
+    query: "encodeBody"
+    expect:
+      - { file: "src/request.js", lines: [85, 113] }
+  - id: A38
+    query: "getKeycloakKeyByKeyId"
+    expect:
+      - { file: "src/Adapters/Auth/keycloak.js", lines: [87, 105] }
+  - id: A39
+    query: "getTests"
+    expect:
+      - { file: "ci/CiVersionCheck.js", lines: [98, 114] }
+  - id: A40
+    query: "LineAdapter"
+    expect:
+      - { file: "spec/Adapters/Auth/line.spec.js", lines: [1, 1] }
+      - { file: "src/Adapters/Auth/line.js", lines: [69, 141] }
+  - id: A41
+    query: "RolesRouter"
+    expect:
+      - { file: "src/Routers/RolesRouter.js", lines: [3, 25] }
+  - id: A42
+    query: "EventEmitterMQ"
+    expect:
+      - { file: "src/Adapters/MessageQueue/EventEmitterMQ.js", lines: [58, 61] }
+  - id: A43
+    query: "handlePurge"
+    expect:
+      - { file: "src/Routers/PurgeRouter.js", lines: [7, 32] }
+  - id: A44
+    query: "MicrosoftAdapter"
+    expect:
+      - { file: "spec/Adapters/Auth/microsoft.spec.js", lines: [1, 1] }
+      - { file: "src/Adapters/Auth/microsoft.js", lines: [67, 107] }
+  - id: A45
+    query: "handleGet"
+    expect:
+      - { file: "src/Routers/AudiencesRouter.js", lines: [32, 38] }
+      - { file: "src/Routers/ClassesRouter.js", lines: [54, 109] }
+  - id: A46
+    query: "getHigherVersions"
+    expect:
+      - { file: "ci/nodeEngineCheck.js", lines: [111, 125] }
+  - id: A47
+    query: "configureTransports"
+    expect:
+      - { file: "src/Adapters/Logger/WinstonLogger.js", lines: [10, 66] }
+  - id: A48
+    query: "NullCacheAdapter"
+    expect:
+      - { file: "spec/NullCacheAdapter.spec.js", lines: [1, 1] }
+      - { file: "src/Adapters/Cache/NullCacheAdapter.js", lines: [1, 21] }
+      - { file: "src/index.ts", lines: [38, 38] }
+  - id: A49
+    query: "JSONSchema"
+    expect:
+      - { file: "src/SchemaMigrations/Migrations.js", lines: [56, 70] }
+  - id: A50
+    query: "AnalyticsAdapter"
+    expect:
+      - { file: "src/Adapters/Analytics/AnalyticsAdapter.js", lines: [6, 23] }

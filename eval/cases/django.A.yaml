@@ -130,3 +130,87 @@ cases:
     query: "coroutine_functions_to_sensitive_variables"
     expect:
       - { file: "django/views/decorators/debug.py", lines: [7, 7] }
+  - id: A31
+    query: "replace"
+    expect:
+      - { file: "django/utils/copy.py", lines: [7, 17] }
+  - id: A32
+    query: "release"
+    expect:
+      - { file: "docs/conf.py", lines: [141, 141] }
+  - id: A33
+    query: "module"
+    expect:
+      - { file: "django/apps/config.py", lines: [22, 22] }
+  - id: A34
+    query: "add_httponly_message"
+    expect:
+      - { file: "django/core/checks/security/sessions.py", lines: [35, 39] }
+  - id: A35
+    query: "AdminDocsConfig"
+    expect:
+      - { file: "django/contrib/admindocs/apps.py", lines: [5, 7] }
+  - id: A36
+    query: "get_level_tags"
+    expect:
+      - { file: "django/contrib/messages/utils.py", lines: [5, 12] }
+  - id: A37
+    query: "supports_color"
+    expect:
+      - { file: "django/core/management/color.py", lines: [28, 67] }
+  - id: A38
+    query: "last_login"
+    expect:
+      - { file: "django/contrib/auth/base_user.py", lines: [45, 45] }
+      - { file: "tests/auth_tests/models/no_password.py", lines: [17, 17] }
+      - { file: "tests/auth_tests/models/with_last_login_attr.py", lines: [5, 5] }
+  - id: A39
+    query: "_tzname_re"
+    expect:
+      - { file: "django/db/backends/oracle/operations.py", lines: [122, 122] }
+  - id: A40
+    query: "localize_input"
+    expect:
+      - { file: "django/utils/formats.py", lines: [218, 240] }
+  - id: A41
+    query: "XViewMiddleware"
+    expect:
+      - { file: "django/contrib/admindocs/middleware.py", lines: [9, 33] }
+  - id: A42
+    query: "permission_denied"
+    expect:
+      - { file: "django/views/defaults.py", lines: [125, 150] }
+      - { file: "tests/logging_tests/views.py", lines: [40, 41] }
+      - { file: "tests/middleware_exceptions/views.py", lines: [26, 27] }
+  - id: A43
+    query: "BTreeIndex"
+    expect:
+      - { file: "django/contrib/postgres/indexes.py", lines: [119, 143] }
+  - id: A44
+    query: "program"
+    expect:
+      - { file: "django/core/management/commands/compilemessages.py", lines: [34, 34] }
+  - id: A45
+    query: "SECURE_CROSS_ORIGIN_OPENER_POLICY"
+    expect:
+      - { file: "django/conf/global_settings.py", lines: [669, 669] }
+  - id: A46
+    query: "_base_geom"
+    expect:
+      - { file: "django/contrib/gis/geos/prepared.py", lines: [19, 19] }
+  - id: A47
+    query: "TIME_CHUNKS"
+    expect:
+      - { file: "django/utils/timesince.py", lines: [18, 18] }
+  - id: A48
+    query: "WKTAdapter"
+    expect:
+      - { file: "django/contrib/gis/db/backends/base/adapter.py", lines: [1, 26] }
+  - id: A49
+    query: "RssUserland091Feed"
+    expect:
+      - { file: "django/utils/feedgenerator.py", lines: [349, 356] }
+  - id: A50
+    query: "get_accessor_name"
+    expect:
+      - { file: "django/db/models/fields/reverse_related.py", lines: [215, 231] }

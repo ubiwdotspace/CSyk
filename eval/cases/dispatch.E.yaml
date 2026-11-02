@@ -122,3 +122,83 @@ cases:
     query: "Maintain Case conversation context"
     expect:
       - { file: "src/dispatch/conversation/flows.py", lines: [30, 190] }
+  - id: E31
+    query: "Handles the workflow run command."
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/workflow.py", lines: [167, 193] }
+  - id: E32
+    query: "Entity update notification not sent, can only send to case threads."
+    expect:
+      - { file: "src/dispatch/case/messaging.py", lines: [523, 556] }
+  - id: E33
+    query: "Failed to update participants canvas {canvas.canvas_id} for case {case.id}"
+    expect:
+      - { file: "src/dispatch/canvas/flows.py", lines: [368, 428] }
+  - id: E34
+    query: "Updates an event in the case timeline."
+    expect:
+      - { file: "src/dispatch/event/service.py", lines: [265, 273] }
+  - id: E35
+    query: "Gets or creates a new entity type."
+    expect:
+      - { file: "src/dispatch/entity_type/service.py", lines: [106, 120] }
+  - id: E36
+    query: "Signal SQS configuration"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_aws/config.py", lines: [5, 29] }
+  - id: E37
+    query: "Returns a cost model based on the given cost model id."
+    expect:
+      - { file: "src/dispatch/cost_model/service.py", lines: [205, 207] }
+  - id: E38
+    query: "Populate revision script with candidate migration "
+    expect:
+      - { file: "src/dispatch/cli.py", lines: [607, 685] }
+  - id: E39
+    query: "Returns all services that have not had a recent evergreen notification."
+    expect:
+      - { file: "src/dispatch/service/service.py", lines: [88, 96] }
+  - id: E40
+    query: "Failed to send message to original Case thread. Reason: {e}"
+    expect:
+      - { file: "src/dispatch/conversation/flows.py", lines: [30, 190] }
+  - id: E41
+    query: "Unable to import {cls_path}. Reason: {e}"
+    expect:
+      - { file: "src/dispatch/common/managers.py", lines: [43, 75] }
+  - id: E42
+    query: "Incident type not found."
+    expect:
+      - { file: "src/dispatch/incident/type/service.py", lines: [59, 80] }
+  - id: E43
+    query: "Returns a project based on the plugin event slug."
+    expect:
+      - { file: "src/dispatch/plugin/service.py", lines: [183, 185] }
+  - id: E44
+    query: "Deletes a participant."
+    expect:
+      - { file: "src/dispatch/participant/service.py", lines: [286, 290] }
+  - id: E45
+    query: "Unable to remove participant from incident with id {incident_id}. An incident wi"
+    expect:
+      - { file: "src/dispatch/incident/flows.py", lines: [1148, 1250] }
+  - id: E46
+    query: "Returns an individual given an email address and project id."
+    expect:
+      - { file: "src/dispatch/individual/service.py", lines: [35, 44] }
+  - id: E47
+    query: "Sends the user an ephemeral message if they use threads in a dedicated case chan"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [1383, 1409] }
+  - id: E48
+    query: "Incident new role assignment message not sent. No conversation plugin is enabled"
+    expect:
+      - { file: "src/dispatch/incident/messaging.py", lines: [888, 924] }
+  - id: E49
+    query: "Gets services by project id and status."
+    expect:
+      - { file: "src/dispatch/service/service.py", lines: [134, 143] }
+  - id: E50
+    query: "Handles the snooze preview event."
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_slack/case/interactive.py", lines: [831, 924] }

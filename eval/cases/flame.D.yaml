@@ -203,3 +203,127 @@ cases:
     direction: out
     expect:
       - { file: "packages/flame/lib/src/particles/particle_buffer.dart", lines: [94, 94] }
+  - id: D31
+    query: "setDQ"
+    direction: in
+    expect:
+      - { file: "packages/flame_3d/lib/src/game/notifying_quaternion.dart", lines: [47, 48] }
+  - id: D32
+    query: "_updateTransform"
+    direction: out
+    expect:
+      - { file: "packages/flame/lib/src/camera/camera_component.dart", lines: [128, 128] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [96, 96] }
+      - { file: "packages/flame/lib/src/camera/camera_component.dart", lines: [165, 174] }
+      - { file: "packages/flame/lib/src/game/notifying_vector2.dart", lines: [25, 28] }
+      - { file: "packages/flame/lib/src/anchor.dart", lines: [47, 61] }
+      - { file: "packages/flame/lib/src/camera/viewfinder.dart", lines: [87, 87] }
+      - { file: "packages/flame/lib/src/camera/viewfinder.dart", lines: [70, 70] }
+  - id: D33
+    query: "generateCoordinates"
+    direction: in
+    expect:
+      - { file: "examples/lib/stories/camera_and_viewport/follow_component_example.dart", lines: [37, 46] }
+  - id: D34
+    query: "knock"
+    direction: out
+    expect:
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [816, 816] }
+      - { file: "packages/flame/lib/src/effects/move_effect.dart", lines: [29, 41] }
+      - { file: "packages/flame/lib/src/effects/controllers/effect_controller.dart", lines: [81, 231] }
+  - id: D35
+    query: "_readEntry"
+    direction: in
+    expect:
+      - { file: "packages/flame_texturepacker/lib/src/texture_packer_parser.dart", lines: [147, 229] }
+  - id: D36
+    query: "removeLast"
+    direction: out
+    expect:
+      - { file: "packages/flame/lib/src/rendering/decorator.dart", lines: [60, 60] }
+      - { file: "packages/flame/lib/src/rendering/decorator.dart", lines: [74, 83] }
+  - id: D37
+    query: "processNode"
+    direction: in
+    expect:
+      - { file: "packages/flame_3d/lib/src/model/model.dart", lines: [51, 91] }
+  - id: D38
+    query: "addFunction1"
+    direction: out
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [112, 122] }
+      - { file: "packages/flame_jenny/jenny/lib/src/function_storage.dart", lines: [143, 302] }
+  - id: D39
+    query: "expectColor"
+    direction: in
+    expect:
+      - { file: "packages/flame/test/extensions/paint_test.dart", lines: [8, 231] }
+      - { file: "packages/flame/test/components/mixins/has_paint_test.dart", lines: [7, 319] }
+  - id: D40
+    query: "destroyMatching"
+    direction: out
+    expect:
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [368, 368] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [71, 71] }
+      - { file: "packages/flame_3d/example/lib/commands/destroy_command.dart", lines: [38, 45] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [862, 862] }
+  - id: D41
+    query: "_computeWeights"
+    direction: in
+    expect:
+      - { file: "packages/flame/lib/src/sprite_warp/warp_mesh.dart", lines: [147, 189] }
+  - id: D42
+    query: "toDocument"
+    direction: out
+    expect:
+      - { file: "packages/flame_markdown/lib/flame_markdown.dart", lines: [31, 33] }
+      - { file: "packages/flame/lib/src/text/nodes/document_root.dart", lines: [7, 53] }
+  - id: D43
+    query: "_onSizeChanged"
+    direction: in
+    expect:
+      - { file: "packages/flame/lib/src/components/widget_component.dart", lines: [57, 197] }
+  - id: D44
+    query: "_spawnInfoText"
+    direction: out
+    expect:
+      - { file: "packages/flame/lib/src/text/renderers/text_paint.dart", lines: [7, 106] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [816, 816] }
+      - { file: "packages/flame/lib/src/components/text_component.dart", lines: [8, 64] }
+      - { file: "packages/flame/lib/src/components/position_component.dart", lines: [382, 382] }
+  - id: D45
+    query: "createWalls"
+    direction: in
+    expect:
+      - { file: "examples/games/padracing/lib/padracing_game.dart", lines: [61, 78] }
+  - id: D46
+    query: "_structLayout"
+    direction: out
+    expect:
+      - { file: "packages/flame_3d/bin/_build_wgslbundle.dart", lines: [287, 329] }
+      - { file: "packages/flame_3d/bin/_build_wgslbundle.dart", lines: [332, 333] }
+  - id: D47
+    query: "_dragCameraUpdate"
+    direction: in
+    expect:
+      - { file: "packages/flame_3d/example/lib/example_camera_3d.dart", lines: [44, 51] }
+  - id: D48
+    query: "_bindMaterial"
+    direction: out
+    expect:
+      - { file: "packages/flame_3d/lib/src/resources/material/spatial_material.dart", lines: [75, 99] }
+      - { file: "packages/flame_3d/lib/src/resources/shader/shader.dart", lines: [47, 57] }
+      - { file: "packages/flame_3d/lib/src/resources/shader/shader.dart", lines: [90, 91] }
+      - { file: "packages/flame_3d/lib/src/resources/shader/shader.dart", lines: [75, 78] }
+  - id: D49
+    query: "addCommand0"
+    direction: in
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/src/command_storage.dart", lines: [17, 162] }
+      - { file: "packages/flame_jenny/jenny/test/command_storage_test.dart", lines: [8, 386] }
+      - { file: "packages/flame_jenny/jenny/test/structure/commands/wait_command_test.dart", lines: [11, 106] }
+  - id: D50
+    query: "floatList"
+    direction: out
+    expect:
+      - { file: "packages/flame_3d/lib/src/parser/gltf/gltf_node.dart", lines: [179, 184] }

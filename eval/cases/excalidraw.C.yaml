@@ -275,3 +275,145 @@ cases:
       - { file: "packages/excalidraw/components/App.tsx", lines: [5501, 5501] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [6269, 6269] }
       - { file: "packages/excalidraw/components/App.tsx", lines: [11313, 11313] }
+  - id: C31
+    query: "useEmitter"
+    expect:
+      - { file: "packages/excalidraw/actions/actionHistory.tsx", lines: [17, 17] }
+      - { file: "packages/excalidraw/actions/actionHistory.tsx", lines: [86, 86] }
+      - { file: "packages/excalidraw/actions/actionHistory.tsx", lines: [130, 130] }
+  - id: C32
+    query: "rangesOverlap"
+    expect:
+      - { file: "packages/excalidraw/snapping.ts", lines: [6, 6] }
+      - { file: "packages/excalidraw/snapping.ts", lines: [374, 374] }
+      - { file: "packages/excalidraw/snapping.ts", lines: [417, 417] }
+      - { file: "packages/excalidraw/snapping.ts", lines: [476, 476] }
+      - { file: "packages/excalidraw/snapping.ts", lines: [545, 545] }
+      - { file: "packages/math/tests/range.test.ts", lines: [1, 1] }
+      - { file: "packages/math/tests/range.test.ts", lines: [7, 7] }
+      - { file: "packages/math/tests/range.test.ts", lines: [8, 8] }
+      - { file: "packages/math/tests/range.test.ts", lines: [9, 9] }
+      - { file: "packages/math/tests/range.test.ts", lines: [10, 10] }
+      - { file: "packages/math/tests/range.test.ts", lines: [14, 14] }
+      - { file: "packages/math/tests/range.test.ts", lines: [15, 15] }
+      - { file: "packages/math/tests/range.test.ts", lines: [16, 16] }
+      - { file: "packages/math/tests/range.test.ts", lines: [20, 20] }
+  - id: C33
+    query: "showSelectedShapeActions"
+    expect:
+      - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [15, 15] }
+      - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [303, 303] }
+  - id: C34
+    query: "shouldAllowVerticalAlign"
+    expect:
+      - { file: "packages/excalidraw/components/shapeActionPredicates.ts", lines: [4, 4] }
+      - { file: "packages/excalidraw/components/shapeActionPredicates.ts", lines: [155, 155] }
+  - id: C35
+    query: "Modal"
+    expect:
+      - { file: "packages/excalidraw/components/Dialog.tsx", lines: [17, 17] }
+      - { file: "packages/excalidraw/components/Dialog.tsx", lines: [107, 107] }
+      - { file: "packages/excalidraw/components/Dialog.tsx", lines: [135, 135] }
+  - id: C36
+    query: "RetryIcon"
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/Chat/ChatMessage.tsx", lines: [6, 6] }
+      - { file: "packages/excalidraw/components/TTDDialog/Chat/ChatMessage.tsx", lines: [211, 211] }
+  - id: C37
+    query: "alignElements"
+    expect:
+      - { file: "packages/excalidraw/actions/actionAlign.tsx", lines: [9, 9] }
+      - { file: "packages/excalidraw/actions/actionAlign.tsx", lines: [63, 63] }
+  - id: C38
+    query: "toBase64"
+    expect:
+      - { file: "packages/excalidraw/subset/subset-main.ts", lines: [25, 25] }
+      - { file: "packages/excalidraw/subset/subset-main.ts", lines: [48, 48] }
+      - { file: "packages/excalidraw/subset/subset-shared.chunk.ts", lines: [31, 31] }
+      - { file: "packages/excalidraw/subset/subset-shared.chunk.ts", lines: [35, 35] }
+  - id: C39
+    query: "SvgCache"
+    expect:
+      - { file: "packages/excalidraw/components/LibraryMenuSection.tsx", lines: [10, 10] }
+      - { file: "packages/excalidraw/components/LibraryMenuSection.tsx", lines: [28, 28] }
+      - { file: "packages/excalidraw/components/LibraryUnit.tsx", lines: [14, 14] }
+      - { file: "packages/excalidraw/components/LibraryUnit.tsx", lines: [39, 39] }
+      - { file: "packages/excalidraw/hooks/useLibraryItemSvg.ts", lines: [11, 11] }
+      - { file: "packages/excalidraw/hooks/useLibraryItemSvg.ts", lines: [30, 30] }
+  - id: C40
+    query: "getApproxMinLineHeight"
+    expect:
+      - { file: "packages/element/src/resizeElements.ts", lines: [49, 49] }
+      - { file: "packages/element/src/resizeElements.ts", lines: [810, 810] }
+      - { file: "packages/excalidraw/components/App.text.ts", lines: [21, 21] }
+      - { file: "packages/excalidraw/components/App.text.ts", lines: [730, 730] }
+  - id: C41
+    query: "HelpDialog"
+    expect:
+      - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [57, 57] }
+      - { file: "packages/excalidraw/components/LayerUI.tsx", lines: [578, 578] }
+  - id: C42
+    query: "ExcalidrawPlusPromoBanner"
+    expect:
+      - { file: "excalidraw-app/App.tsx", lines: [149, 149] }
+      - { file: "excalidraw-app/App.tsx", lines: [1011, 1011] }
+  - id: C43
+    query: "setPointerUp"
+    expect:
+      - { file: "packages/excalidraw/components/App.tsx", lines: [3312, 3312] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8249, 8249] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [8261, 8261] }
+  - id: C44
+    query: "applyListMarkerAdvances"
+    expect:
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [14, 14] }
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [231, 231] }
+      - { file: "packages/excalidraw/components/App.duplicate.ts", lines: [239, 239] }
+  - id: C45
+    query: "AIComponents"
+    expect:
+      - { file: "excalidraw-app/App.tsx", lines: [144, 144] }
+      - { file: "excalidraw-app/App.tsx", lines: [1070, 1070] }
+  - id: C46
+    query: "DarkModeToggle"
+    expect:
+      - { file: "packages/excalidraw/actions/actionExport.tsx", lines: [9, 9] }
+      - { file: "packages/excalidraw/actions/actionExport.tsx", lines: [453, 453] }
+  - id: C47
+    query: "Trail"
+    expect:
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [30, 30] }
+      - { file: "packages/excalidraw/components/SVGLayer.tsx", lines: [5, 5] }
+      - { file: "packages/excalidraw/components/SVGLayer.tsx", lines: [8, 8] }
+      - { file: "packages/excalidraw/drawShapeTrail.ts", lines: [10, 10] }
+      - { file: "packages/excalidraw/drawShapeTrail.ts", lines: [12, 12] }
+      - { file: "packages/excalidraw/laserTrails.ts", lines: [8, 8] }
+      - { file: "packages/excalidraw/laserTrails.ts", lines: [12, 12] }
+  - id: C48
+    query: "getSegmentMidPointIndex"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [1098, 1098] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [6282, 6282] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [6308, 6308] }
+      - { file: "packages/excalidraw/components/App.tsx", lines: [9029, 9029] }
+  - id: C49
+    query: "actionShortcuts"
+    expect:
+      - { file: "packages/excalidraw/actions/index.ts", lines: [48, 48] }
+      - { file: "packages/excalidraw/components/footer/Footer.tsx", lines: [3, 3] }
+      - { file: "packages/excalidraw/components/footer/Footer.tsx", lines: [74, 74] }
+      - { file: "packages/excalidraw/components/main-menu/DefaultItems.tsx", lines: [11, 11] }
+      - { file: "packages/excalidraw/components/main-menu/DefaultItems.tsx", lines: [203, 203] }
+      - { file: "packages/excalidraw/components/welcome-screen/WelcomeScreen.Center.tsx", lines: [1, 1] }
+      - { file: "packages/excalidraw/components/welcome-screen/WelcomeScreen.Center.tsx", lines: [140, 140] }
+  - id: C50
+    query: "getMermaidHeaderLineIndex"
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts", lines: [5, 5] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts", lines: [388, 388] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts", lines: [468, 468] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts", lines: [614, 614] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [75, 75] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [134, 134] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [309, 309] }
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [330, 330] }

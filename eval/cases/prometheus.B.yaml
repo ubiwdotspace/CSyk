@@ -122,3 +122,83 @@ cases:
     query: "url source"
     expect:
       - { file: "discovery/http/http.go", lines: [220, 222] }
+  - id: B31
+    query: "set target metadata cache gatherer"
+    expect:
+      - { file: "scrape/metrics.go", lines: [307, 309] }
+  - id: B32
+    query: "read st header"
+    expect:
+      - { file: "tsdb/chunkenc/st.go", lines: [53, 55] }
+  - id: B33
+    query: "RebuSymbolTable"
+    expect:
+      - { file: "tsdb/head_other.go", lines: [30, 32] }
+  - id: B34
+    query: "SchemaAppenderV2"
+    expect:
+      - { file: "scrape/target.go", lines: [583, 587] }
+  - id: B35
+    query: "put endpoint"
+    expect:
+      - { file: "documentation/examples/remote_storage/remote_storage_adapter/opentsdb/client.go", lines: [32, 32] }
+  - id: B36
+    query: "err duplicate recording label set"
+    expect:
+      - { file: "rules/recording.go", lines: [36, 36] }
+  - id: B37
+    query: "reset matched sigs present"
+    expect:
+      - { file: "promql/engine.go", lines: [1848, 1855] }
+  - id: B38
+    query: "msk metrics"
+    expect:
+      - { file: "discovery/aws/metrics_msk.go", lines: [20, 22] }
+  - id: B39
+    query: "list droplets"
+    expect:
+      - { file: "discovery/digitalocean/digitalocean.go", lines: [269, 292] }
+  - id: B40
+    query: "SearchHintsLinear"
+    expect:
+      - { file: "storage/generic.go", lines: [328, 353] }
+  - id: B41
+    query: "test dir locker usage"
+    expect:
+      - { file: "tsdb/tsdbutil/dir_locker_testutil.go", lines: [31, 86] }
+  - id: B42
+    query: "dockLabelContainerImageID"
+    expect:
+      - { file: "discovery/moby/docker.go", lines: [46, 46] }
+  - id: B43
+    query: "no reference releases"
+    expect:
+      - { file: "storage/remote/intern.go", lines: [29, 34] }
+  - id: B44
+    query: "t brace close"
+    expect:
+      - { file: "model/textparse/promparse.go", lines: [64, 64] }
+  - id: B45
+    query: "WinklerRunes"
+    expect:
+      - { file: "util/strutil/jarowinkler.go", lines: [182, 253] }
+  - id: B46
+    query: "j unit xml"
+    expect:
+      - { file: "util/junitxml/junitxml.go", lines: [21, 24] }
+  - id: B47
+    query: "err writer invalid"
+    expect:
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [37, 37] }
+  - id: B48
+    query: "azure metrics"
+    expect:
+      - { file: "discovery/azure/metrics.go", lines: [24, 31] }
+  - id: B49
+    query: "chunk allocation size"
+    expect:
+      - { file: "tsdb/chunkenc/xor.go", lines: [56, 56] }
+  - id: B50
+    query: "ContWithPath"
+    expect:
+      - { file: "util/httputil/context.go", lines: [28, 30] }

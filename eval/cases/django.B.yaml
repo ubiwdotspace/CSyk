@@ -122,3 +122,83 @@ cases:
     query: "supp_color"
     expect:
       - { file: "django/core/management/color.py", lines: [28, 67] }
+  - id: B31
+    query: "session_auth_fallback_hash"
+    expect:
+      - { file: "django/contrib/auth/base_user.py", lines: [138, 140] }
+  - id: B32
+    query: "tzname re"
+    expect:
+      - { file: "django/db/backends/oracle/operations.py", lines: [122, 122] }
+  - id: B33
+    query: "iso input formats"
+    expect:
+      - { file: "django/utils/formats.py", lines: [19, 19] }
+  - id: B34
+    query: "error 500 template name"
+    expect:
+      - { file: "django/views/defaults.py", lines: [15, 15] }
+  - id: B35
+    query: "dedu_items"
+    expect:
+      - { file: "django/contrib/postgres/indexes.py", lines: [124, 124] }
+  - id: B36
+    query: "has errors"
+    expect:
+      - { file: "django/core/management/commands/compilemessages.py", lines: [122, 122] }
+  - id: B37
+    query: "csrf cookie name"
+    expect:
+      - { file: "django/conf/global_settings.py", lines: [576, 576] }
+  - id: B38
+    query: "prepared geometry"
+    expect:
+      - { file: "django/contrib/gis/geos/prepared.py", lines: [5, 51] }
+  - id: B39
+    query: "months days"
+    expect:
+      - { file: "django/utils/timesince.py", lines: [25, 25] }
+  - id: B40
+    query: "wkt adapter"
+    expect:
+      - { file: "django/contrib/gis/db/backends/base/adapter.py", lines: [1, 26] }
+  - id: B41
+    query: "rss201rev2 feed"
+    expect:
+      - { file: "django/utils/feedgenerator.py", lines: [359, 416] }
+  - id: B42
+    query: "get accessor name"
+    expect:
+      - { file: "django/db/models/fields/reverse_related.py", lines: [215, 231] }
+  - id: B43
+    query: "get plural"
+    expect:
+      - { file: "django/views/i18n.py", lines: [166, 178] }
+  - id: B44
+    query: "FieldDefaultMixin"
+    expect:
+      - { file: "django/db/models/fields/mixins.py", lines: [38, 66] }
+  - id: B45
+    query: "file_based_cache_is_absolute"
+    expect:
+      - { file: "django/core/checks/caches.py", lines: [61, 76] }
+  - id: B46
+    query: "engine mixin"
+    expect:
+      - { file: "django/forms/renderers.py", lines: [31, 44] }
+  - id: B47
+    query: "get spheroid"
+    expect:
+      - { file: "django/contrib/gis/db/backends/base/models.py", lines: [109, 127] }
+  - id: B48
+    query: "SpatLiteClient"
+    expect:
+      - { file: "django/contrib/gis/db/backends/spatialite/client.py", lines: [4, 5] }
+  - id: B49
+    query: "comm_end_re"
+    expect:
+      - { file: "django/template/base.py", lines: [440, 440] }
+  - id: B50
+    query: "token_lazy"
+    expect:
+      - { file: "django/template/backends/utils.py", lines: [15, 15] }

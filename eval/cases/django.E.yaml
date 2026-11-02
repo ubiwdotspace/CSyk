@@ -122,3 +122,83 @@ cases:
     query: "Return the Semi Major Axis for this Spatial Reference."
     expect:
       - { file: "django/contrib/gis/gdal/srs.py", lines: [265, 268] }
+  - id: E31
+    query: "Return the number of interior rings."
+    expect:
+      - { file: "django/contrib/gis/geos/polygon.py", lines: [154, 158] }
+  - id: E32
+    query: "Check that list_max_show_all is an integer."
+    expect:
+      - { file: "django/contrib/admin/checks.py", lines: [1125, 1133] }
+  - id: E33
+    query: "Specifies the indent level to use when pretty-printing output."
+    expect:
+      - { file: "django/core/management/commands/dumpdata.py", lines: [36, 102] }
+  - id: E34
+    query: "Cannot determine module path for {value!r}: no __module__ attribute."
+    expect:
+      - { file: "django/utils/module_loading.py", lines: [132, 132] }
+  - id: E35
+    query: "You cannot set the upload handlers after the upload has been "
+    expect:
+      - { file: "django/http/request.py", lines: [363, 370] }
+  - id: E36
+    query: "Size is larger than raster."
+    expect:
+      - { file: "django/contrib/gis/gdal/raster/band.py", lines: [188, 254] }
+  - id: E37
+    query: "Render a form on GET and processes it on POST."
+    expect:
+      - { file: "django/views/generic/edit.py", lines: [137, 158] }
+  - id: E38
+    query: "Errors happened when checking %s translation for %s:\\n%s"
+    expect:
+      - { file: "scripts/manage_translations.py", lines: [231, 264] }
+  - id: E39
+    query: "Center the value in a field of a given width."
+    expect:
+      - { file: "django/template/defaultfilters.py", lines: [431, 438] }
+  - id: E40
+    query: "The model is already registered."
+    expect:
+      - { file: "django/contrib/admin/exceptions.py", lines: [16, 19] }
+  - id: E41
+    query: "Return the name of the data source."
+    expect:
+      - { file: "django/contrib/gis/gdal/datasource.py", lines: [124, 128] }
+  - id: E42
+    query: "Please address the issues below. A daily check may automatically "
+    expect:
+      - { file: "scripts/pr_quality/check_pr.py", lines: [441, 521] }
+  - id: E43
+    query: "Backport of {cherry_sha} from main."
+    expect:
+      - { file: "scripts/prepare_commit_msg.py", lines: [88, 88] }
+  - id: E44
+    query: "Return the Transifex resource name."
+    expect:
+      - { file: "scripts/manage_translations.py", lines: [186, 188] }
+  - id: E45
+    query: "Superuser creation skipped due to not running in a TTY. "
+    expect:
+      - { file: "django/contrib/auth/management/commands/createsuperuser.py", lines: [92, 254] }
+  - id: E46
+    query: "Return True if the geometry has Z coordinates."
+    expect:
+      - { file: "django/contrib/gis/gdal/geometries.py", lines: [273, 276] }
+  - id: E47
+    query: "Invalid filter was passed to admin view via URL querystring"
+    expect:
+      - { file: "django/contrib/admin/exceptions.py", lines: [4, 7] }
+  - id: E48
+    query: "The model %s is already registered "
+    expect:
+      - { file: "django/contrib/admin/sites.py", lines: [126, 126] }
+  - id: E49
+    query: "Holder for user configured settings."
+    expect:
+      - { file: "django/conf/__init__.py", lines: [326, 391] }
+  - id: E50
+    query: "You must either define the environment variable %s "
+    expect:
+      - { file: "django/conf/__init__.py", lines: [93, 109] }

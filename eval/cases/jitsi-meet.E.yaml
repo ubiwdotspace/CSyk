@@ -122,3 +122,83 @@ cases:
     query: "Failed to load the advisor"
     expect:
       - { file: "react/features/custom-panel/components/native/CustomPanel.tsx", lines: [33, 35] }
+  - id: E31
+    query: "Error fetching branded custom icons:"
+    expect:
+      - { file: "react/features/dynamic-branding/middleware.any.ts", lines: [28, 33] }
+  - id: E32
+    query: "Unknown error trying to create sip videogw session"
+    expect:
+      - { file: "react/features/videosipgw/middleware.ts", lines: [92, 135] }
+  - id: E33
+    query: "Popup closed before completing auth."
+    expect:
+      - { file: "react/features/calendar-sync/web/microsoftCalendar.ts", lines: [178, 190] }
+  - id: E34
+    query: "Entered Picture-in-Picture mode"
+    expect:
+      - { file: "react/features/pip/actions.ts", lines: [233, 239] }
+  - id: E35
+    query: "Using SUPPORT_URL interfaceConfig URL overwrite is deprecated."
+    expect:
+      - { file: "react/features/base/config/functions.any.ts", lines: [314, 396] }
+  - id: E36
+    query: "Timed out waiting for video metadata, resetting PiP request state."
+    expect:
+      - { file: "react/features/pip/functions.ts", lines: [379, 459] }
+  - id: E37
+    query: "Reconnecting to conference with new token."
+    expect:
+      - { file: "react/features/authentication/actions.web.ts", lines: [284, 316] }
+  - id: E38
+    query: "Preloaded custom icons failed, fetching them again"
+    expect:
+      - { file: "react/features/dynamic-branding/functions.any.ts", lines: [116, 129] }
+  - id: E39
+    query: "Unsubscribed from WebSocket topic"
+    expect:
+      - { file: "react/features/visitors/websocket-client.ts", lines: [122, 128] }
+  - id: E40
+    query: "Could not set sink id"
+    expect:
+      - { file: "react/features/settings/components/web/audio/SpeakerEntry.tsx", lines: [128, 137] }
+  - id: E41
+    query: "Saint Helena, Ascension and Tristan Da Cunha"
+    expect:
+      - { file: "react/features/prejoin/utils.ts", lines: [554, 554] }
+  - id: E42
+    query: "Dispatching connect on demote request visitor message for local participant."
+    expect:
+      - { file: "react/features/visitors/middleware.ts", lines: [105, 116] }
+  - id: E43
+    query: "Large video is playing!"
+    expect:
+      - { file: "modules/UI/videolayout/VideoContainer.js", lines: [258, 263] }
+  - id: E44
+    query: "Ignoring enable lobby request because there are visitors in the call already."
+    expect:
+      - { file: "react/features/lobby/actions.any.ts", lines: [245, 261] }
+  - id: E45
+    query: "Error during cleanup:"
+    expect:
+      - { file: "react/features/pip/components/PiPVideoElement.tsx", lines: [189, 200] }
+  - id: E46
+    query: "Error creating screen-sharing stream"
+    expect:
+      - { file: "react/features/base/tracks/actions.native.ts", lines: [42, 69] }
+  - id: E47
+    query: "Canvas stream produced no data after repeated frame requests"
+    expect:
+      - { file: "react/features/pip/components/PiPVideoElement.tsx", lines: [159, 175] }
+  - id: E48
+    query: "South Georgia and the South Sandwich Islands"
+    expect:
+      - { file: "react/features/prejoin/utils.ts", lines: [619, 619] }
+  - id: E49
+    query: "Face landmarks detection is disabled due to missing local track."
+    expect:
+      - { file: "react/features/face-landmarks/FaceLandmarksDetector.ts", lines: [180, 242] }
+  - id: E50
+    query: "Device list updated"
+    expect:
+      - { file: "react/features/base/devices/middleware.web.ts", lines: [69, 191] }

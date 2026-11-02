@@ -608,3 +608,196 @@ cases:
       - { file: "django/db/migrations/serializer.py", lines: [234, 241] }
       - { file: "django/db/migrations/serializer.py", lines: [245, 255] }
       - { file: "django/db/migrations/serializer.py", lines: [298, 310] }
+  - id: G31
+    query: "django/contrib/postgres/aggregates/statistics.py:25"
+    expect:
+      - { file: "django/contrib/postgres/aggregates/statistics.py", lines: [22, 27] }
+      - { file: "django/contrib/postgres/aggregates/statistics.py", lines: [35, 37] }
+  - id: G32
+    query: "django/contrib/gis/db/backends/utils.py:28"
+    expect:
+      - { file: "django/contrib/gis/db/backends/utils.py", lines: [26, 29] }
+      - { file: "django/contrib/gis/db/backends/oracle/operations.py", lines: [53, 55] }
+      - { file: "django/contrib/gis/db/backends/postgis/operations.py", lines: [40, 43] }
+      - { file: "django/contrib/gis/db/backends/spatialite/operations.py", lines: [21, 23] }
+  - id: G33
+    query: "django/db/backends/postgresql/creation.py:24"
+    expect:
+      - { file: "django/db/backends/postgresql/creation.py", lines: [21, 31] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [40, 44] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [46, 48] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [50, 52] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [54, 56] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [58, 62] }
+      - { file: "tests/backends/postgresql/test_creation.py", lines: [64, 71] }
+  - id: G34
+    query: "django/conf/__init__.py:216"
+    expect:
+      - { file: "django/conf/__init__.py", lines: [202, 219] }
+      - { file: "tests/mail/test_deprecated.py", lines: [227, 251] }
+      - { file: "tests/mail/test_deprecated.py", lines: [253, 276] }
+      - { file: "tests/mail/test_deprecated.py", lines: [336, 354] }
+      - { file: "django/core/management/templates.py", lines: [89, 235] }
+      - { file: "scripts/manage_translations.py", lines: [208, 228] }
+      - { file: "tests/admin_scripts/configured_dynamic_settings_manage.py", lines: [1, 21] }
+      - { file: "tests/admin_scripts/configured_settings_manage.py", lines: [1, 10] }
+      - { file: "tests/settings_tests/tests.py", lines: [321, 323] }
+      - { file: "tests/settings_tests/tests.py", lines: [325, 328] }
+      - { file: "tests/settings_tests/tests.py", lines: [330, 334] }
+      - { file: "tests/settings_tests/tests.py", lines: [429, 433] }
+      - { file: "tests/settings_tests/tests.py", lines: [466, 470] }
+      - { file: "django/core/management/commands/startapp.py", lines: [12, 15] }
+      - { file: "django/core/management/commands/startproject.py", lines: [14, 21] }
+  - id: G35
+    query: "django/contrib/auth/handlers/modwsgi.py:55"
+    expect:
+      - { file: "django/contrib/auth/handlers/modwsgi.py", lines: [44, 58] }
+      - { file: "tests/auth_tests/test_handlers.py", lines: [64, 78] }
+  - id: G36
+    query: "django/db/backends/ddl_references.py:226"
+    expect:
+      - { file: "django/db/backends/ddl_references.py", lines: [225, 228] }
+      - { file: "django/db/backends/base/schema.py", lines: [712, 737] }
+      - { file: "tests/backends/test_ddl_references.py", lines: [227, 231] }
+      - { file: "django/contrib/gis/db/backends/spatialite/schema.py", lines: [138, 195] }
+      - { file: "django/db/backends/sqlite3/schema.py", lines: [80, 282] }
+      - { file: "django/db/backends/base/schema.py", lines: [1523, 1554] }
+  - id: G37
+    query: "django/utils/regex_helper.py:155"
+    expect:
+      - { file: "django/utils/regex_helper.py", lines: [42, 193] }
+      - { file: "django/urls/resolvers.py", lines: [546, 628] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [9, 13] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [15, 19] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [21, 25] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [27, 31] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [33, 42] }
+      - { file: "tests/utils_tests/test_regex_helper.py", lines: [44, 48] }
+      - { file: "django/urls/resolvers.py", lines: [630, 635] }
+      - { file: "django/urls/resolvers.py", lines: [637, 642] }
+      - { file: "django/urls/resolvers.py", lines: [644, 649] }
+      - { file: "django/urls/resolvers.py", lines: [666, 669] }
+      - { file: "django/urls/resolvers.py", lines: [756, 843] }
+      - { file: "tests/urlpatterns_reverse/tests.py", lines: [757, 767] }
+  - id: G38
+    query: "django/contrib/gis/gdal/error.py:52"
+    expect:
+      - { file: "django/contrib/gis/gdal/error.py", lines: [49, 61] }
+      - { file: "django/contrib/gis/gdal/prototypes/errcheck.py", lines: [25, 34] }
+      - { file: "django/contrib/gis/gdal/prototypes/errcheck.py", lines: [37, 63] }
+      - { file: "django/contrib/gis/gdal/prototypes/errcheck.py", lines: [89, 93] }
+      - { file: "django/contrib/gis/gdal/prototypes/errcheck.py", lines: [108, 114] }
+      - { file: "django/contrib/gis/gdal/prototypes/errcheck.py", lines: [117, 121] }
+      - { file: "django/contrib/gis/gdal/prototypes/generation.py", lines: [105, 109] }
+      - { file: "django/contrib/gis/gdal/prototypes/generation.py", lines: [135, 139] }
+      - { file: "django/contrib/gis/gdal/prototypes/generation.py", lines: [62, 63] }
+  - id: G39
+    query: "django/core/files/move.py:90"
+    expect:
+      - { file: "django/core/files/move.py", lines: [16, 92] }
+      - { file: "django/core/cache/backends/filebased.py", lines: [48, 61] }
+      - { file: "django/core/files/storage/filesystem.py", lines: [68, 142] }
+      - { file: "tests/files/tests.py", lines: [428, 444] }
+      - { file: "tests/files/tests.py", lines: [446, 500] }
+      - { file: "tests/files/tests.py", lines: [502, 521] }
+      - { file: "django/core/cache/backends/filebased.py", lines: [27, 31] }
+      - { file: "tests/file_storage/tests.py", lines: [713, 716] }
+  - id: G40
+    query: "django/db/models/sql/datastructures.py:136 django/db/models/sql/datastructures.py:217"
+    expect:
+      - { file: "django/db/models/sql/datastructures.py", lines: [135, 150] }
+      - { file: "django/db/models/sql/datastructures.py", lines: [216, 219] }
+      - { file: "django/db/models/sql/datastructures.py", lines: [170, 173] }
+      - { file: "django/db/models/sql/datastructures.py", lines: [175, 178] }
+  - id: G41
+    query: "django/contrib/messages/storage/base.py:21 django/contrib/messages/storage/base.py:123"
+    expect:
+      - { file: "django/contrib/messages/storage/base.py", lines: [20, 26] }
+      - { file: "django/contrib/messages/storage/base.py", lines: [121, 126] }
+      - { file: "django/contrib/messages/storage/base.py", lines: [128, 140] }
+      - { file: "tests/messages_tests/test_fallback.py", lines: [87, 101] }
+  - id: G42
+    query: "django/contrib/postgres/fields/array.py:166 django/contrib/postgres/fields/array.py:41"
+    expect:
+      - { file: "django/contrib/postgres/fields/array.py", lines: [163, 169] }
+      - { file: "django/contrib/postgres/fields/array.py", lines: [29, 42] }
+      - { file: "tests/postgres_tests/models.py", lines: [166, 167] }
+  - id: G43
+    query: "django/contrib/postgres/fields/hstore.py:53 django/contrib/postgres/fields/hstore.py:33"
+    expect:
+      - { file: "django/contrib/postgres/fields/hstore.py", lines: [49, 55] }
+      - { file: "django/contrib/postgres/fields/hstore.py", lines: [31, 39] }
+      - { file: "tests/postgres_tests/test_hstore.py", lines: [406, 409] }
+  - id: G44
+    query: "django/utils/copy.py:8"
+    expect:
+      - { file: "django/utils/copy.py", lines: [7, 17] }
+      - { file: "django/db/migrations/operations/fields.py", lines: [140, 156] }
+      - { file: "django/db/migrations/operations/fields.py", lines: [258, 272] }
+      - { file: "django/db/migrations/operations/fields.py", lines: [346, 358] }
+      - { file: "django/db/migrations/operations/models.py", lines: [151, 379] }
+      - { file: "django/db/migrations/operations/models.py", lines: [522, 532] }
+      - { file: "django/db/migrations/operations/models.py", lines: [941, 948] }
+      - { file: "django/db/migrations/operations/models.py", lines: [1132, 1140] }
+      - { file: "django/db/migrations/operations/models.py", lines: [1184, 1197] }
+  - id: G45
+    query: "docs/conf.py:471 docs/conf.py:137"
+    expect:
+      - { file: "docs/conf.py", lines: [469, 472] }
+      - { file: "docs/conf.py", lines: [131, 139] }
+      - { file: "docs/conf.py", lines: [1, 476] }
+  - id: G46
+    query: "django/apps/config.py:226 django/apps/config.py:46"
+    expect:
+      - { file: "django/apps/config.py", lines: [224, 239] }
+      - { file: "django/apps/config.py", lines: [16, 56] }
+      - { file: "tests/apps/query_performing_app/apps.py", lines: [9, 11] }
+  - id: G47
+    query: "django/core/checks/security/sessions.py:88 django/core/checks/security/sessions.py:38"
+    expect:
+      - { file: "django/core/checks/security/sessions.py", lines: [79, 90] }
+      - { file: "django/core/checks/security/sessions.py", lines: [35, 39] }
+      - { file: "tests/check_framework/test_security.py", lines: [79, 89] }
+      - { file: "tests/check_framework/test_security.py", lines: [91, 98] }
+      - { file: "tests/check_framework/test_security.py", lines: [100, 111] }
+      - { file: "tests/check_framework/test_security.py", lines: [113, 123] }
+      - { file: "tests/check_framework/test_security.py", lines: [125, 134] }
+      - { file: "django/core/checks/security/sessions.py", lines: [1, 99] }
+  - id: G48
+    query: "django/contrib/auth/base_user.py:26"
+    expect:
+      - { file: "django/contrib/auth/base_user.py", lines: [22, 34] }
+      - { file: "django/contrib/auth/models.py", lines: [148, 161] }
+      - { file: "tests/auth_tests/models/custom_user.py", lines: [17, 30] }
+      - { file: "tests/auth_tests/models/custom_user.py", lines: [32, 43] }
+      - { file: "tests/auth_tests/test_models.py", lines: [131, 135] }
+      - { file: "tests/auth_tests/test_models.py", lines: [137, 139] }
+      - { file: "tests/auth_tests/test_models.py", lines: [141, 143] }
+      - { file: "django/contrib/auth/models.py", lines: [163, 169] }
+      - { file: "django/contrib/auth/models.py", lines: [171, 175] }
+      - { file: "tests/auth_tests/models/custom_user.py", lines: [45, 51] }
+      - { file: "tests/auth_tests/models/custom_permissions.py", lines: [14, 18] }
+  - id: G49
+    query: "django/utils/formats.py:254"
+    expect:
+      - { file: "django/utils/formats.py", lines: [243, 273] }
+      - { file: "django/forms/widgets.py", lines: [1300, 1318] }
+      - { file: "django/utils/formats.py", lines: [218, 240] }
+      - { file: "tests/i18n/tests.py", lines: [1273, 1284] }
+      - { file: "tests/i18n/tests.py", lines: [1286, 1316] }
+      - { file: "tests/forms_tests/widget_tests/test_selectdatewidget.py", lines: [423, 536] }
+      - { file: "tests/forms_tests/widget_tests/test_selectdatewidget.py", lines: [538, 559] }
+      - { file: "tests/forms_tests/widget_tests/test_selectdatewidget.py", lines: [597, 621] }
+      - { file: "django/forms/widgets.py", lines: [344, 359] }
+      - { file: "django/forms/widgets.py", lines: [666, 669] }
+      - { file: "tests/i18n/tests.py", lines: [1215, 1260] }
+      - { file: "tests/i18n/tests.py", lines: [1262, 1271] }
+      - { file: "tests/forms_tests/field_tests/test_decimalfield.py", lines: [206, 215] }
+      - { file: "tests/forms_tests/field_tests/test_floatfield.py", lines: [116, 124] }
+  - id: G50
+    query: "django/views/defaults.py:93 django/views/defaults.py:52"
+    expect:
+      - { file: "django/views/defaults.py", lines: [82, 99] }
+      - { file: "django/views/defaults.py", lines: [34, 79] }
+      - { file: "tests/view_tests/tests/test_defaults.py", lines: [174, 191] }
+      - { file: "tests/view_tests/tests/test_defaults.py", lines: [193, 206] }

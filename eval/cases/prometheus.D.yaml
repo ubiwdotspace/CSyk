@@ -264,3 +264,147 @@ cases:
       - { file: "storage/generic.go", lines: [509, 518] }
       - { file: "storage/generic.go", lines: [531, 548] }
       - { file: "storage/interface.go", lines: [273, 273] }
+  - id: D31
+    query: "TestDirLockerUsage"
+    direction: in
+    expect:
+      - { file: "tsdb/agent/db_test.go", lines: [892, 912] }
+      - { file: "tsdb/db_test.go", lines: [1785, 1798] }
+      - { file: "tsdb/tsdbutil/dir_locker_test.go", lines: [25, 38] }
+  - id: D32
+    query: "testTemplateParsing"
+    direction: out
+    expect:
+      - { file: "model/timestamp/timestamp.go", lines: [22, 24] }
+      - { file: "template/template.go", lines: [122, 296] }
+      - { file: "template/template.go", lines: [299, 317] }
+      - { file: "template/template.go", lines: [398, 404] }
+  - id: D33
+    query: "NewDockerDiscovery"
+    direction: in
+    expect:
+      - { file: "discovery/moby/docker.go", lines: [96, 98] }
+      - { file: "discovery/moby/docker_test.go", lines: [31, 228] }
+      - { file: "discovery/moby/docker_test.go", lines: [230, 519] }
+      - { file: "discovery/moby/docker_test.go", lines: [527, 590] }
+      - { file: "discovery/moby/moby_test.go", lines: [52, 148] }
+  - id: D34
+    query: "intern"
+    direction: out
+    expect:
+      - { file: "storage/remote/intern.go", lines: [47, 49] }
+  - id: D35
+    query: "unreplace"
+    direction: in
+    expect:
+      - { file: "model/textparse/openmetrics2parse.go", lines: [306, 381] }
+      - { file: "model/textparse/openmetrics2parse.go", lines: [385, 442] }
+      - { file: "model/textparse/openmetricsparse.go", lines: [215, 249] }
+      - { file: "model/textparse/promparse.go", lines: [287, 323] }
+  - id: D36
+    query: "jaroWinklerRunes"
+    direction: out
+    expect:
+      - { file: "util/strutil/jarowinkler.go", lines: [53, 57] }
+      - { file: "util/strutil/jarowinkler.go", lines: [59, 64] }
+  - id: D37
+    query: "lastCase"
+    direction: in
+    expect:
+      - { file: "util/junitxml/junitxml.go", lines: [51, 55] }
+      - { file: "util/junitxml/junitxml.go", lines: [77, 81] }
+  - id: D38
+    query: "checkInitialUnalignedOffset"
+    direction: out
+    expect:
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [315, 321] }
+      - { file: "tsdb/fileutil/direct_io_writer.go", lines: [332, 347] }
+  - id: D39
+    query: "xorRead"
+    direction: in
+    expect:
+      - { file: "tsdb/chunkenc/float_histogram.go", lines: [1175, 1182] }
+      - { file: "tsdb/chunkenc/histogram.go", lines: [1364, 1371] }
+      - { file: "tsdb/chunkenc/xor.go", lines: [423, 464] }
+  - id: D40
+    query: "ContextFromRequest"
+    direction: out
+    expect:
+      - { file: "promql/engine.go", lines: [5177, 5179] }
+  - id: D41
+    query: "MustNewRegexp"
+    direction: in
+    expect:
+      - { file: "config/config_test.go", lines: [91, 1852] }
+      - { file: "model/relabel/relabel.go", lines: [35, 40] }
+      - { file: "model/relabel/relabel.go", lines: [108, 118] }
+      - { file: "model/relabel/relabel_test.go", lines: [29, 761] }
+      - { file: "model/relabel/relabel_test.go", lines: [763, 862] }
+      - { file: "notifier/manager_test.go", lines: [239, 366] }
+      - { file: "notifier/manager_test.go", lines: [368, 409] }
+      - { file: "notifier/manager_test.go", lines: [411, 455] }
+      - { file: "notifier/manager_test.go", lines: [1205, 1280] }
+      - { file: "rules/alerting_test.go", lines: [788, 837] }
+      - { file: "scrape/manager_test.go", lines: [63, 624] }
+      - { file: "scrape/scrape_test.go", lines: [496, 538] }
+      - { file: "scrape/scrape_test.go", lines: [1561, 1585] }
+      - { file: "scrape/scrape_test.go", lines: [6470, 6511] }
+      - { file: "scrape/scrape_test.go", lines: [6519, 6558] }
+      - { file: "scrape/scrape_test.go", lines: [6567, 6683] }
+      - { file: "scrape/scrape_test.go", lines: [7288, 7372] }
+      - { file: "scrape/scrape_test.go", lines: [8544, 8586] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [1526, 1577] }
+      - { file: "storage/remote/queue_manager_test.go", lines: [3260, 4005] }
+      - { file: "storage/remote/write_test.go", lines: [260, 369] }
+      - { file: "web/api/v1/api_test.go", lines: [176, 212] }
+      - { file: "web/api/v1/api_test.go", lines: [1251, 4001] }
+  - id: D42
+    query: "includeStaleNaNs"
+    direction: out
+    expect:
+      - { file: "util/teststorage/appender.go", lines: [101, 110] }
+  - id: D43
+    query: "mulSaturatingInt64"
+    direction: in
+    expect:
+      - { file: "promql/estimate.go", lines: [61, 299] }
+  - id: D44
+    query: "getResetHint"
+    direction: out
+    expect:
+      - { file: "model/histogram/float_histogram.go", lines: [774, 830] }
+  - id: D45
+    query: "repairBadIndexVersion"
+    direction: in
+    expect:
+      - { file: "tsdb/db.go", lines: [1005, 1265] }
+  - id: D46
+    query: "readCustomBound"
+    direction: out
+    expect:
+      - { file: "tsdb/chunkenc/bstream.go", lines: [202, 228] }
+      - { file: "tsdb/chunkenc/varbit.go", lines: [202, 263] }
+  - id: D47
+    query: "NegotiateResponseType"
+    direction: in
+    expect:
+      - { file: "storage/remote/codec_test.go", lines: [694, 716] }
+      - { file: "storage/remote/read_handler.go", lines: [84, 132] }
+  - id: D48
+    query: "selectDirs"
+    direction: out
+    expect:
+      - { file: "tsdb/compact.go", lines: [471, 508] }
+  - id: D49
+    query: "NewNerveDiscovery"
+    direction: in
+    expect:
+      - { file: "discovery/zookeeper/zookeeper.go", lines: [112, 114] }
+  - id: D50
+    query: "appendV1Samples"
+    direction: out
+    expect:
+      - { file: "model/labels/labels_common.go", lines: [48, 50] }
+      - { file: "prompb/types.pb.go", lines: [290, 295] }
+      - { file: "prompb/types.pb.go", lines: [297, 302] }
+      - { file: "storage/interface_append.go", lines: [218, 218] }

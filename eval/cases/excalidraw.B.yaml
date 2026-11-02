@@ -122,3 +122,83 @@ cases:
     query: "AllowVerticalAlign"
     expect:
       - { file: "packages/element/src/textElement.ts", lines: [490, 504] }
+  - id: B31
+    query: "question circle"
+    expect:
+      - { file: "packages/excalidraw/components/icons.tsx", lines: [702, 705] }
+  - id: B32
+    query: "calcTranslation"
+    expect:
+      - { file: "packages/element/src/align.ts", lines: [58, 86] }
+  - id: B33
+    query: "subsToBase64"
+    expect:
+      - { file: "packages/excalidraw/subset/subset-shared.chunk.ts", lines: [25, 37] }
+  - id: B34
+    query: "library item svgs cache"
+    expect:
+      - { file: "packages/excalidraw/hooks/useLibraryItemSvg.ts", lines: [11, 11] }
+  - id: B35
+    query: "MaxCharWidth"
+    expect:
+      - { file: "packages/element/src/textMeasurements.ts", lines: [284, 291] }
+  - id: B36
+    query: "ShorIsland"
+    expect:
+      - { file: "packages/excalidraw/components/HelpDialog.tsx", lines: [69, 78] }
+  - id: B37
+    query: "ExcaPlusPromoBanner"
+    expect:
+      - { file: "excalidraw-app/components/ExcalidrawPlusPromoBanner.tsx", lines: [4, 36] }
+  - id: B38
+    query: "OwnedInteractionState"
+    expect:
+      - { file: "packages/excalidraw/components/App.host.ts", lines: [85, 99] }
+  - id: B39
+    query: "list marker kind"
+    expect:
+      - { file: "packages/element/src/listMarker.ts", lines: [31, 31] }
+  - id: B40
+    query: "ai components"
+    expect:
+      - { file: "excalidraw-app/components/AI.tsx", lines: [19, 175] }
+  - id: B41
+    query: "ExcaWithClientOnly"
+    expect:
+      - { file: "examples/with-nextjs/src/app/page.tsx", lines: [8, 13] }
+  - id: B42
+    query: "has last point"
+    expect:
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [65, 75] }
+  - id: B43
+    query: "path segment length at parameter"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [2866, 2871] }
+  - id: B44
+    query: "actiShortcuts"
+    expect:
+      - { file: "packages/excalidraw/actions/actionMenu.tsx", lines: [9, 35] }
+  - id: B45
+    query: "InactiveParticipantLineNumber"
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/utils/mermaidError.ts", lines: [103, 122] }
+  - id: B46
+    query: "editor state"
+    expect:
+      - { file: "packages/excalidraw/components/TTDDialog/TTDDialogInput.tsx", lines: [20, 23] }
+  - id: B47
+    query: "to closely equal points"
+    expect:
+      - { file: "packages/utils/src/test-utils.ts", lines: [4, 32] }
+  - id: B48
+    query: "get or create worker pool"
+    expect:
+      - { file: "packages/excalidraw/subset/subset-main.ts", lines: [114, 130] }
+  - id: B49
+    query: "FiniteNumber"
+    expect:
+      - { file: "packages/math/src/utils.ts", lines: [28, 30] }
+  - id: B50
+    query: "PicksTip"
+    expect:
+      - { file: "packages/excalidraw/components/TopPicksDnD/TopPicksTip.tsx", lines: [11, 60] }

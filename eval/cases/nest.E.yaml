@@ -122,3 +122,83 @@ cases:
     query: "Generating local supergraph schema from schema files..."
     expect:
       - { file: "sample/32-graphql-federation-schema-first/gateway/generate-supergraph.ts", lines: [39, 124] }
+  - id: E31
+    query: "Cannot read signed cookies: no cookie secret is configured. "
+    expect:
+      - { file: "packages/core/helpers/cookies/request-cookies.ts", lines: [56, 87] }
+  - id: E32
+    query: "Schema files not found. Make sure both sub-graph applications have their schema "
+    expect:
+      - { file: "sample/32-graphql-federation-schema-first/gateway/generate-supergraph.ts", lines: [39, 124] }
+  - id: E33
+    query: "The found record"
+    expect:
+      - { file: "sample/11-swagger/src/cats/cats.controller.ts", lines: [25, 33] }
+  - id: E34
+    query: "Exception interceptor message"
+    expect:
+      - { file: "sample/10-fastify/src/common/interceptors/exception.interceptor.ts", lines: [20, 24] }
+  - id: E35
+    query: "This action adds a new dog"
+    expect:
+      - { file: "integration/inspector/src/dogs/dogs.service.ts", lines: [7, 9] }
+  - id: E36
+    query: "Called once after 5 seconds"
+    expect:
+      - { file: "sample/27-scheduling/src/tasks/tasks.service.ts", lines: [18, 21] }
+  - id: E37
+    query: "Cannot apply global guards: registration must occur before initialization."
+    expect:
+      - { file: "packages/microservices/nest-microservice.ts", lines: [250, 266] }
+  - id: E38
+    query: "Cannot apply WebSocket adapter: registration must occur before initialization."
+    expect:
+      - { file: "packages/microservices/nest-microservice.ts", lines: [165, 173] }
+  - id: E39
+    query: "The breed of the Cat"
+    expect:
+      - { file: "sample/11-swagger/src/cats/entities/cat.entity.ts", lines: [13, 17] }
+  - id: E40
+    query: "Validation failed (boolean string is expected)"
+    expect:
+      - { file: "packages/common/pipes/parse-bool.pipe.ts", lines: [63, 79] }
+  - id: E41
+    query: "Nest encountered an undefined dependency. This may be due to a circular import o"
+    expect:
+      - { file: "packages/core/injector/injector.ts", lines: [621, 648] }
+  - id: E42
+    query: "Generating local supergraph schema for development..."
+    expect:
+      - { file: "sample/31-graphql-federation-code-first/gateway/generate-supergraph.ts", lines: [39, 101] }
+  - id: E43
+    query: "An order needs at least one item"
+    expect:
+      - { file: "sample/37-outbox/src/orders/orders.service.ts", lines: [22, 60] }
+  - id: E44
+    query: "Error happened during shutdown"
+    expect:
+      - { file: "packages/core/constants.ts", lines: [8, 8] }
+  - id: E45
+    query: "Invalid CSRF protection options: expected an options object."
+    expect:
+      - { file: "packages/core/security/cross-origin-protection.ts", lines: [233, 272] }
+  - id: E46
+    query: "Global pipes registered after initialization will not be applied."
+    expect:
+      - { file: "packages/microservices/nest-microservice.ts", lines: [205, 223] }
+  - id: E47
+    query: "Validation failed (invalid date format)"
+    expect:
+      - { file: "packages/common/pipes/parse-date.pipe.ts", lines: [63, 88] }
+  - id: E48
+    query: "Cannot apply global preRequest hooks: registration must occur before initializat"
+    expect:
+      - { file: "packages/microservices/nest-microservice.ts", lines: [273, 281] }
+  - id: E49
+    query: "Failed precondition"
+    expect:
+      - { file: "packages/microservices/exceptions/grpc-exception.ts", lines: [80, 82] }
+  - id: E50
+    query: "No view engine is configured; call app.setViewEngine() to use @Render()."
+    expect:
+      - { file: "packages/platform-node/adapters/node-adapter.ts", lines: [335, 353] }

@@ -122,3 +122,83 @@ cases:
     query: "clp value"
     expect:
       - { file: "src/SchemaMigrations/Migrations.js", lines: [52, 52] }
+  - id: B31
+    query: "gcs adapter"
+    expect:
+      - { file: "src/index.ts", lines: [26, 26] }
+  - id: B32
+    query: "random hex string"
+    expect:
+      - { file: "src/cryptoUtils.js", lines: [6, 14] }
+  - id: B33
+    query: "ObjectWithKey"
+    expect:
+      - { file: "src/RestQuery.js", lines: [1382, 1407] }
+  - id: B34
+    query: "parse server definitions"
+    expect:
+      - { file: "src/cli/definitions/parse-server.js", lines: [1, 1] }
+  - id: B35
+    query: "push controlling"
+    expect:
+      - { file: "src/Controllers/index.js", lines: [165, 170] }
+  - id: B36
+    query: "json from query"
+    expect:
+      - { file: "src/Routers/ClassesRouter.js", lines: [148, 158] }
+  - id: B37
+    query: "AnalRouter"
+    expect:
+      - { file: "src/Routers/AnalyticsRouter.js", lines: [14, 19] }
+  - id: B38
+    query: "wrap mongo db with latency"
+    expect:
+      - { file: "benchmark/MongoLatencyWrapper.js", lines: [79, 133] }
+  - id: B39
+    query: "group by badge"
+    expect:
+      - { file: "src/Push/PushWorker.js", lines: [13, 20] }
+  - id: B40
+    query: "reveDefinitions"
+    expect:
+      - { file: "src/cli/utils/commander.js", lines: [7, 7] }
+  - id: B41
+    query: "get parse class query config"
+    expect:
+      - { file: "src/GraphQL/loaders/parseClassQueries.js", lines: [12, 14] }
+  - id: B42
+    query: "handSessionMissingError"
+    expect:
+      - { file: "src/rest.js", lines: [320, 331] }
+  - id: B43
+    query: "OrUpdateHook"
+    expect:
+      - { file: "src/Controllers/HooksController.js", lines: [119, 141] }
+  - id: B44
+    query: "confirm smsotp"
+    expect:
+      - { file: "src/Adapters/Auth/mfa.js", lines: [256, 273] }
+  - id: B45
+    query: "ParseClassTypeConfig"
+    expect:
+      - { file: "src/GraphQL/loaders/parseClassTypes.js", lines: [23, 25] }
+  - id: B46
+    query: "KeyConstraints"
+    expect:
+      - { file: "src/LiveQuery/QueryTools.js", lines: [172, 420] }
+  - id: B47
+    query: "log report"
+    expect:
+      - { file: "src/Security/CheckRunner.js", lines: [127, 175] }
+  - id: B48
+    query: "flush db key"
+    expect:
+      - { file: "src/Adapters/Cache/RedisCacheAdapter.js", lines: [6, 6] }
+  - id: B49
+    query: "query file"
+    expect:
+      - { file: "src/Adapters/Storage/Postgres/sql/index.js", lines: [3, 3] }
+  - id: B50
+    query: "multMiddleware"
+    expect:
+      - { file: "src/Routers/FunctionsRouter.js", lines: [199, 313] }

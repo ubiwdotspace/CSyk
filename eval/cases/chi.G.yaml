@@ -258,3 +258,23 @@ cases:
     expect:
       - { file: "middleware/get_head.go", lines: [10, 39] }
       - { file: "middleware/get_head_test.go", lines: [11, 66] }
+  - id: G31
+    query: "middleware/timeout.go:41"
+    expect:
+      - { file: "middleware/timeout.go", lines: [32, 48] }
+      - { file: "_examples/limits/main.go", lines: [21, 92] }
+  - id: G32
+    query: "middleware/value.go:12"
+    expect:
+      - { file: "middleware/value.go", lines: [9, 17] }
+      - { file: "middleware/value_test.go", lines: [11, 33] }
+  - id: G33
+    query: "middleware/content_encoding.go:26"
+    expect:
+      - { file: "middleware/content_encoding.go", lines: [10, 34] }
+      - { file: "middleware/content_encoding_test.go", lines: [12, 82] }
+  - id: G34
+    query: "middleware/middleware.go:8"
+    expect:
+      - { file: "middleware/middleware.go", lines: [6, 12] }
+      - { file: "middleware/middleware_test.go", lines: [40, 70] }

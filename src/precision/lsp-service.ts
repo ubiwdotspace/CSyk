@@ -141,6 +141,8 @@ export type References = {
   throughBase?: Position[];
   /** The server stopped before it answered: what it found cannot be trusted. */
   stopped?: true;
+  /** Mentions in code the server could not resolve, which may be uses too. */
+  unconfirmed?: Position[];
 };
 
 // How far apart two files are: 0 for the same file, then the folders that
@@ -159,7 +161,7 @@ export class LspService {
   readonly root: string;
   readonly spec: ServerSpec;
   private readonly lsp: LspClient;
-  private readonly definitions = new Map<string, Promise<Span[]>>();
+  private readonly definitions = new Map<string, Promise<{ spans: Span[]; outside: boolean }>>();
   private readonly mentions = new Map<string, Promise<Mention[]>>();
 
   private constructor(root: string, spec: ServerSpec, lsp: LspClient) {
@@ -185,7 +187,12 @@ export class LspService {
    * kept until a file changes: callers two levels up ask about the same
    * mentions many times.
    */
-  definition(at: Position): Promise<Span[]> {
+  async definition(at: Position): Promise<Span[]> {
+    return (await this.lookup(at)).spans;
+  }
+
+  // The server's answer for [at] (see LspClient.definition), kept as above.
+  private lookup(at: Position): Promise<{ spans: Span[]; outside: boolean }> {
     const key = `${at.file}:${at.line}:${at.character}`;
     let found = this.definitions.get(key);
     if (!found) {
@@ -251,7 +258,7 @@ export class LspService {
     // An overloaded function resolves to all its signatures; any of them will do.
     const deadline = options.deadline ?? Date.now() + searchMs;
     const resolved = (
-      await pool(candidates, concurrency(), async (p) => ({ p, spans: await this.definition(p) }), deadline)
+      await pool(candidates, concurrency(), async (p) => ({ p, ...(await this.lookup(p)) }), deadline)
     ).filter((r) => r !== undefined);
     let partial = resolved.length < candidates.length ? { resolved: resolved.length, total: candidates.length } : undefined;
     const lines = text.split('\n');
@@ -268,7 +275,7 @@ export class LspService {
     // symbol wrapped (React's memo, connect, withStyles), and a use of it
     // renders or calls the symbol; the server resolves that use to the export.
     const wrapped = new Set(symbol.parent ? [] : wrappedDefault(lines, symbol.name));
-    const statics = symbol.parent ? await staticUses(this.root, symbol, text, resolved.filter((r) => r.spans.length === 0).map((r) => r.p)) : new Set<string>();
+    const statics = await staticUses(this.root, symbol, text, resolved.filter((r) => r.spans.length === 0).map((r) => r.p));
     // `super.m()`, and Python's `super().m()` or `super(C, self).m()`.
     const viaSuper = (p: Mention) => /\bsuper(\([^)]*\))?\.$/.test(p.text.slice(0, p.character));
     const isOurs = (p: Mention, spans: Span[]) =>
@@ -277,12 +284,27 @@ export class LspService {
       spans.some((span) => imports.has(`${span.file}:${span.nameLine}`) || (span.file === symbol.file && wrapped.has(span.nameLine)));
     const ours = resolved.filter(({ p, spans }) => isOurs(p, spans)).map(({ p }) => p);
     const key = (p: Position) => `${p.file}:${p.line}:${p.character}`;
+    // Mentions in code the server could not resolve at all, on a receiver it
+    // cannot type (`this.config.filesController.expandFilesInObject(…)` in
+    // JS): they may be uses, so an answer without them is not complete. An
+    // export (`module.exports.name = name`) is the declaration's own.
+    const unknown = await inCode(
+      this.root,
+      resolved
+        .filter(({ p, spans, outside }) => spans.length === 0 && !outside && !isOurs(p, spans) && !/\bexports\s*\.\s*$/.test(p.text.slice(0, p.character)))
+        .map(({ p }) => p),
+      options.where ?? (() => true),
+    );
+    const unconfirmed = (found: Position[]) => {
+      const have = new Set(found.map(key));
+      return unknown.filter((p) => !have.has(key(p)));
+    };
     const direct = (spans: Span[]) => spans.some((span) => declared.some((d) => !bases.has(`${d.file}:${d.nameLine}`) && resolvesTo(span, d, lines)));
     const viaBase = new Set(resolved.filter(({ p, spans }) => isOurs(p, spans) && !direct(spans)).map(({ p }) => key(p)));
     const found = await inCode(this.root, ours, options.where);
     const throughBase = found.filter((p) => viaBase.has(key(p)));
     // A Go method whose type is declared in another file has no parent, but is a method.
-    if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial, throughBase };
+    if (!options.viaSupertypes || (symbol.kind !== 'method' && !symbol.parent)) return { found, partial, throughBase, unconfirmed: unconfirmed(found) };
     const have = new Set(ours.map(key));
     const column = nameColumn(lines[symbol.line - 1] ?? '', symbol.name);
     const at = { file: symbol.file, line: symbol.line - 1, character: column };
@@ -304,7 +326,8 @@ export class LspService {
     const unique = new Map([...throughInterfaces, ...(await this.withoutSuperCalls(added))].map((p) => [key(p), p]));
     // What the server's search adds spans the whole hierarchy: through a base, too.
     const fromHierarchy = await inCode(this.root, [...unique.values()], options.where);
-    return { found: [...found, ...fromHierarchy], partial, throughBase: [...throughBase, ...fromHierarchy] };
+    const all = [...found, ...fromHierarchy];
+    return { found: all, partial, throughBase: [...throughBase, ...fromHierarchy], unconfirmed: unconfirmed(all) };
   }
 
   // [mentions] less `super.m()` calls, which the Dart server's search counts
@@ -598,16 +621,18 @@ async function defaultAliases(symbol: CodeSymbol, text: string, mentionsOf: (nam
 }
 
 /**
- * Of [unresolved] mentions of the member [symbol], those written on its
- * class as imported from the class's file, as `file:line:character`:
- * parse-server's `Config.validateOptions(options)` in ParseServer.ts,
- * whose project (`allowJs: false`) cannot read Config.js. By name when
- * the class is exported so, as the default when it is the default export.
+ * Of [unresolved] mentions of [symbol], those written on what is imported
+ * from its file, as `file:line:character`: a member on its class (by name
+ * when the class is exported so, as the default when it is the default
+ * export), a top-level export on the whole module (`import * as`). In
+ * parse-server's ParseServer.ts, whose project (`allowJs: false`) cannot
+ * read the JS it imports: `Config.validateOptions(options)`,
+ * `controllers.getControllers(options)`.
  */
 async function staticUses(root: string, symbol: CodeSymbol, text: string, unresolved: Mention[]): Promise<Set<string>> {
   const found = new Set<string>();
   const owner = symbol.parent?.slice(symbol.parent.indexOf('#') + 1) ?? '';
-  if (!owner || owner.includes('.') || unresolved.length === 0) return found;
+  if ((!owner && !symbol.exported) || owner.includes('.') || unresolved.length === 0) return found;
   const escaped = owner.replace(/[$]/g, '\\$');
   const byName = new RegExp(`\\bexport\\s+(?:abstract\\s+)?class\\s+${escaped}\\b|\\bexport\\s*\\{[^}]*\\b${escaped}\\b`).test(text);
   const asDefault = isDefaultExport(text, owner);
@@ -623,6 +648,11 @@ async function staticUses(root: string, symbol: CodeSymbol, text: string, unreso
       for (const [, clause = '', from = ''] of source.matchAll(/\bimport\s+([^;'"]*?)\s*from\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
         const module = join(dirname(m.file), from).replace(/\.[cm]?[jt]sx?$/, '');
         if (module !== target && `${module}/index` !== target) continue;
+        if (!owner) {
+          const whole = /^\*\s+as\s+([A-Za-z_$][\w$]*)$/.exec(clause.trim())?.[1];
+          if (whole) names.add(whole);
+          continue;
+        }
         const local = /^\s*(?:type\s+)?([A-Za-z_$][\w$]*)\s*(?:,|$)/.exec(clause)?.[1];
         if (asDefault && local) names.add(local);
         for (const part of /\{([^}]*)\}/.exec(clause)?.[1]?.split(',') ?? []) {

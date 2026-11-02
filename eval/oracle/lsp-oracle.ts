@@ -105,7 +105,7 @@ export class LspOracle {
 
   /** Where the name at [at] is declared, when that is inside the repo. */
   async resolve(at: Position): Promise<Span | undefined> {
-    return (await this.lsp.definition(at))[0];
+    return (await this.lsp.definition(at)).spans[0];
   }
 
   /**
@@ -202,7 +202,7 @@ export class LspOracle {
       const own = mention.file === declaration.file && mention.line === declaration.nameLine;
       if (own) continue;
       // An overloaded function resolves to all its signatures.
-      const spans = await this.lsp.definition(mention);
+      const { spans } = await this.lsp.definition(mention);
       if (spans.some((span) => resolvesTo(span, declared, lines))) refs.push(mention);
     }
     // One per line, in file order: a renamed import names the symbol twice on its line.

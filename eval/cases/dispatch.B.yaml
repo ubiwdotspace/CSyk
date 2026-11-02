@@ -122,3 +122,83 @@ cases:
     query: "service feedback pagination"
     expect:
       - { file: "src/dispatch/feedback/service/models.py", lines: [67, 69] }
+  - id: B31
+    query: "test storage plugin"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_test/storage.py", lines: [4, 39] }
+  - id: B32
+    query: "organization pagination"
+    expect:
+      - { file: "src/dispatch/organization/models.py", lines: [72, 74] }
+  - id: B33
+    query: "calc_score"
+    expect:
+      - { file: "src/dispatch/forms/scoring.py", lines: [4, 33] }
+  - id: B34
+    query: "onca_shift_feedback_emea"
+    expect:
+      - { file: "src/dispatch/feedback/service/scheduled.py", lines: [48, 54] }
+  - id: B35
+    query: "get all expired reminders by project id"
+    expect:
+      - { file: "src/dispatch/feedback/service/reminder/service.py", lines: [11, 22] }
+  - id: B36
+    query: "PlugEventBase"
+    expect:
+      - { file: "src/dispatch/plugin/models.py", lines: [176, 180] }
+  - id: B37
+    query: "crea_investigation"
+    expect:
+      - { file: "src/dispatch/plugins/bases/investigation_tooling.py", lines: [18, 28] }
+  - id: B38
+    query: "send case triage reminder"
+    expect:
+      - { file: "src/dispatch/case/messaging.py", lines: [86, 121] }
+  - id: B39
+    query: "case cost type update"
+    expect:
+      - { file: "src/dispatch/case_cost_type/models.py", lines: [52, 53] }
+  - id: B40
+    query: "add members"
+    expect:
+      - { file: "src/dispatch/storage/enums.py", lines: [5, 5] }
+  - id: B41
+    query: "send conversation message"
+    expect:
+      - { file: "src/dispatch/conversation/messaging.py", lines: [18, 34] }
+  - id: B42
+    query: "create forms type"
+    expect:
+      - { file: "src/dispatch/forms/type/views.py", lines: [41, 58] }
+  - id: B43
+    query: "reca_entity_flow"
+    expect:
+      - { file: "src/dispatch/entity_type/flows.py", lines: [10, 37] }
+  - id: B44
+    query: "incident expanded pagination"
+    expect:
+      - { file: "src/dispatch/incident/models.py", lines: [438, 443] }
+  - id: B45
+    query: "upda_entity_type"
+    expect:
+      - { file: "src/dispatch/entity_type/views.py", lines: [131, 158] }
+  - id: B46
+    query: "crea_boolean_dataframe"
+    expect:
+      - { file: "src/dispatch/tag/recommender.py", lines: [90, 104] }
+  - id: B47
+    query: "request id ctx key"
+    expect:
+      - { file: "src/dispatch/main.py", lines: [104, 104] }
+  - id: B48
+    query: "upda_signal_with_filters"
+    expect:
+      - { file: "src/dispatch/signal/views.py", lines: [423, 441] }
+  - id: B49
+    query: "secret_key"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_duo/config.py", lines: [11, 11] }
+  - id: B50
+    query: "did oncall just go off shift"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/plugin.py", lines: [88, 95] }

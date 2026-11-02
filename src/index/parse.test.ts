@@ -128,6 +128,26 @@ describe('extractSymbols for JavaScript', () => {
     ]);
   });
 
+  it('finds the functions of an object literal a top-level call is given or returned', async () => {
+    const source = [
+      "export const todos = createSlice({ name: 'todos', reducers: { addTodo(state) {}, clear: () => [] } });",
+      'expect.extend({ toBeNear(received) {} });',
+      'export const useStore = create()(immer((set) => ({ count: 0, increment: () => set({}) })));',
+      'export default defineComponent({ methods: { submit() {} } });',
+      "describe('todos', () => { const helper = { make() {} }; });",
+    ].join('\n');
+    const found = (await extractSymbols('store.ts', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}`);
+    expect(found).toEqual([
+      'const todos 1-1',
+      'method todos.addTodo 1-1',
+      'method todos.clear 1-1',
+      'function toBeNear 2-2',
+      'const useStore 3-3',
+      'method useStore.increment 3-3',
+      'function submit 4-4',
+    ]);
+  });
+
   it('finds the methods Object.assign copies onto a constructor or its prototype', async () => {
     const source = [
       'function Line() {}',

@@ -171,3 +171,120 @@ cases:
     direction: out
     expect:
       - { file: "src/Security/CheckRunner.js", lines: [182, 191] }
+  - id: D31
+    query: "handleCloudJob"
+    direction: in
+    expect:
+      - { file: "src/Routers/FunctionsRouter.js", lines: [65, 85] }
+      - { file: "src/Routers/FunctionsRouter.js", lines: [78, 80] }
+      - { file: "src/Routers/FunctionsRouter.js", lines: [82, 84] }
+  - id: D32
+    query: "handleLoginAttempt"
+    direction: out
+    expect:
+      - { file: "src/AccountLockout.js", lines: [80, 97] }
+      - { file: "src/AccountLockout.js", lines: [13, 23] }
+      - { file: "src/AccountLockout.js", lines: [104, 120] }
+  - id: D33
+    query: "getAuth"
+    direction: in
+    expect:
+      - { file: "src/ParseServerRESTController.js", lines: [33, 166] }
+      - { file: "src/ParseServerRESTController.js", lines: [126, 164] }
+  - id: D34
+    query: "expandFilesInObject"
+    direction: out
+    expect:
+      - { file: "src/Controllers/FilesController.js", lines: [73, 89] }
+      - { file: "src/Controllers/FilesController.js", lines: [91, 112] }
+  - id: D35
+    query: "getType"
+    direction: in
+    expect:
+      - { file: "src/Controllers/SchemaController.js", lines: [1022, 1093] }
+      - { file: "src/Controllers/SchemaController.js", lines: [1112, 1203] }
+      - { file: "src/Controllers/SchemaController.js", lines: [1286, 1335] }
+  - id: D36
+    query: "vkOAuth2Request"
+    direction: out
+    expect:
+      - { file: "src/Adapters/Auth/vkontakte.js", lines: [73, 75] }
+  - id: D37
+    query: "mongoSchemaFieldsToParseSchemaFields"
+    direction: in
+    expect:
+      - { file: "src/Adapters/Storage/Mongo/MongoSchemaCollection.js", lines: [95, 112] }
+  - id: D38
+    query: "loadSchemaIfNeeded"
+    direction: out
+    expect:
+      - { file: "src/Controllers/DatabaseController.js", lines: [512, 524] }
+  - id: D39
+    query: "restStatusHandler"
+    direction: in
+    expect:
+      - { file: "src/StatusHandler.js", lines: [131, 343] }
+  - id: D40
+    query: "modifySchema"
+    direction: out
+    expect:
+      - { file: "src/Error.js", lines: [13, 22] }
+      - { file: "src/Routers/SchemasRouter.js", lines: [39, 46] }
+      - { file: "src/Routers/SchemasRouter.js", lines: [10, 15] }
+      - { file: "src/Routers/SchemasRouter.js", lines: [61, 71] }
+  - id: D41
+    query: "requestTokenInfo"
+    direction: in
+    expect:
+      - { file: "src/Adapters/Auth/oauth2.js", lines: [75, 90] }
+      - { file: "src/Adapters/Auth/oauth2.js", lines: [92, 100] }
+  - id: D42
+    query: "_bodyParsingMiddleware"
+    direction: out
+    expect:
+      - { file: "src/Utils.js", lines: [554, 578] }
+  - id: D43
+    query: "isTransientError"
+    direction: in
+    expect:
+      - { file: "src/Adapters/Storage/Mongo/MongoStorageAdapter.js", lines: [281, 297] }
+  - id: D44
+    query: "applyAuthDataOptimisticLock"
+    direction: out
+    expect:
+      - { file: "src/AuthDataLock.js", lines: [35, 47] }
+  - id: D45
+    query: "composePageUrl"
+    direction: in
+    expect:
+      - { file: "src/Routers/PagesRouter.js", lines: [263, 318] }
+      - { file: "src/Routers/PagesRouter.js", lines: [305, 311] }
+  - id: D46
+    query: "mapperFor"
+    direction: out
+    expect:
+      - { file: "resources/buildConfigDefinitions.js", lines: [156, 156] }
+  - id: D47
+    query: "defaultPushChannel"
+    direction: in
+    expect:
+      - { file: "src/Push/PushQueue.js", lines: [9, 65] }
+      - { file: "src/Push/PushWorker.js", lines: [22, 99] }
+      - { file: "src/Push/PushQueue.js", lines: [16, 20] }
+      - { file: "src/Push/PushWorker.js", lines: [27, 41] }
+  - id: D48
+    query: "validateFileUrlsInObject"
+    direction: out
+    expect:
+      - { file: "src/FileUrlValidator.js", lines: [46, 66] }
+      - { file: "src/FileUrlValidator.js", lines: [9, 38] }
+  - id: D49
+    query: "resetParseServer"
+    direction: in
+    expect:
+      - { file: "benchmark/performance.js", lines: [873, 958] }
+  - id: D50
+    query: "parseOptions"
+    direction: out
+    expect:
+      - { file: "src/Controllers/LoggerController.js", lines: [177, 188] }

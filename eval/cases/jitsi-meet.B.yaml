@@ -122,3 +122,83 @@ cases:
     query: "AbstMuteEveryoneElsesVideoButton"
     expect:
       - { file: "react/features/video-menu/components/AbstractMuteEveryoneElsesVideoButton.ts", lines: [20, 37] }
+  - id: B31
+    query: "ReloadAudioFiles"
+    expect:
+      - { file: "react/features/base/sounds/middleware.any.ts", lines: [98, 115] }
+  - id: B32
+    query: "init settings"
+    expect:
+      - { file: "react/features/base/settings/reducer.ts", lines: [160, 184] }
+  - id: B33
+    query: "device id key"
+    expect:
+      - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [10, 10] }
+  - id: B34
+    query: "is enabled from state"
+    expect:
+      - { file: "react/features/av-moderation/functions.ts", lines: [36, 47] }
+  - id: B35
+    query: "is track streaming status inactive"
+    expect:
+      - { file: "react/features/connection-indicator/functions.ts", lines: [22, 26] }
+  - id: B36
+    query: "set pending subject change"
+    expect:
+      - { file: "react/features/base/conference/actionTypes.ts", lines: [327, 327] }
+  - id: B37
+    query: "EtherpadState"
+    expect:
+      - { file: "react/features/etherpad/reducer.ts", lines: [21, 24] }
+  - id: B38
+    query: "on reset private message recipient"
+    expect:
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [75, 83] }
+  - id: B39
+    query: "initial display name"
+    expect:
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [10, 10] }
+  - id: B40
+    query: "i pip state"
+    expect:
+      - { file: "react/features/pip/reducer.ts", lines: [13, 30] }
+  - id: B41
+    query: "ExternalAPIAvailable"
+    expect:
+      - { file: "react/features/mobile/react-native-sdk/functions.js", lines: [9, 13] }
+  - id: B42
+    query: "ScreenGallery"
+    expect:
+      - { file: "react/features/multi-screen/components/SecondScreenGallery.web.tsx", lines: [79, 201] }
+  - id: B43
+    query: "i custom option button"
+    expect:
+      - { file: "react/features/toolbox/components/native/CustomOptionButton.tsx", lines: [13, 19] }
+  - id: B44
+    query: "get calendar integration"
+    expect:
+      - { file: "react/features/calendar-sync/functions.web.ts", lines: [107, 114] }
+  - id: B45
+    query: "tab icon"
+    expect:
+      - { file: "react/features/welcome/components/TabIcon.tsx", lines: [26, 32] }
+  - id: B46
+    query: "set top panel visibility"
+    expect:
+      - { file: "react/features/filmstrip/actionTypes.ts", lines: [231, 231] }
+  - id: B47
+    query: "error notification keys"
+    expect:
+      - { file: "react/features/audio-translation/middleware.any.ts", lines: [26, 34] }
+  - id: B48
+    query: "overflow drawer padding"
+    expect:
+      - { file: "react/features/gifs/components/web/GifsMenu.tsx", lines: [26, 26] }
+  - id: B49
+    query: "InseRoomNameExpandedLabel"
+    expect:
+      - { file: "react/features/conference/components/native/InsecureRoomNameExpandedLabel.tsx", lines: [19, 37] }
+  - id: B50
+    query: "get last n for quality level"
+    expect:
+      - { file: "react/features/base/lastn/functions.ts", lines: [10, 24] }

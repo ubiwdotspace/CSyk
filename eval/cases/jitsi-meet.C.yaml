@@ -212,3 +212,166 @@ cases:
     expect:
       - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [259, 259] }
       - { file: "react/features/virtual-background/components/VirtualBackgroundPreview.tsx", lines: [279, 279] }
+  - id: C31
+    query: "ADD_PENDING_INVITE_REQUEST"
+    expect:
+      - { file: "react/features/invite/actions.any.ts", lines: [8, 8] }
+      - { file: "react/features/invite/actions.any.ts", lines: [282, 282] }
+      - { file: "react/features/invite/reducer.ts", lines: [4, 4] }
+      - { file: "react/features/invite/reducer.ts", lines: [49, 49] }
+  - id: C32
+    query: "ChatCounter"
+    expect:
+      - { file: "react/features/chat/components/web/ChatCounter.tsx", lines: [9, 9] }
+      - { file: "react/features/chat/components/web/ChatCounter.tsx", lines: [74, 74] }
+  - id: C33
+    query: "GifsMenuFooter"
+    expect:
+      - { file: "react/features/gifs/components/native/GifsMenu.tsx", lines: [14, 14] }
+      - { file: "react/features/gifs/components/native/GifsMenu.tsx", lines: [46, 46] }
+      - { file: "react/features/gifs/components/native/GifsMenuFooter.tsx", lines: [27, 27] }
+  - id: C34
+    query: "isLanguageSupported"
+    expect:
+      - { file: "react/features/base/sounds/middleware.any.ts", lines: [99, 99] }
+      - { file: "react/features/base/sounds/middleware.any.ts", lines: [100, 100] }
+  - id: C35
+    query: "filterSubtree"
+    expect:
+      - { file: "react/features/base/settings/reducer.ts", lines: [121, 121] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [124, 124] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [130, 130] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [131, 131] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [132, 132] }
+      - { file: "react/features/base/settings/reducer.ts", lines: [134, 134] }
+  - id: C36
+    query: "DEVICE_ID_KEY"
+    expect:
+      - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [19, 19] }
+      - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [34, 34] }
+      - { file: "react/features/analytics/handlers/amplitude/fixDeviceID.web.ts", lines: [45, 45] }
+  - id: C37
+    query: "WhiteboardStatus"
+    expect:
+      - { file: "react/features/whiteboard/actions.web.ts", lines: [7, 7] }
+      - { file: "react/features/whiteboard/actions.web.ts", lines: [43, 43] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [33, 33] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [147, 147] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [153, 153] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [159, 159] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [171, 171] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [174, 174] }
+      - { file: "react/features/whiteboard/middleware.web.ts", lines: [204, 204] }
+  - id: C38
+    query: "isEnabledFromState"
+    expect:
+      - { file: "modules/API/API.js", lines: [16, 16] }
+      - { file: "modules/API/API.js", lines: [1161, 1161] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [26, 26] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [39, 39] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [40, 40] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [60, 60] }
+      - { file: "react/features/av-moderation/actions.ts", lines: [79, 79] }
+      - { file: "react/features/av-moderation/functions.ts", lines: [55, 55] }
+      - { file: "react/features/av-moderation/functions.ts", lines: [156, 156] }
+      - { file: "react/features/av-moderation/functions.ts", lines: [172, 172] }
+      - { file: "react/features/av-moderation/functions.ts", lines: [186, 186] }
+      - { file: "react/features/av-moderation/middleware.ts", lines: [64, 64] }
+      - { file: "react/features/av-moderation/middleware.ts", lines: [145, 145] }
+      - { file: "react/features/settings/functions.any.ts", lines: [3, 3] }
+      - { file: "react/features/settings/functions.any.ts", lines: [188, 188] }
+      - { file: "react/features/settings/functions.any.ts", lines: [189, 189] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryoneDialog.ts", lines: [7, 7] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryoneDialog.ts", lines: [133, 133] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryonesDesktopDialog.ts", lines: [4, 4] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryonesDesktopDialog.ts", lines: [116, 116] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryonesVideoDialog.ts", lines: [4, 4] }
+      - { file: "react/features/video-menu/components/AbstractMuteEveryonesVideoDialog.ts", lines: [116, 116] }
+      - { file: "react/features/video-menu/components/AbstractMuteRemoteParticipantsDesktopDialog.ts", lines: [6, 6] }
+      - { file: "react/features/video-menu/components/AbstractMuteRemoteParticipantsDesktopDialog.ts", lines: [77, 77] }
+      - { file: "react/features/video-menu/components/AbstractMuteRemoteParticipantsVideoDialog.ts", lines: [6, 6] }
+      - { file: "react/features/video-menu/components/AbstractMuteRemoteParticipantsVideoDialog.ts", lines: [77, 77] }
+  - id: C39
+    query: "isTrackStreamingStatusInterrupted"
+    expect:
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [32, 32] }
+      - { file: "modules/UI/videolayout/LargeVideoManager.js", lines: [652, 652] }
+      - { file: "react/features/connection-indicator/components/native/ConnectionIndicator.tsx", lines: [20, 20] }
+      - { file: "react/features/connection-indicator/components/native/ConnectionIndicator.tsx", lines: [191, 191] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicator.tsx", lines: [25, 25] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicator.tsx", lines: [391, 391] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicatorContent.tsx", lines: [22, 22] }
+      - { file: "react/features/connection-indicator/components/web/ConnectionIndicatorContent.tsx", lines: [358, 358] }
+      - { file: "react/features/video-menu/components/native/ConnectionStatusComponent.tsx", lines: [22, 22] }
+      - { file: "react/features/video-menu/components/native/ConnectionStatusComponent.tsx", lines: [467, 467] }
+  - id: C40
+    query: "CONFERENCE_BLURRED"
+    expect:
+      - { file: "react/features/conference/components/native/Conference.tsx", lines: [15, 15] }
+      - { file: "react/features/conference/components/native/Conference.tsx", lines: [628, 628] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [13, 13] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [173, 173] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [174, 174] }
+      - { file: "react/features/mobile/react-native-sdk/middleware.js", lines: [6, 6] }
+      - { file: "react/features/mobile/react-native-sdk/middleware.js", lines: [98, 98] }
+  - id: C41
+    query: "IEtherpadState"
+    expect:
+      - { file: "react/features/app/types.ts", lines: [40, 40] }
+      - { file: "react/features/app/types.ts", lines: [134, 134] }
+      - { file: "react/features/etherpad/reducer.ts", lines: [29, 29] }
+      - { file: "react/features/etherpad/reducer.ts", lines: [31, 31] }
+  - id: C42
+    query: "_onResetLobbyMessageRecipient"
+    expect:
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [56, 56] }
+      - { file: "react/features/chat/components/native/MessageRecipient.tsx", lines: [113, 113] }
+  - id: C43
+    query: "INITIAL_DISPLAY_NAME"
+    expect:
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [47, 47] }
+      - { file: "react/features/display-name/components/web/DisplayNamePrompt.tsx", lines: [48, 48] }
+  - id: C44
+    query: "getDisabledSounds"
+    expect:
+      - { file: "react/features/base/sounds/actions.ts", lines: [15, 15] }
+      - { file: "react/features/base/sounds/actions.ts", lines: [73, 73] }
+      - { file: "react/features/reactions/middleware.ts", lines: [19, 19] }
+      - { file: "react/features/reactions/middleware.ts", lines: [139, 139] }
+  - id: C45
+    query: "ProfileButton"
+    expect:
+      - { file: "react/features/toolbox/components/web/ProfileButton.ts", lines: [16, 16] }
+      - { file: "react/features/toolbox/components/web/ProfileButton.ts", lines: [116, 116] }
+  - id: C46
+    query: "IPipState"
+    expect:
+      - { file: "react/features/app/types.ts", lines: [63, 63] }
+      - { file: "react/features/app/types.ts", lines: [156, 156] }
+      - { file: "react/features/pip/reducer.ts", lines: [35, 35] }
+  - id: C47
+    query: "isExternalAPIAvailable"
+    expect:
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [68, 68] }
+      - { file: "react/features/mobile/external-api/middleware.ts", lines: [114, 114] }
+      - { file: "react/features/mobile/react-native-sdk/middleware.js", lines: [23, 23] }
+      - { file: "react/features/mobile/react-native-sdk/middleware.js", lines: [26, 26] }
+  - id: C48
+    query: "STORE_SUBTITLE"
+    expect:
+      - { file: "react/features/subtitles/actions.any.ts", lines: [8, 8] }
+      - { file: "react/features/subtitles/actions.any.ts", lines: [131, 131] }
+      - { file: "react/features/subtitles/reducer.ts", lines: [9, 9] }
+      - { file: "react/features/subtitles/reducer.ts", lines: [72, 72] }
+  - id: C49
+    query: "SecondScreenGallery"
+    expect:
+      - { file: "react/features/multi-screen/components/SecondScreenGallery.web.tsx", lines: [11, 11] }
+      - { file: "react/features/multi-screen/components/SecondScreenGallery.web.tsx", lines: [203, 203] }
+  - id: C50
+    query: "OPEN_DIALOG"
+    expect:
+      - { file: "react/features/base/dialog/actions.ts", lines: [8, 8] }
+      - { file: "react/features/base/dialog/actions.ts", lines: [66, 66] }
+      - { file: "react/features/base/dialog/reducer.ts", lines: [9, 9] }
+      - { file: "react/features/base/dialog/reducer.ts", lines: [43, 43] }

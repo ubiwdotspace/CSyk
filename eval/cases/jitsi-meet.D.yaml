@@ -194,3 +194,118 @@ cases:
     expect:
       - { file: "react/features/base/responsive-ui/functions.ts", lines: [14, 21] }
       - { file: "react/features/video-layout/functions.any.ts", lines: [64, 121] }
+  - id: D31
+    query: "DocumentPiPContent"
+    direction: in
+    expect:
+      - { file: "react/features/pip/components/PiP.tsx", lines: [25, 46] }
+  - id: D32
+    query: "clientResized"
+    direction: out
+    expect:
+      - { file: "react/features/base/responsive-ui/actions.ts", lines: [146, 160] }
+      - { file: "react/features/base/responsive-ui/actions.ts", lines: [100, 133] }
+      - { file: "react/features/participants-pane/functions.ts", lines: [324, 332] }
+  - id: D33
+    query: "requestLiveStreamsForYouTubeBroadcast"
+    direction: in
+    expect:
+      - { file: "react/features/recording/components/LiveStream/web/StartLiveStreamDialog.tsx", lines: [201, 210] }
+  - id: D34
+    query: "toggleSharedVideo"
+    direction: out
+    expect:
+      - { file: "react/features/shared-video/actions.ts", lines: [93, 103] }
+      - { file: "react/features/shared-video/actions.ts", lines: [83, 85] }
+      - { file: "react/features/shared-video/actions.ts", lines: [113, 134] }
+  - id: D35
+    query: "renderNotificationsContainer"
+    direction: in
+    expect:
+      - { file: "react/features/conference/components/web/Conference.tsx", lines: [237, 344] }
+      - { file: "react/features/conference/components/native/Conference.tsx", lines: [541, 567] }
+  - id: D36
+    query: "_libWillInit"
+    direction: out
+    expect:
+      - { file: "react/features/base/logging/middleware.ts", lines: [294, 305] }
+  - id: D37
+    query: "createSection"
+    direction: in
+    expect:
+      - { file: "react/features/calendar-sync/components/CalendarListContent.native.tsx", lines: [200, 239] }
+      - { file: "react/features/calendar-sync/components/CalendarListContent.native.tsx", lines: [230, 231] }
+      - { file: "react/features/recent-list/functions.native.ts", lines: [100, 147] }
+      - { file: "react/features/recent-list/functions.native.ts", lines: [104, 105] }
+      - { file: "react/features/recent-list/functions.native.ts", lines: [106, 107] }
+  - id: D38
+    query: "stopDetection"
+    direction: out
+    expect:
+      - { file: "react/features/face-landmarks/FaceLandmarksDetector.ts", lines: [74, 76] }
+      - { file: "react/features/face-landmarks/FaceLandmarksDetector.ts", lines: [279, 297] }
+  - id: D39
+    query: "useWhiteboardButton"
+    direction: in
+    expect:
+      - { file: "react/features/toolbox/hooks.web.ts", lines: [286, 379] }
+  - id: D40
+    query: "RenameButton"
+    direction: out
+    expect:
+      - { file: "react/features/base/dialog/actions.ts", lines: [62, 70] }
+  - id: D41
+    query: "detectChinese"
+    direction: in
+    expect:
+      - { file: "react/features/base/i18n/languageDetector.native.ts", lines: [35, 58] }
+  - id: D42
+    query: "_onClientRequirements"
+    direction: out
+    expect:
+      - { file: "react/features/notifications/actions.ts", lines: [101, 106] }
+      - { file: "react/features/notifications/actions.ts", lines: [165, 171] }
+  - id: D43
+    query: "_setPasswordFailed"
+    direction: in
+    expect:
+      - { file: "react/features/room-lock/middleware.ts", lines: [1, 150] }
+      - { file: "react/features/room-lock/middleware.ts", lines: [28, 62] }
+  - id: D44
+    query: "_parseQueryResults"
+    direction: out
+    expect:
+      - { file: "react/features/invite/components/add-people-dialog/web/InviteContactsForm.tsx", lines: [302, 313] }
+      - { file: "react/features/invite/components/add-people-dialog/web/InviteContactsForm.tsx", lines: [483, 487] }
+  - id: D45
+    query: "_clearNotificationDismissTimeout"
+    direction: in
+    expect:
+      - { file: "react/features/notifications/components/native/NotificationsContainer.tsx", lines: [103, 132] }
+      - { file: "react/features/notifications/components/native/NotificationsContainer.tsx", lines: [139, 141] }
+      - { file: "react/features/notifications/components/native/NotificationsContainer.tsx", lines: [162, 173] }
+  - id: D46
+    query: "_initializeKRnnoise"
+    direction: out
+    expect:
+      - { file: "react/features/base/util/helpers.ts", lines: [49, 60] }
+  - id: D47
+    query: "submitVideoDeviceSelectionTab"
+    direction: in
+    expect:
+      - { file: "react/features/settings/components/web/SettingsDialog.tsx", lines: [131, 372] }
+  - id: D48
+    query: "_onJoinPress"
+    direction: out
+    expect:
+      - { file: "react/features/calendar-sync/components/CalendarListContent.web.tsx", lines: [136, 159] }
+  - id: D49
+    query: "setScreenshareAudioTrack"
+    direction: in
+    expect:
+      - { file: "react/features/base/tracks/actions.web.ts", lines: [122, 259] }
+  - id: D50
+    query: "_updateSettings"
+    direction: out
+    expect:
+      - { file: "react/features/base/settings/actions.ts", lines: [27, 32] }

@@ -466,3 +466,314 @@ cases:
       - { file: "examples/lib/stories/image/image.dart", lines: [9, 60] }
       - { file: "examples/lib/main.dart", lines: [81, 146] }
       - { file: "examples/lib/main.dart", lines: [52, 79] }
+  - id: G31
+    query: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart:183"
+    expect:
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [177, 193] }
+      - { file: "examples/lib/stories/sprites/sprite_batch_bleed_example.dart", lines: [30, 175] }
+      - { file: "packages/flame_forge2d/lib/forge2d_game.dart", lines: [9, 102] }
+      - { file: "packages/flame_forge2d/test/length_units_per_meter_test.dart", lines: [16, 65] }
+      - { file: "packages/flame_3d_component/lib/src/component_3d.dart", lines: [28, 127] }
+      - { file: "packages/flame/test/components/input/sprite_button_component_test.dart", lines: [448, 462] }
+      - { file: "packages/flame/lib/src/components/input/hud_button_component.dart", lines: [10, 31] }
+      - { file: "packages/flame/lib/src/components/input/advanced_button_component.dart", lines: [18, 260] }
+      - { file: "packages/flame/lib/src/components/input/toggle_button_component.dart", lines: [12, 166] }
+      - { file: "packages/flame/lib/src/components/icon_component.dart", lines: [29, 228] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [72, 1509] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [816, 816] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [251, 259] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1179, 1185] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [586, 586] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1276, 1286] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [198, 198] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [204, 204] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [559, 559] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1151, 1174] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [270, 275] }
+      - { file: "packages/flame/lib/src/components/core/component_tree_root.dart", lines: [217, 219] }
+      - { file: "packages/flame_riverpod/example/lib/main.dart", lines: [93, 104] }
+      - { file: "packages/flame/lib/src/post_process/post_process.dart", lines: [70, 70] }
+      - { file: "packages/flame/lib/src/components/input/sprite_button_component.dart", lines: [19, 90] }
+      - { file: "packages/flame/lib/src/components/input/button_component.dart", lines: [10, 80] }
+      - { file: "packages/flame_tiled/test/image_layer_test.dart", lines: [9, 54] }
+      - { file: "packages/flame/lib/src/game/game.dart", lines: [23, 512] }
+      - { file: "packages/flame/lib/src/game/game.dart", lines: [281, 281] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/quadtree/has_quadtree_collision_detection.dart", lines: [19, 87] }
+      - { file: "packages/flame/lib/src/game/game_widget/game_widget.dart", lines: [48, 207] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [241, 292] }
+  - id: G32
+    query: "packages/flame_studio/lib/src/core/gizmo/canvas_mapping.dart:120 packages/flame_studio/lib/src/core/gizmo/canvas_mapping.dart:36"
+    expect:
+      - { file: "packages/flame_studio/lib/src/core/gizmo/canvas_mapping.dart", lines: [100, 121] }
+      - { file: "packages/flame_studio/lib/src/core/gizmo/canvas_mapping.dart", lines: [24, 62] }
+      - { file: "packages/flame_studio/lib/src/core/gizmo/rotate_drag.dart", lines: [35, 56] }
+      - { file: "packages/flame_studio/lib/src/core/gizmo/move_drag.dart", lines: [36, 64] }
+      - { file: "packages/flame_studio/test/gizmo_test.dart", lines: [9, 140] }
+      - { file: "packages/flame_studio/lib/src/core/gizmo/gizmo_geometry.dart", lines: [57, 93] }
+      - { file: "packages/flame_studio/test/rotate_scale_drag_test.dart", lines: [11, 179] }
+      - { file: "packages/flame_studio/lib/src/widgets/viewport/viewport_tool_layer.dart", lines: [164, 226] }
+      - { file: "packages/flame_studio/test/move_drag_test.dart", lines: [9, 178] }
+      - { file: "packages/flame_studio/lib/src/core/gizmo/gizmo_geometry.dart", lines: [51, 55] }
+  - id: G33
+    query: "examples/lib/stories/parallax/parallax.dart:100"
+    expect:
+      - { file: "examples/lib/stories/parallax/parallax.dart", lines: [15, 102] }
+      - { file: "examples/lib/main.dart", lines: [81, 146] }
+      - { file: "examples/lib/main.dart", lines: [52, 79] }
+  - id: G34
+    query: "packages/flame/lib/src/cache/value_cache.dart:23"
+    expect:
+      - { file: "packages/flame/lib/src/cache/value_cache.dart", lines: [21, 25] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1470, 1480] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1484, 1504] }
+      - { file: "packages/flame/lib/src/geometry/path_component.dart", lines: [106, 137] }
+      - { file: "packages/flame_steering_behaviors/test/helpers/steerable_entity.dart", lines: [14, 18] }
+      - { file: "packages/flame_steering_behaviors/lib/src/mixins/steering.dart", lines: [25, 31] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/flee_behavior.dart", lines: [29, 32] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/pursue_behavior.dart", lines: [29, 36] }
+      - { file: "packages/flame/lib/src/camera/viewports/circular_viewport.dart", lines: [43, 45] }
+      - { file: "packages/flame/lib/src/components/position_component.dart", lines: [487, 516] }
+      - { file: "packages/flame/lib/src/geometry/polygon_component.dart", lines: [266, 269] }
+      - { file: "packages/flame/lib/src/geometry/circle_component.dart", lines: [89, 92] }
+      - { file: "packages/flame/lib/src/geometry/path_component.dart", lines: [153, 156] }
+      - { file: "packages/flame/lib/src/geometry/path_component.dart", lines: [192, 214] }
+      - { file: "packages/flame/lib/src/geometry/path_component.dart", lines: [179, 181] }
+      - { file: "packages/flame/lib/src/collisions/hitboxes/path_hitbox.dart", lines: [56, 80] }
+      - { file: "packages/flame/lib/src/collisions/hitboxes/path_hitbox.dart", lines: [92, 123] }
+      - { file: "packages/flame/lib/src/geometry/shape_intersections.dart", lines: [80, 82] }
+  - id: G35
+    query: "examples/lib/stories/bridge_libraries/flame_lottie/lottie.dart:12"
+    expect:
+      - { file: "examples/lib/stories/bridge_libraries/flame_lottie/lottie.dart", lines: [7, 23] }
+      - { file: "examples/lib/main.dart", lines: [81, 146] }
+      - { file: "examples/lib/main.dart", lines: [52, 79] }
+  - id: G36
+    query: "packages/flame/lib/src/widgets/sprite_painter.dart:29 packages/flame/lib/src/widgets/sprite_painter.dart:16"
+    expect:
+      - { file: "packages/flame/lib/src/widgets/sprite_painter.dart", lines: [23, 47] }
+      - { file: "packages/flame/lib/src/widgets/sprite_painter.dart", lines: [15, 20] }
+      - { file: "packages/flame/test/components/custom_painter_component_test.dart", lines: [9, 23] }
+      - { file: "packages/flame/lib/src/components/custom_painter_component.dart", lines: [26, 28] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [160, 167] }
+      - { file: "packages/flame/benchmark/children_traversal_benchmark.dart", lines: [52, 62] }
+      - { file: "packages/flame/benchmark/culling_benchmark.dart", lines: [59, 65] }
+      - { file: "packages/flame/benchmark/render_components_benchmark.dart", lines: [46, 50] }
+      - { file: "packages/flame/test/camera/camera_component_test.dart", lines: [15, 657] }
+      - { file: "packages/flame/test/camera/viewfinder_test.dart", lines: [10, 284] }
+      - { file: "packages/flame/test/components/component_render_context_test.dart", lines: [8, 80] }
+      - { file: "packages/flame/test/components/mixins/cull_when_offscreen_test.dart", lines: [12, 681] }
+      - { file: "packages/flame/test/components/mixins/snapshot_test.dart", lines: [10, 171] }
+      - { file: "packages/flame/test/components/mixins/cull_bounds_children_test.dart", lines: [10, 385] }
+      - { file: "packages/flame/test/components/priority_test.dart", lines: [9, 260] }
+      - { file: "packages/flame/test/components/widget_component_test.dart", lines: [97, 603] }
+      - { file: "packages/flame/test/components/text_box_component_test.dart", lines: [8, 424] }
+      - { file: "packages/flame/lib/src/devtools/connectors/game_snapshot_connector.dart", lines: [123, 144] }
+      - { file: "packages/flame_tiled/benchmark/tile_layer_benchmark.dart", lines: [73, 89] }
+      - { file: "packages/flame_tiled/test/tile_layer_culling_test.dart", lines: [102, 102] }
+      - { file: "packages/flame_tiled/test/test_image_utils.dart", lines: [45, 54] }
+      - { file: "packages/flame_forge2d/lib/body_component.dart", lines: [189, 205] }
+      - { file: "packages/flame_forge2d/test/body_component_test.dart", lines: [27, 690] }
+      - { file: "packages/flame_3d_component/test/component_3d_test.dart", lines: [36, 137] }
+      - { file: "packages/flame/test/particles/particle_emitter_component_test.dart", lines: [28, 386] }
+      - { file: "packages/flame_tiled/lib/src/renderable_tile_map.dart", lines: [57, 666] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [730, 755] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [72, 1509] }
+      - { file: "packages/flame/benchmark/children_traversal_benchmark.dart", lines: [30, 63] }
+  - id: G37
+    query: "packages/flame_cli/lib/src/game_responses.dart:293"
+    expect:
+      - { file: "packages/flame_cli/lib/src/game_responses.dart", lines: [290, 296] }
+      - { file: "packages/flame_cli/test/game_responses_test.dart", lines: [6, 86] }
+      - { file: "packages/flame_cli/lib/src/commands/snapshot_command.dart", lines: [161, 250] }
+      - { file: "packages/flame_cli/test/snapshot_command_test.dart", lines: [42, 45] }
+      - { file: "packages/flame_cli/lib/src/commands/flame_command.dart", lines: [45, 62] }
+  - id: G38
+    query: "packages/flame_3d/lib/src/game/notifying_quaternion.dart:132 packages/flame_3d/lib/src/game/notifying_quaternion.dart:83"
+    expect:
+      - { file: "packages/flame_3d/lib/src/game/notifying_quaternion.dart", lines: [130, 133] }
+      - { file: "packages/flame_3d/lib/src/game/notifying_quaternion.dart", lines: [81, 84] }
+      - { file: "packages/flame_3d/lib/src/game/notifying_quaternion.dart", lines: [28, 29] }
+  - id: G39
+    query: "packages/flame/lib/src/devtools/connectors/component_tree_connector.dart:47"
+    expect:
+      - { file: "packages/flame/lib/src/devtools/connectors/component_tree_connector.dart", lines: [13, 54] }
+      - { file: "packages/flame/lib/src/devtools/dev_tools_connector.dart", lines: [15, 61] }
+  - id: G40
+    query: "packages/flame/lib/src/parallax.dart:399"
+    expect:
+      - { file: "packages/flame/lib/src/parallax.dart", lines: [387, 404] }
+      - { file: "packages/flame/lib/src/parallax.dart", lines: [510, 549] }
+      - { file: "packages/flame/lib/src/parallax.dart", lines: [342, 363] }
+      - { file: "packages/flame/lib/src/parallax.dart", lines: [14, 37] }
+      - { file: "packages/flame/lib/src/components/parallax_component.dart", lines: [149, 188] }
+      - { file: "packages/flame/lib/src/parallax.dart", lines: [79, 98] }
+  - id: G41
+    query: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_chunk.dart:81 packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_chunk.dart:66"
+    expect:
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_chunk.dart", lines: [79, 85] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_chunk.dart", lines: [55, 76] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_layer.dart", lines: [154, 166] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/tile_layer.dart", lines: [271, 317] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [160, 167] }
+      - { file: "packages/flame/benchmark/children_traversal_benchmark.dart", lines: [52, 62] }
+      - { file: "packages/flame/benchmark/culling_benchmark.dart", lines: [59, 65] }
+      - { file: "packages/flame/benchmark/render_components_benchmark.dart", lines: [46, 50] }
+      - { file: "packages/flame/test/camera/camera_component_test.dart", lines: [15, 657] }
+      - { file: "packages/flame/test/camera/viewfinder_test.dart", lines: [10, 284] }
+      - { file: "packages/flame/test/components/component_render_context_test.dart", lines: [8, 80] }
+      - { file: "packages/flame/test/components/mixins/cull_when_offscreen_test.dart", lines: [12, 681] }
+      - { file: "packages/flame/test/components/mixins/snapshot_test.dart", lines: [10, 171] }
+      - { file: "packages/flame/test/components/mixins/cull_bounds_children_test.dart", lines: [10, 385] }
+      - { file: "packages/flame/test/components/priority_test.dart", lines: [9, 260] }
+      - { file: "packages/flame/test/components/widget_component_test.dart", lines: [97, 603] }
+      - { file: "packages/flame/test/components/text_box_component_test.dart", lines: [8, 424] }
+      - { file: "packages/flame/lib/src/devtools/connectors/game_snapshot_connector.dart", lines: [123, 144] }
+      - { file: "packages/flame_tiled/benchmark/tile_layer_benchmark.dart", lines: [73, 89] }
+      - { file: "packages/flame_tiled/test/tile_layer_culling_test.dart", lines: [102, 102] }
+      - { file: "packages/flame_tiled/test/test_image_utils.dart", lines: [45, 54] }
+      - { file: "packages/flame_forge2d/lib/body_component.dart", lines: [189, 205] }
+      - { file: "packages/flame_forge2d/test/body_component_test.dart", lines: [27, 690] }
+      - { file: "packages/flame_3d_component/test/component_3d_test.dart", lines: [36, 137] }
+      - { file: "packages/flame/test/particles/particle_emitter_component_test.dart", lines: [28, 386] }
+      - { file: "packages/flame/test/components/custom_painter_component_test.dart", lines: [9, 23] }
+      - { file: "packages/flame_tiled/lib/src/renderable_tile_map.dart", lines: [57, 666] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [730, 755] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [72, 1509] }
+      - { file: "packages/flame/benchmark/children_traversal_benchmark.dart", lines: [30, 63] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/staggered_tile_layer.dart", lines: [22, 144] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/orthogonal_tile_layer.dart", lines: [22, 81] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/hexagonal_tile_layer.dart", lines: [23, 143] }
+      - { file: "packages/flame_tiled/lib/src/renderable_layers/tile_layers/isometric_tile_layer.dart", lines: [22, 82] }
+  - id: G42
+    query: "packages/flame_jenny/jenny/lib/src/localization.dart:119 packages/flame_jenny/jenny/lib/src/localization.dart:102"
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/src/localization.dart", lines: [114, 125] }
+      - { file: "packages/flame_jenny/jenny/lib/src/localization.dart", lines: [98, 103] }
+      - { file: "packages/flame_jenny/jenny/lib/src/localization.dart", lines: [1, 152] }
+  - id: G43
+    query: "packages/flame_steering_behaviors/lib/src/steering/wander.dart:42"
+    expect:
+      - { file: "packages/flame_steering_behaviors/lib/src/steering/wander.dart", lines: [34, 49] }
+      - { file: "packages/flame_steering_behaviors/test/src/steering/pursue_test.dart", lines: [8, 39] }
+      - { file: "packages/flame_steering_behaviors/test/src/steering/separation_test.dart", lines: [8, 76] }
+      - { file: "packages/flame_steering_behaviors/test/src/steering/wander_test.dart", lines: [13, 112] }
+      - { file: "packages/flame_steering_behaviors/test/src/steering/flee_test.dart", lines: [8, 42] }
+      - { file: "packages/flame_steering_behaviors/test/src/mixins/steering_test.dart", lines: [16, 97] }
+      - { file: "packages/flame_steering_behaviors/lib/src/mixins/steering.dart", lines: [14, 21] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/wander_behavior.dart", lines: [25, 36] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/flee_behavior.dart", lines: [20, 26] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/pursue_behavior.dart", lines: [20, 26] }
+      - { file: "packages/flame_steering_behaviors/lib/src/behaviors/separation_behavior.dart", lines: [18, 27] }
+  - id: G44
+    query: "examples/lib/stories/camera_and_viewport/follow_component_example.dart:90"
+    expect:
+      - { file: "examples/lib/stories/camera_and_viewport/follow_component_example.dart", lines: [87, 100] }
+      - { file: "packages/flame_behaviors/lib/src/behaviors/propagating_collision_behavior.dart", lines: [83, 90] }
+      - { file: "packages/flame/lib/src/collisions/hitboxes/shape_hitbox.dart", lines: [245, 256] }
+      - { file: "packages/flame/lib/src/collisions/collision_passthrough.dart", lines: [32, 38] }
+      - { file: "packages/flame/lib/src/collisions/standard_collision_detection.dart", lines: [35, 42] }
+      - { file: "packages/flame/lib/src/collisions/collision_callbacks.dart", lines: [63, 66] }
+      - { file: "packages/flame_forge2d/lib/forge2d_game.dart", lines: [9, 102] }
+      - { file: "packages/flame_forge2d/test/length_units_per_meter_test.dart", lines: [16, 65] }
+      - { file: "packages/flame_3d_component/lib/src/component_3d.dart", lines: [28, 127] }
+      - { file: "packages/flame/test/components/input/sprite_button_component_test.dart", lines: [448, 462] }
+      - { file: "packages/flame/lib/src/components/input/hud_button_component.dart", lines: [10, 31] }
+      - { file: "packages/flame/lib/src/components/input/advanced_button_component.dart", lines: [18, 260] }
+      - { file: "packages/flame/lib/src/components/input/toggle_button_component.dart", lines: [12, 166] }
+      - { file: "packages/flame/lib/src/components/icon_component.dart", lines: [29, 228] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [72, 1509] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [816, 816] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [251, 259] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1179, 1185] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [586, 586] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1276, 1286] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [198, 198] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [204, 204] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [559, 559] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1151, 1174] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [270, 275] }
+      - { file: "packages/flame/lib/src/components/core/component_tree_root.dart", lines: [217, 219] }
+      - { file: "packages/flame_riverpod/example/lib/main.dart", lines: [93, 104] }
+      - { file: "packages/flame/lib/src/post_process/post_process.dart", lines: [70, 70] }
+      - { file: "packages/flame/lib/src/components/input/sprite_button_component.dart", lines: [19, 90] }
+      - { file: "packages/flame/lib/src/components/input/button_component.dart", lines: [10, 80] }
+      - { file: "packages/flame_tiled/test/image_layer_test.dart", lines: [9, 54] }
+      - { file: "packages/flame/lib/src/collisions/collision_detection.dart", lines: [33, 70] }
+  - id: G45
+    query: "packages/flame/lib/src/components/router/world_route.dart:54"
+    expect:
+      - { file: "packages/flame/lib/src/components/router/world_route.dart", lines: [46, 59] }
+      - { file: "packages/flame/lib/src/components/router/world_route.dart", lines: [42, 42] }
+      - { file: "packages/flame/lib/src/components/router/route.dart", lines: [69, 69] }
+      - { file: "packages/flame/lib/src/components/router/route.dart", lines: [130, 134] }
+      - { file: "packages/flame/lib/src/components/router/route.dart", lines: [138, 144] }
+      - { file: "packages/flame/lib/src/components/router/router_component.dart", lines: [138, 152] }
+      - { file: "packages/flame/lib/src/components/router/router_component.dart", lines: [163, 165] }
+      - { file: "packages/flame/lib/src/components/router/router_component.dart", lines: [296, 302] }
+      - { file: "packages/flame/lib/src/components/router/router_component.dart", lines: [127, 129] }
+      - { file: "packages/flame/lib/src/components/router/router_component.dart", lines: [98, 115] }
+      - { file: "packages/flame/lib/src/components/router/route.dart", lines: [151, 157] }
+  - id: G46
+    query: "packages/flame_console/lib/src/commands/debug_command.dart:10"
+    expect:
+      - { file: "packages/flame_console/lib/src/commands/debug_command.dart", lines: [7, 12] }
+      - { file: "packages/flame_console/lib/src/commands/commands.dart", lines: [60, 72] }
+      - { file: "packages/flame_console/test/src/debug_command_test.dart", lines: [7, 35] }
+      - { file: "packages/flame_console/test/src/pause_command_test.dart", lines: [6, 38] }
+      - { file: "packages/flame_console/test/src/resume_command_test.dart", lines: [6, 38] }
+  - id: G47
+    query: "packages/flame_texturepacker/lib/src/texture_packer_parser.dart:124"
+    expect:
+      - { file: "packages/flame_texturepacker/lib/src/texture_packer_parser.dart", lines: [119, 145] }
+      - { file: "packages/flame_texturepacker/lib/src/texture_packer_parser.dart", lines: [20, 89] }
+      - { file: "packages/flame_texturepacker/lib/src/texture_packer_atlas.dart", lines: [91, 124] }
+  - id: G48
+    query: "packages/flame/lib/src/rendering/decorator.dart:90"
+    expect:
+      - { file: "packages/flame/lib/src/rendering/decorator.dart", lines: [85, 93] }
+      - { file: "doc/flame/examples/lib/decorator_blur.dart", lines: [7, 29] }
+      - { file: "doc/flame/examples/lib/decorator_tint.dart", lines: [9, 35] }
+      - { file: "doc/flame/examples/lib/decorator_grayscale.dart", lines: [7, 31] }
+      - { file: "doc/flame/examples/lib/decorator_hue.dart", lines: [9, 31] }
+      - { file: "packages/flame_forge2d/lib/forge2d_game.dart", lines: [9, 102] }
+      - { file: "packages/flame_forge2d/test/length_units_per_meter_test.dart", lines: [16, 65] }
+      - { file: "packages/flame_3d_component/lib/src/component_3d.dart", lines: [28, 127] }
+      - { file: "packages/flame/test/components/input/sprite_button_component_test.dart", lines: [448, 462] }
+      - { file: "packages/flame/lib/src/components/input/hud_button_component.dart", lines: [10, 31] }
+      - { file: "packages/flame/lib/src/components/input/advanced_button_component.dart", lines: [18, 260] }
+      - { file: "packages/flame/lib/src/components/input/toggle_button_component.dart", lines: [12, 166] }
+      - { file: "packages/flame/lib/src/components/icon_component.dart", lines: [29, 228] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [72, 1509] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [816, 816] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [251, 259] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1179, 1185] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [586, 586] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1276, 1286] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [198, 198] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [204, 204] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [559, 559] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [1151, 1174] }
+      - { file: "packages/flame/lib/src/components/core/component.dart", lines: [270, 275] }
+      - { file: "packages/flame/lib/src/components/core/component_tree_root.dart", lines: [217, 219] }
+      - { file: "packages/flame_riverpod/example/lib/main.dart", lines: [93, 104] }
+      - { file: "packages/flame/lib/src/post_process/post_process.dart", lines: [70, 70] }
+      - { file: "packages/flame/lib/src/components/input/sprite_button_component.dart", lines: [19, 90] }
+      - { file: "packages/flame/lib/src/components/input/button_component.dart", lines: [10, 80] }
+      - { file: "packages/flame_tiled/test/image_layer_test.dart", lines: [9, 54] }
+      - { file: "packages/flame/lib/src/game/game.dart", lines: [23, 512] }
+      - { file: "packages/flame/lib/src/game/game.dart", lines: [281, 281] }
+      - { file: "packages/flame/lib/src/collisions/broadphase/quadtree/has_quadtree_collision_detection.dart", lines: [19, 87] }
+      - { file: "packages/flame/lib/src/game/game_widget/game_widget.dart", lines: [48, 207] }
+      - { file: "packages/flame/lib/src/game/flame_game.dart", lines: [241, 292] }
+  - id: G49
+    query: "packages/flame_jenny/jenny/lib/src/structure/expressions/functions/round_places.dart:18"
+    expect:
+      - { file: "packages/flame_jenny/jenny/lib/src/structure/expressions/functions/round_places.dart", lines: [10, 37] }
+      - { file: "packages/flame_jenny/jenny/lib/src/structure/expressions/functions/_common.dart", lines: [1, 77] }
+  - id: G50
+    query: "packages/flame_3d/lib/src/model/model_node.dart:56 packages/flame_3d/lib/src/model/model_node.dart:91"
+    expect:
+      - { file: "packages/flame_3d/lib/src/model/model_node.dart", lines: [38, 61] }
+      - { file: "packages/flame_3d/lib/src/model/model_node.dart", lines: [63, 98] }
+      - { file: "packages/flame_3d/lib/src/model/model.dart", lines: [51, 91] }
+      - { file: "packages/flame_3d/lib/src/model/model_component.dart", lines: [24, 41] }

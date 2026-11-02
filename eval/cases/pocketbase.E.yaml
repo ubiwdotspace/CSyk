@@ -122,3 +122,83 @@ cases:
     query: "Successfully changed superuser %q password!"
     expect:
       - { file: "cmd/superuser.go", lines: [108, 140] }
+  - id: E31
+    query: "Failed to fetch OAuth2 token."
+    expect:
+      - { file: "apis/record_auth_with_oauth2.go", lines: [30, 173] }
+  - id: E32
+    query: "The record primary key is invalid or already exists."
+    expect:
+      - { file: "core/field_text.go", lines: [179, 220] }
+  - id: E33
+    query: "Must be a valid auth collection id or name."
+    expect:
+      - { file: "forms/test_email_send.go", lines: [63, 75] }
+  - id: E34
+    query: "Realtime connection closed (closed channel)"
+    expect:
+      - { file: "apis/realtime.go", lines: [43, 166] }
+  - id: E35
+    query: "Collection type cannot be changed."
+    expect:
+      - { file: "core/collection_validate.go", lines: [210, 218] }
+  - id: E36
+    query: "Invalid or duplicated auth record id."
+    expect:
+      - { file: "core/record_model.go", lines: [1443, 1488] }
+  - id: E37
+    query: "Failed to run periodic PRAGMA wal_checkpoint for the auxiliary DB"
+    expect:
+      - { file: "core/base.go", lines: [1372, 1478] }
+  - id: E38
+    query: "Notify dir watch error:"
+    expect:
+      - { file: "core/notify_watcher.go", lines: [128, 211] }
+  - id: E39
+    query: "Rate limit rule configuration with label {{.label}} already exists or conflicts "
+    expect:
+      - { file: "core/settings_model.go", lines: [646, 678] }
+  - id: E40
+    query: "Failed to delete used OTP"
+    expect:
+      - { file: "apis/record_auth_with_otp.go", lines: [11, 102] }
+  - id: E41
+    query: "Starts the web server (default to 127.0.0.1:8090 if no domain is specified)"
+    expect:
+      - { file: "cmd/serve.go", lines: [14, 77] }
+  - id: E42
+    query: "Failed to generate logs stats."
+    expect:
+      - { file: "apis/logs.go", lines: [44, 64] }
+  - id: E43
+    query: "Failed to delete storage prefix (non critical error; usually could happen becaus"
+    expect:
+      - { file: "core/base.go", lines: [1372, 1478] }
+  - id: E44
+    query: "Failed to delete old AuthOrigin record"
+    expect:
+      - { file: "apis/record_helpers.go", lines: [589, 664] }
+  - id: E45
+    query: "Unable to refresh app types file: %v"
+    expect:
+      - { file: "plugins/jsvm/jsvm.go", lines: [129, 176] }
+  - id: E46
+    query: "Failed to update record verified state after successful OTP validation"
+    expect:
+      - { file: "apis/record_auth_with_otp.go", lines: [11, 102] }
+  - id: E47
+    query: "Failed to delete empty dir after new record commit failure"
+    expect:
+      - { file: "core/field_file.go", lines: [336, 404] }
+  - id: E48
+    query: "The collection is not configured to allow OAuth2 authentication."
+    expect:
+      - { file: "apis/record_auth_with_oauth2.go", lines: [30, 173] }
+  - id: E49
+    query: "You can create your first superuser by running: %s superuser upsert EMAIL PASS"
+    expect:
+      - { file: "apis/installer.go", lines: [25, 44] }
+  - id: E50
+    query: "Missing OAuth2 state parameter"
+    expect:
+      - { file: "apis/record_auth_with_oauth2_redirect.go", lines: [31, 101] }

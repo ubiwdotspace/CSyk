@@ -19,7 +19,7 @@ describe('LspClient', () => {
       const spans = await Promise.all(
         [2, 3, 4].map((line) => lsp.definition({ file: 'use.py', line, character: 1 })),
       );
-      expect(spans.map((s) => `${s[0]?.file}:${s[0]?.nameLine}`)).toEqual(['greet.py:0', 'greet.py:0', 'greet.py:0']);
+      expect(spans.map((s) => `${s.spans[0]?.file}:${s.spans[0]?.nameLine}`)).toEqual(['greet.py:0', 'greet.py:0', 'greet.py:0']);
     } finally {
       await lsp.stop();
     }

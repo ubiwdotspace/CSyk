@@ -340,3 +340,269 @@ cases:
     expect:
       - { file: "core/log_printer.go", lines: [17, 24] }
       - { file: "core/log_printer.go", lines: [28, 67] }
+  - id: G31
+    query: "plugins/jsvm/pool.go:31"
+    expect:
+      - { file: "plugins/jsvm/pool.go", lines: [22, 38] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [13, 71] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [73, 151] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [153, 232] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [234, 314] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1591, 1607] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1619, 1705] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1707, 1746] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1758, 1856] }
+      - { file: "plugins/jsvm/jsvm.go", lines: [258, 371] }
+      - { file: "plugins/jsvm/jsvm.go", lines: [129, 176] }
+  - id: G32
+    query: "tools/router/rereadable_read_closer.go:92"
+    expect:
+      - { file: "tools/router/rereadable_read_closer.go", lines: [84, 96] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [66, 78] }
+      - { file: "tools/router/rereadable_read_closer_test.go", lines: [13, 69] }
+      - { file: "tools/router/router.go", lines: [83, 159] }
+      - { file: "apis/middlewares_body_limit.go", lines: [145, 152] }
+      - { file: "tools/router/event.go", lines: [366, 423] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [41, 61] }
+      - { file: "tools/router/router.go", lines: [62, 81] }
+  - id: G33
+    query: "tools/security/jwt.go:36 tools/security/jwt.go:23"
+    expect:
+      - { file: "tools/security/jwt.go", lines: [28, 43] }
+      - { file: "tools/security/jwt.go", lines: [14, 25] }
+      - { file: "core/record_query.go", lines: [483, 540] }
+      - { file: "plugins/jsvm/binds.go", lines: [717, 758] }
+      - { file: "tools/security/jwt_test.go", lines: [52, 134] }
+      - { file: "tools/security/jwt_test.go", lines: [136, 185] }
+      - { file: "apis/record_auth_email_change_confirm.go", lines: [97, 122] }
+      - { file: "apis/record_auth_password_reset_confirm.go", lines: [13, 61] }
+      - { file: "apis/record_auth_refresh.go", lines: [9, 35] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [83, 109] }
+      - { file: "core/record_tokens_test.go", lines: [24, 74] }
+      - { file: "core/record_tokens_test.go", lines: [118, 176] }
+      - { file: "tools/security/jwt_test.go", lines: [11, 50] }
+      - { file: "apis/backup.go", lines: [65, 97] }
+      - { file: "apis/file.go", lines: [85, 217] }
+      - { file: "apis/middlewares.go", lines: [184, 209] }
+      - { file: "apis/record_auth_password_reset_confirm.go", lines: [88, 104] }
+      - { file: "apis/record_auth_password_reset_confirm_test.go", lines: [12, 394] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [12, 66] }
+      - { file: "core/record_query_test.go", lines: [897, 972] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [848, 853] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [855, 887] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [889, 919] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [921, 976] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [978, 997] }
+      - { file: "plugins/jsvm/jsvm.go", lines: [184, 255] }
+      - { file: "plugins/jsvm/jsvm.go", lines: [258, 371] }
+      - { file: "apis/record_auth_email_change_confirm.go", lines: [11, 52] }
+      - { file: "apis/record_auth_email_change_confirm.go", lines: [78, 81] }
+      - { file: "apis/record_auth_email_change_confirm.go", lines: [83, 95] }
+      - { file: "apis/record_auth.go", lines: [10, 69] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [77, 81] }
+      - { file: "core/record_tokens_test.go", lines: [14, 22] }
+      - { file: "core/record_tokens_test.go", lines: [76, 84] }
+      - { file: "core/record_tokens_test.go", lines: [86, 92] }
+      - { file: "core/record_tokens_test.go", lines: [94, 100] }
+      - { file: "core/record_tokens_test.go", lines: [102, 108] }
+      - { file: "core/record_tokens_test.go", lines: [110, 116] }
+  - id: G34
+    query: "core/mfa_model.go:63 core/mfa_model.go:45"
+    expect:
+      - { file: "core/mfa_model.go", lines: [58, 64] }
+      - { file: "core/mfa_model.go", lines: [41, 54] }
+      - { file: "core/db.go", lines: [239, 261] }
+      - { file: "apis/record_auth_with_password_test.go", lines: [13, 764] }
+      - { file: "apis/record_helpers.go", lines: [189, 256] }
+      - { file: "apis/record_helpers_test.go", lines: [467, 761] }
+      - { file: "core/mfa_model_test.go", lines: [13, 24] }
+      - { file: "core/mfa_model_test.go", lines: [40, 62] }
+      - { file: "core/mfa_model_test.go", lines: [64, 86] }
+      - { file: "core/mfa_model_test.go", lines: [88, 110] }
+      - { file: "core/mfa_model_test.go", lines: [112, 130] }
+      - { file: "core/mfa_model_test.go", lines: [132, 150] }
+      - { file: "core/mfa_model_test.go", lines: [152, 182] }
+      - { file: "core/mfa_model_test.go", lines: [233, 302] }
+      - { file: "core/mfa_model_test.go", lines: [304, 363] }
+      - { file: "tests/dynamic_stubs.go", lines: [55, 113] }
+      - { file: "core/db.go", lines: [234, 236] }
+      - { file: "core/db.go", lines: [273, 366] }
+      - { file: "core/db.go", lines: [368, 448] }
+      - { file: "core/db_test.go", lines: [78, 102] }
+      - { file: "apis/record_helpers.go", lines: [45, 144] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [12, 96] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [98, 158] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [160, 241] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [243, 324] }
+      - { file: "apis/record_crud_mfa_test.go", lines: [326, 405] }
+      - { file: "core/mfa_query_test.go", lines: [12, 70] }
+      - { file: "core/mfa_query_test.go", lines: [72, 138] }
+      - { file: "core/mfa_query_test.go", lines: [140, 179] }
+      - { file: "core/mfa_query_test.go", lines: [181, 248] }
+      - { file: "core/mfa_query_test.go", lines: [250, 311] }
+  - id: G35
+    query: "tools/filesystem/internal/fileblob/attrs.go:77"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/attrs.go", lines: [66, 87] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [193, 214] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [217, 388] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [391, 410] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [413, 446] }
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [528, 569] }
+      - { file: "tools/filesystem/blob/bucket.go", lines: [114, 156] }
+      - { file: "tools/filesystem/blob/bucket.go", lines: [228, 293] }
+      - { file: "tools/filesystem/internal/s3blob/s3blob_test.go", lines: [284, 388] }
+  - id: G36
+    query: "tools/auth/mailcow.go:49"
+    expect:
+      - { file: "tools/auth/mailcow.go", lines: [42, 86] }
+      - { file: "apis/record_auth_with_oauth2.go", lines: [30, 173] }
+      - { file: "apis/record_auth.go", lines: [10, 69] }
+  - id: G37
+    query: "apis/record_auth_verification_confirm.go:78"
+    expect:
+      - { file: "apis/record_auth_verification_confirm.go", lines: [77, 81] }
+      - { file: "apis/record_auth_verification_confirm.go", lines: [12, 66] }
+      - { file: "apis/record_auth.go", lines: [10, 69] }
+  - id: G38
+    query: "tools/filesystem/blob/bucket.go:366 tools/filesystem/blob/bucket.go:401"
+    expect:
+      - { file: "tools/filesystem/blob/bucket.go", lines: [348, 388] }
+      - { file: "tools/filesystem/blob/bucket.go", lines: [394, 405] }
+      - { file: "tools/filesystem/filesystem.go", lines: [168, 170] }
+      - { file: "tools/filesystem/filesystem.go", lines: [161, 163] }
+      - { file: "apis/file.go", lines: [85, 217] }
+      - { file: "tools/filesystem/filesystem.go", lines: [198, 224] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [63, 107] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [109, 172] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [312, 364] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [366, 405] }
+      - { file: "apis/backup.go", lines: [124, 160] }
+      - { file: "apis/backup_create.go", lines: [61, 78] }
+      - { file: "apis/backup_upload.go", lines: [60, 72] }
+      - { file: "apis/file_test.go", lines: [539, 612] }
+      - { file: "core/backup_restore.go", lines: [50, 196] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [24, 61] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [197, 235] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [237, 271] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [407, 431] }
+  - id: G39
+    query: "tools/auth/gitee.go:53 tools/auth/gitee.go:32"
+    expect:
+      - { file: "tools/auth/gitee.go", lines: [46, 93] }
+      - { file: "tools/auth/gitee.go", lines: [29, 41] }
+      - { file: "apis/record_auth_with_oauth2.go", lines: [30, 173] }
+      - { file: "tools/auth/gitee.go", lines: [14, 16] }
+      - { file: "apis/record_auth.go", lines: [10, 69] }
+  - id: G40
+    query: "tools/tokenizer/tokenizer.go:206 tools/tokenizer/tokenizer.go:169"
+    expect:
+      - { file: "tools/tokenizer/tokenizer.go", lines: [203, 211] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [126, 170] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [189, 200] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [86, 103] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [58, 62] }
+      - { file: "core/view.go", lines: [575, 661] }
+      - { file: "tools/tokenizer/tokenizer.go", lines: [106, 123] }
+      - { file: "tools/tokenizer/tokenizer_test.go", lines: [66, 90] }
+  - id: G41
+    query: "tools/subscriptions/message.go:34"
+    expect:
+      - { file: "tools/subscriptions/message.go", lines: [20, 37] }
+      - { file: "apis/realtime.go", lines: [43, 166] }
+      - { file: "tools/subscriptions/message_test.go", lines: [10, 25] }
+      - { file: "apis/realtime.go", lines: [35, 41] }
+  - id: G42
+    query: "core/view.go:675 core/view.go:520"
+    expect:
+      - { file: "core/view.go", lines: [663, 692] }
+      - { file: "core/view.go", lines: [495, 528] }
+      - { file: "core/view.go", lines: [575, 661] }
+      - { file: "core/view.go", lines: [326, 493] }
+      - { file: "core/collection_query.go", lines: [257, 289] }
+      - { file: "core/view.go", lines: [82, 124] }
+      - { file: "core/view.go", lines: [203, 270] }
+  - id: G43
+    query: "apis/middlewares_body_limit.go:35 apis/middlewares_body_limit.go:56"
+    expect:
+      - { file: "apis/middlewares_body_limit.go", lines: [27, 40] }
+      - { file: "apis/middlewares_body_limit.go", lines: [42, 73] }
+      - { file: "apis/backup.go", lines: [17, 25] }
+      - { file: "apis/base.go", lines: [19, 57] }
+      - { file: "apis/middlewares_body_limit_test.go", lines: [15, 153] }
+      - { file: "plugins/jsvm/binds.go", lines: [853, 890] }
+      - { file: "apis/record_crud.go", lines: [27, 34] }
+      - { file: "apis/file_test.go", lines: [539, 612] }
+      - { file: "apis/middlewares_rate_limit_test.go", lines: [16, 166] }
+      - { file: "apis/middlewares_rate_limit_test.go", lines: [168, 326] }
+      - { file: "apis/realtime_test.go", lines: [460, 519] }
+      - { file: "apis/realtime_test.go", lines: [521, 558] }
+      - { file: "apis/realtime_test.go", lines: [560, 673] }
+      - { file: "apis/realtime_test.go", lines: [675, 710] }
+      - { file: "apis/realtime_test.go", lines: [712, 789] }
+      - { file: "apis/realtime_test.go", lines: [791, 866] }
+      - { file: "apis/realtime_test.go", lines: [897, 955] }
+      - { file: "apis/realtime_test.go", lines: [957, 992] }
+      - { file: "apis/realtime_test.go", lines: [1009, 1241] }
+      - { file: "apis/serve.go", lines: [61, 314] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [73, 151] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [153, 232] }
+      - { file: "plugins/jsvm/binds_app_reset_test.go", lines: [234, 314] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1758, 1856] }
+      - { file: "tests/api.go", lines: [169, 320] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1126, 1132] }
+      - { file: "plugins/jsvm/binds_test.go", lines: [1134, 1186] }
+      - { file: "plugins/jsvm/jsvm.go", lines: [258, 371] }
+  - id: G44
+    query: "tools/filesystem/internal/fileblob/fileblob.go:634"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [630, 643] }
+      - { file: "apis/batch.go", lines: [391, 455] }
+      - { file: "apis/middlewares_gzip.go", lines: [161, 187] }
+      - { file: "apis/middlewares_gzip.go", lines: [189, 204] }
+      - { file: "tools/filesystem/filesystem_test.go", lines: [312, 364] }
+      - { file: "tools/filesystem/internal/s3blob/s3blob_test.go", lines: [542, 617] }
+      - { file: "tools/router/event_test.go", lines: [225, 278] }
+      - { file: "tools/router/rereadable_read_closer.go", lines: [41, 61] }
+      - { file: "apis/batch.go", lines: [276, 389] }
+  - id: G45
+    query: "cmd/serve.go:36"
+    expect:
+      - { file: "cmd/serve.go", lines: [14, 77] }
+      - { file: "pocketbase.go", lines: [167, 173] }
+      - { file: "examples/base/main.go", lines: [19, 126] }
+  - id: G46
+    query: "tools/router/event.go:62"
+    expect:
+      - { file: "tools/router/event.go", lines: [60, 63] }
+      - { file: "apis/middlewares.go", lines: [366, 465] }
+      - { file: "tools/router/event_test.go", lines: [91, 144] }
+      - { file: "tools/router/router.go", lines: [329, 340] }
+      - { file: "apis/middlewares.go", lines: [350, 364] }
+  - id: G47
+    query: "migrations/1640988000_init.go:114"
+    expect:
+      - { file: "migrations/1640988000_init.go", lines: [107, 118] }
+      - { file: "migrations/1640988000_init.go", lines: [29, 105] }
+      - { file: "migrations/1717233556_v0.23_migrate.go", lines: [176, 245] }
+      - { file: "migrations/1717233556_v0.23_migrate.go", lines: [21, 69] }
+  - id: G48
+    query: "tools/auth/strava.go:36"
+    expect:
+      - { file: "tools/auth/strava.go", lines: [27, 41] }
+      - { file: "tools/auth/strava.go", lines: [12, 14] }
+  - id: G49
+    query: "core/field_geo_point.go:12 core/field_geo_point.go:124"
+    expect:
+      - { file: "core/field_geo_point.go", lines: [11, 15] }
+      - { file: "core/field_geo_point.go", lines: [121, 144] }
+      - { file: "core/field_geo_point_test.go", lines: [73, 197] }
+      - { file: "core/record_model.go", lines: [1427, 1441] }
+      - { file: "core/record_model.go", lines: [57, 476] }
+  - id: G50
+    query: "apis/collection.go:186 apis/collection.go:37"
+    expect:
+      - { file: "apis/collection.go", lines: [183, 199] }
+      - { file: "apis/collection.go", lines: [34, 59] }
+      - { file: "apis/collection.go", lines: [18, 32] }
+      - { file: "apis/base.go", lines: [19, 57] }

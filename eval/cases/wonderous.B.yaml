@@ -122,3 +122,83 @@ cases:
     query: "simple checkbox"
     expect:
       - { file: "lib/ui/common/controls/checkbox.dart", lines: [4, 45] }
+  - id: B31
+    query: "context utils"
+    expect:
+      - { file: "lib/ui/common/utils/context_utils.dart", lines: [3, 19] }
+  - id: B32
+    query: "parse id"
+    expect:
+      - { file: "lib/_tools/artifact_search_helper.dart", lines: [154, 191] }
+  - id: B33
+    query: "app bitmaps"
+    expect:
+      - { file: "lib/assets.dart", lines: [6, 15] }
+  - id: B34
+    query: "PrefsFile"
+    expect:
+      - { file: "lib/logic/common/json_prefs_file.dart", lines: [5, 19] }
+  - id: B35
+    query: "ImageStack"
+    expect:
+      - { file: "lib/ui/screens/editorial/widgets/_sliding_image_stack.dart", lines: [3, 71] }
+  - id: B36
+    query: "IfChanged"
+    expect:
+      - { file: "lib/logic/locale_logic.dart", lines: [29, 34] }
+  - id: B37
+    query: "ArrowButton"
+    expect:
+      - { file: "lib/ui/screens/home/widgets/_animated_arrow_button.dart", lines: [4, 55] }
+  - id: B38
+    query: "arch clipper"
+    expect:
+      - { file: "lib/ui/common/curved_clippers.dart", lines: [5, 24] }
+  - id: B39
+    query: "LoadModal"
+    expect:
+      - { file: "lib/ui/common/modals/app_modals.dart", lines: [13, 28] }
+  - id: B40
+    query: "previous next navigation state"
+    expect:
+      - { file: "lib/ui/common/previous_next_navigation.dart", lines: [30, 102] }
+  - id: B41
+    query: "get switch pt"
+    expect:
+      - { file: "lib/ui/screens/editorial/widgets/_section_divider.dart", lines: [21, 21] }
+  - id: B42
+    query: "MeasWidget"
+    expect:
+      - { file: "lib/ui/common/measurable_widget.dart", lines: [6, 11] }
+  - id: B43
+    query: "pyramids giza data"
+    expect:
+      - { file: "lib/logic/data/wonders_data/pyramids_giza_data.dart", lines: [7, 63] }
+  - id: B44
+    query: "get handle"
+    expect:
+      - { file: "lib/ui/screens/artifact/artifact_search/time_range_selector/range_selector.dart", lines: [114, 141] }
+  - id: B45
+    query: "WondTitleText"
+    expect:
+      - { file: "lib/ui/wonder_illustrations/common/wonder_title_text.dart", lines: [9, 64] }
+  - id: B46
+    query: "IlluTexture"
+    expect:
+      - { file: "lib/ui/wonder_illustrations/common/paint_textures.dart", lines: [3, 40] }
+  - id: B47
+    query: "CompDivider"
+    expect:
+      - { file: "lib/ui/common/compass_divider.dart", lines: [5, 63] }
+  - id: B48
+    query: "ChineseDateLayout"
+    expect:
+      - { file: "lib/ui/screens/artifact/artifact_search/time_range_selector/expanding_time_range_selector.dart", lines: [142, 165] }
+  - id: B49
+    query: "ColoData"
+    expect:
+      - { file: "lib/logic/data/wonders_data/colosseum_data.dart", lines: [7, 63] }
+  - id: B50
+    query: "chichen itza illustration"
+    expect:
+      - { file: "lib/ui/wonder_illustrations/chichen_itza_illustration.dart", lines: [8, 107] }

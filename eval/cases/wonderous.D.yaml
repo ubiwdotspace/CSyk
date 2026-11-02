@@ -186,3 +186,129 @@ cases:
     expect:
       - { file: "lib/logic/unsplash_service.dart", lines: [25, 32] }
       - { file: "lib/logic/data/unsplash_photo_data.dart", lines: [14, 14] }
+  - id: D31
+    query: "_getCollectibleIndex"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/photo_gallery/photo_gallery.dart", lines: [175, 177] }
+  - id: D32
+    query: "measureLongest"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/string_utils.dart", lines: [24, 36] }
+  - id: D33
+    query: "_fixNewlines"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/editorial/widgets/_scrolling_content.dart", lines: [26, 150] }
+  - id: D34
+    query: "getMetObjectByID"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/http_client.dart", lines: [26, 47] }
+      - { file: "lib/logic/common/http_client.dart", lines: [96, 104] }
+  - id: D35
+    query: "shift"
+    direction: in
+    expect:
+      - { file: "lib/ui/wonder_illustrations/great_wall_illustration.dart", lines: [26, 47] }
+      - { file: "lib/ui/wonder_illustrations/colosseum_illustration.dart", lines: [25, 45] }
+  - id: D36
+    query: "wrapGestureDetector"
+    direction: out
+    expect:
+      - { file: "lib/ui/screens/home/_vertical_swipe_controller.dart", lines: [16, 16] }
+      - { file: "lib/ui/screens/home/_vertical_swipe_controller.dart", lines: [17, 17] }
+      - { file: "lib/ui/screens/home/_vertical_swipe_controller.dart", lines: [19, 23] }
+  - id: D37
+    query: "dialog"
+    direction: in
+    expect:
+      - { file: "lib/logic/app_logic.dart", lines: [99, 107] }
+  - id: D38
+    query: "_buildImageWithFade"
+    direction: out
+    expect:
+      - { file: "lib/ui/common/curved_clippers.dart", lines: [86, 86] }
+      - { file: "lib/assets.dart", lines: [63, 63] }
+      - { file: "lib/ui/common/list_gradient.dart", lines: [7, 7] }
+  - id: D39
+    query: "_checkPointerIsDown"
+    direction: in
+    expect:
+      - { file: "lib/ui/common/pop_router_on_over_scroll.dart", lines: [33, 38] }
+  - id: D40
+    query: "buildScrollbar"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/platform_info.dart", lines: [17, 17] }
+      - { file: "lib/logic/common/platform_info.dart", lines: [16, 16] }
+  - id: D41
+    query: "_buildHidden"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/collection/widgets/_collectible_image.dart", lines: [18, 24] }
+  - id: D42
+    query: "_handleMarkerPressed"
+    direction: out
+    expect:
+      - { file: "lib/ui/screens/timeline/widgets/_scrolling_viewport_controller.dart", lines: [80, 84] }
+      - { file: "lib/ui/screens/timeline/widgets/_scrolling_viewport_controller.dart", lines: [14, 14] }
+  - id: D43
+    query: "_handleViewportYearChanged"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/timeline/timeline_screen.dart", lines: [51, 105] }
+  - id: D44
+    query: "bootstrap"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/platform_info.dart", lines: [21, 21] }
+      - { file: "lib/logic/common/platform_info.dart", lines: [23, 23] }
+      - { file: "lib/assets.dart", lines: [9, 14] }
+      - { file: "lib/logic/common/platform_info.dart", lines: [24, 24] }
+      - { file: "lib/logic/common/save_load_mixin.dart", lines: [9, 16] }
+      - { file: "lib/logic/locale_logic.dart", lines: [14, 27] }
+      - { file: "lib/logic/wonders_logic.dart", lines: [24, 35] }
+      - { file: "lib/logic/timeline_logic.dart", lines: [7, 18] }
+      - { file: "lib/logic/collectibles_logic.dart", lines: [29, 29] }
+  - id: D45
+    query: "wonderDetails"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/home/wonders_home_screen.dart", lines: [122, 128] }
+      - { file: "lib/ui/screens/wonder_details/wonders_details_screen.dart", lines: [52, 55] }
+  - id: D46
+    query: "loadImage"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/retry_image.dart", lines: [104, 112] }
+      - { file: "lib/logic/common/retry_image.dart", lines: [105, 107] }
+      - { file: "lib/logic/common/retry_image.dart", lines: [109, 111] }
+  - id: D47
+    query: "_buildAnimatedCutout"
+    direction: in
+    expect:
+      - { file: "lib/ui/screens/photo_gallery/widgets/_animated_cutout_overlay.dart", lines: [25, 42] }
+  - id: D48
+    query: "_request"
+    direction: out
+    expect:
+      - { file: "lib/logic/common/http_client.dart", lines: [74, 85] }
+  - id: D49
+    query: "scheduleSave"
+    direction: in
+    expect:
+      - { file: "lib/logic/settings_logic.dart", lines: [5, 44] }
+      - { file: "lib/logic/collectibles_logic.dart", lines: [89, 98] }
+      - { file: "lib/logic/collectibles_logic.dart", lines: [37, 50] }
+  - id: D50
+    query: "_buildTwoColumn"
+    direction: out
+    expect:
+      - { file: "lib/ui/common/centered_box.dart", lines: [4, 4] }
+      - { file: "lib/styles/styles.dart", lines: [217, 217] }
+      - { file: "lib/ui/screens/wonder_events/widgets/_wonder_image_with_timeline.dart", lines: [4, 4] }
+      - { file: "lib/ui/screens/wonder_events/widgets/_timeline_btn.dart", lines: [4, 4] }
+      - { file: "lib/styles/styles.dart", lines: [216, 216] }
+      - { file: "lib/ui/screens/wonder_events/widgets/_events_list.dart", lines: [4, 12] }

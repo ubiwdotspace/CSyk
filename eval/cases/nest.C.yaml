@@ -289,3 +289,172 @@ cases:
       - { file: "packages/core/test/injector/helpers/silent-logger.spec.ts", lines: [2, 2] }
       - { file: "packages/core/test/injector/helpers/silent-logger.spec.ts", lines: [5, 5] }
       - { file: "packages/core/test/injector/helpers/silent-logger.spec.ts", lines: [8, 8] }
+  - id: C31
+    query: "PassthroughInterceptor"
+    expect:
+      - { file: "integration/nest-application/sse/src/app.controller.ts", lines: [92, 92] }
+      - { file: "integration/nest-application/sse/src/app.controller.ts", lines: [239, 239] }
+      - { file: "integration/nest-application/sse/src/app.controller.ts", lines: [247, 247] }
+      - { file: "integration/nest-application/sse/src/app.controller.ts", lines: [327, 327] }
+  - id: C32
+    query: "hasOnAppShutdownHook"
+    expect:
+      - { file: "packages/core/hooks/on-app-shutdown.hook.ts", lines: [26, 26] }
+      - { file: "packages/core/hooks/on-app-shutdown.hook.ts", lines: [73, 73] }
+  - id: C33
+    query: "randomStringGenerator"
+    expect:
+      - { file: "packages/common/module-utils/configurable-module.builder.ts", lines: [4, 4] }
+      - { file: "packages/common/module-utils/configurable-module.builder.ts", lines: [227, 227] }
+      - { file: "packages/common/module-utils/configurable-module.builder.ts", lines: [250, 250] }
+      - { file: "packages/common/module-utils/utils/generate-options-injection-token.util.ts", lines: [1, 1] }
+      - { file: "packages/common/module-utils/utils/generate-options-injection-token.util.ts", lines: [4, 4] }
+      - { file: "packages/common/test/utils/random-string-generator.util.spec.ts", lines: [1, 1] }
+      - { file: "packages/common/test/utils/random-string-generator.util.spec.ts", lines: [5, 5] }
+  - id: C34
+    query: "makeSafeInstanceDecorator"
+    expect:
+      - { file: "packages/core/injector/injector.ts", lines: [32, 32] }
+      - { file: "packages/core/injector/injector.ts", lines: [159, 159] }
+      - { file: "packages/core/injector/module.ts", lines: [12, 12] }
+      - { file: "packages/core/injector/module.ts", lines: [405, 405] }
+      - { file: "packages/core/internal.ts", lines: [36, 36] }
+      - { file: "packages/core/nest-application.ts", lines: [24, 24] }
+      - { file: "packages/core/nest-application.ts", lines: [718, 718] }
+      - { file: "packages/core/nest-application.ts", lines: [730, 730] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [1, 1] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [7, 7] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [18, 18] }
+      - { file: "packages/core/test/helpers/safe-instance-decorator.spec.ts", lines: [39, 39] }
+  - id: C35
+    query: "ExternalExceptionsHandler"
+    expect:
+      - { file: "packages/core/exceptions/external-exception-filter-context.ts", lines: [8, 8] }
+      - { file: "packages/core/exceptions/external-exception-filter-context.ts", lines: [30, 30] }
+      - { file: "packages/core/exceptions/external-exception-filter-context.ts", lines: [33, 33] }
+      - { file: "packages/core/helpers/external-proxy.ts", lines: [1, 1] }
+      - { file: "packages/core/helpers/external-proxy.ts", lines: [8, 8] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [3, 3] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [6, 6] }
+      - { file: "packages/core/test/exceptions/external-exceptions-handler.spec.ts", lines: [9, 9] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [2, 2] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [7, 7] }
+      - { file: "packages/core/test/helpers/external-proxy.spec.ts", lines: [10, 10] }
+  - id: C36
+    query: "MathModule"
+    expect:
+      - { file: "sample/03-microservices/src/app.module.ts", lines: [2, 2] }
+      - { file: "sample/03-microservices/src/app.module.ts", lines: [5, 5] }
+  - id: C37
+    query: "ModuleKey"
+    expect:
+      - { file: "packages/core/repl/repl-context.ts", lines: [31, 31] }
+      - { file: "packages/core/repl/repl-context.ts", lines: [79, 79] }
+  - id: C38
+    query: "MaxMqttTopicLengthExceededException"
+    expect:
+      - { file: "packages/microservices/client/client-mqtt.ts", lines: [9, 9] }
+      - { file: "packages/microservices/client/client-mqtt.ts", lines: [488, 488] }
+      - { file: "packages/microservices/server/server-mqtt.ts", lines: [12, 12] }
+      - { file: "packages/microservices/server/server-mqtt.ts", lines: [317, 317] }
+      - { file: "packages/microservices/test/client/client-mqtt.spec.ts", lines: [5, 5] }
+      - { file: "packages/microservices/test/client/client-mqtt.spec.ts", lines: [140, 140] }
+      - { file: "packages/microservices/test/client/client-mqtt.spec.ts", lines: [157, 157] }
+      - { file: "packages/microservices/test/client/client-mqtt.spec.ts", lines: [985, 985] }
+      - { file: "packages/microservices/test/server/server-mqtt.spec.ts", lines: [7, 7] }
+      - { file: "packages/microservices/test/server/server-mqtt.spec.ts", lines: [390, 390] }
+      - { file: "packages/microservices/test/server/server-mqtt.spec.ts", lines: [601, 601] }
+  - id: C39
+    query: "RpcExceptionFilter"
+    expect:
+      - { file: "packages/common/index.ts", lines: [65, 65] }
+      - { file: "packages/common/interfaces/exceptions/rpc-exception-filter-metadata.interface.ts", lines: [1, 1] }
+      - { file: "packages/common/interfaces/exceptions/rpc-exception-filter-metadata.interface.ts", lines: [5, 5] }
+  - id: C40
+    query: "hasOnModuleDestroyHook"
+    expect:
+      - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [26, 26] }
+      - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [70, 70] }
+  - id: C41
+    query: "ClientsProviderAsyncOptions"
+    expect:
+      - { file: "packages/microservices/module/clients.module.ts", lines: [14, 14] }
+      - { file: "packages/microservices/module/clients.module.ts", lines: [65, 65] }
+      - { file: "packages/microservices/module/clients.module.ts", lines: [80, 80] }
+      - { file: "packages/microservices/module/clients.module.ts", lines: [100, 100] }
+      - { file: "packages/microservices/module/interfaces/clients-module.interface.ts", lines: [34, 34] }
+      - { file: "packages/microservices/module/interfaces/clients-module.interface.ts", lines: [36, 36] }
+  - id: C42
+    query: "LazyController"
+    expect:
+      - { file: "integration/lazy-modules/e2e/lazy-import-request-providers.spec.ts", lines: [4, 4] }
+      - { file: "integration/lazy-modules/e2e/lazy-import-request-providers.spec.ts", lines: [12, 12] }
+      - { file: "integration/lazy-modules/e2e/lazy-import-transient-providers.spec.ts", lines: [4, 4] }
+      - { file: "integration/lazy-modules/e2e/lazy-import-transient-providers.spec.ts", lines: [12, 12] }
+  - id: C43
+    query: "AdditionalHeadersSource"
+    expect:
+      - { file: "packages/core/router/router-response-controller.ts", lines: [17, 17] }
+      - { file: "packages/core/router/router-response-controller.ts", lines: [133, 133] }
+      - { file: "packages/core/router/sse-stream.ts", lines: [111, 111] }
+      - { file: "packages/core/router/sse-stream.ts", lines: [137, 137] }
+  - id: C44
+    query: "MiddlewareBuilder"
+    expect:
+      - { file: "packages/core/middleware/builder.ts", lines: [31, 31] }
+      - { file: "packages/core/middleware/builder.ts", lines: [50, 50] }
+      - { file: "packages/core/middleware/middleware-module.ts", lines: [22, 22] }
+      - { file: "packages/core/middleware/middleware-module.ts", lines: [105, 105] }
+      - { file: "packages/core/middleware/middleware-module.ts", lines: [122, 122] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [17, 17] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [24, 24] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [30, 30] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [39, 39] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [223, 223] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [283, 283] }
+      - { file: "packages/core/test/middleware/builder.spec.ts", lines: [309, 309] }
+      - { file: "packages/core/test/middleware/middleware-module.spec.ts", lines: [15, 15] }
+      - { file: "packages/core/test/middleware/middleware-module.spec.ts", lines: [87, 87] }
+  - id: C45
+    query: "ErrorGateway"
+    expect:
+      - { file: "integration/websockets/e2e/error-gateway.spec.ts", lines: [4, 4] }
+      - { file: "integration/websockets/e2e/error-gateway.spec.ts", lines: [11, 11] }
+  - id: C46
+    query: "DrainTimeoutException"
+    expect:
+      - { file: "packages/microservices/helpers/json-socket.ts", lines: [4, 4] }
+      - { file: "packages/microservices/helpers/json-socket.ts", lines: [263, 263] }
+      - { file: "packages/microservices/test/helpers/json-socket.spec.ts", lines: [3, 3] }
+      - { file: "packages/microservices/test/helpers/json-socket.spec.ts", lines: [570, 570] }
+  - id: C47
+    query: "ExportsModule"
+    expect:
+      - { file: "integration/injector/e2e/injector.spec.ts", lines: [13, 13] }
+      - { file: "integration/injector/e2e/injector.spec.ts", lines: [211, 211] }
+      - { file: "integration/injector/src/app.module.ts", lines: [2, 2] }
+      - { file: "integration/injector/src/app.module.ts", lines: [5, 5] }
+  - id: C48
+    query: "InvalidSocketPortException"
+    expect:
+      - { file: "packages/websockets/test/web-sockets-controller.spec.ts", lines: [18, 18] }
+      - { file: "packages/websockets/test/web-sockets-controller.spec.ts", lines: [109, 109] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [15, 15] }
+      - { file: "packages/websockets/web-sockets-controller.ts", lines: [114, 114] }
+  - id: C49
+    query: "TcpContext"
+    expect:
+      - { file: "integration/microservices/e2e/packet-metadata-tcp.spec.ts", lines: [10, 10] }
+      - { file: "integration/microservices/e2e/packet-metadata-tcp.spec.ts", lines: [24, 24] }
+      - { file: "integration/microservices/e2e/packet-metadata-tcp.spec.ts", lines: [29, 29] }
+      - { file: "packages/microservices/server/server-tcp.ts", lines: [14, 14] }
+      - { file: "packages/microservices/server/server-tcp.ts", lines: [164, 164] }
+      - { file: "packages/microservices/server/server-tcp.ts", lines: [337, 337] }
+      - { file: "packages/microservices/test/ctx-host/tcp.context.spec.ts", lines: [1, 1] }
+      - { file: "packages/microservices/test/ctx-host/tcp.context.spec.ts", lines: [5, 5] }
+      - { file: "packages/microservices/test/ctx-host/tcp.context.spec.ts", lines: [8, 8] }
+  - id: C50
+    query: "HooksController"
+    expect:
+      - { file: "integration/security/src/app.module.ts", lines: [4, 4] }
+      - { file: "integration/security/src/app.module.ts", lines: [7, 7] }

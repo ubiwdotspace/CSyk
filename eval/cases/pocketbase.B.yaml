@@ -122,3 +122,83 @@ cases:
     query: "MethodOTP"
     expect:
       - { file: "core/mfa_model.go", lines: [16, 16] }
+  - id: B31
+    query: "get attrs"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/attrs.go", lines: [66, 87] }
+  - id: B32
+    query: "name mailcow"
+    expect:
+      - { file: "tools/auth/mailcow.go", lines: [20, 20] }
+  - id: B33
+    query: "geneHookId"
+    expect:
+      - { file: "tools/hook/hook.go", lines: [176, 178] }
+  - id: B34
+    query: "recoConfirmVerificationForm"
+    expect:
+      - { file: "apis/record_auth_verification_confirm.go", lines: [70, 75] }
+  - id: B35
+    query: "list iterator"
+    expect:
+      - { file: "tools/filesystem/blob/bucket.go", lines: [105, 110] }
+  - id: B36
+    query: "name gitee"
+    expect:
+      - { file: "tools/auth/gitee.go", lines: [21, 21] }
+  - id: B37
+    query: "read token"
+    expect:
+      - { file: "tools/tokenizer/tokenizer.go", lines: [126, 170] }
+  - id: B38
+    query: "replWithExpression"
+    expect:
+      - { file: "core/record_field_resolver_replace_expr.go", lines: [13, 17] }
+  - id: B39
+    query: "write sse"
+    expect:
+      - { file: "tools/subscriptions/message.go", lines: [20, 37] }
+  - id: B40
+    query: "defaViewIdField"
+    expect:
+      - { file: "core/view.go", lines: [314, 322] }
+  - id: B41
+    query: "PlaceholderAppName"
+    expect:
+      - { file: "core/collection_model_auth_templates.go", lines: [5, 5] }
+  - id: B42
+    query: "BodyLimitMiddlewarePriority"
+    expect:
+      - { file: "apis/middlewares_body_limit.go", lines: [18, 18] }
+  - id: B43
+    query: "MetaInSidecar"
+    expect:
+      - { file: "tools/filesystem/internal/fileblob/fileblob.go", lines: [79, 79] }
+  - id: B44
+    query: "ServeCommand"
+    expect:
+      - { file: "cmd/serve.go", lines: [14, 77] }
+  - id: B45
+    query: "rw unwrapper"
+    expect:
+      - { file: "tools/router/event.go", lines: [43, 45] }
+  - id: B46
+    query: "creaParamsTable"
+    expect:
+      - { file: "migrations/1640988000_init.go", lines: [107, 118] }
+  - id: B47
+    query: "new strava provider"
+    expect:
+      - { file: "tools/auth/strava.go", lines: [27, 41] }
+  - id: B48
+    query: "field type geo point"
+    expect:
+      - { file: "core/field_geo_point.go", lines: [17, 17] }
+  - id: B49
+    query: "RunViewForm"
+    expect:
+      - { file: "apis/collection.go", lines: [288, 290] }
+  - id: B50
+    query: "name linear"
+    expect:
+      - { file: "tools/auth/linear.go", lines: [21, 21] }

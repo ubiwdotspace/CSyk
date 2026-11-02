@@ -127,3 +127,90 @@ cases:
     query: "getGrpcPackageDefinition"
     expect:
       - { file: "packages/microservices/helpers/grpc-helpers.ts", lines: [5, 23] }
+  - id: A31
+    query: "AmqplibQueueOptions"
+    expect:
+      - { file: "packages/microservices/external/rmq-url.interface.ts", lines: [59, 70] }
+  - id: A32
+    query: "TimeoutInterceptor"
+    expect:
+      - { file: "integration/inspector/src/common/interceptors/timeout.interceptor.ts", lines: [10, 15] }
+      - { file: "sample/01-cats-app/src/common/interceptors/timeout.interceptor.ts", lines: [10, 15] }
+      - { file: "sample/34-hmr-esm/src/common/interceptors/timeout.interceptor.ts", lines: [10, 15] }
+  - id: A33
+    query: "RequestFilter"
+    expect:
+      - { file: "integration/websockets/src/request.filter.ts", lines: [4, 12] }
+  - id: A34
+    query: "WsParamProperties"
+    expect:
+      - { file: "packages/websockets/context/ws-context-creator.ts", lines: [34, 34] }
+  - id: A35
+    query: "SilentLogger"
+    expect:
+      - { file: "packages/core/injector/helpers/silent-logger.ts", lines: [4, 12] }
+  - id: A36
+    query: "ssePrimitives"
+    expect:
+      - { file: "integration/nest-application/sse/src/app.controller.ts", lines: [119, 122] }
+  - id: A37
+    query: "hasOnAppShutdownHook"
+    expect:
+      - { file: "packages/core/hooks/on-app-shutdown.hook.ts", lines: [14, 18] }
+  - id: A38
+    query: "randomStringGenerator"
+    expect:
+      - { file: "packages/common/utils/random-string-generator.util.ts", lines: [3, 3] }
+  - id: A39
+    query: "makeSafeInstanceDecorator"
+    expect:
+      - { file: "packages/core/helpers/safe-instance-decorator.ts", lines: [14, 29] }
+  - id: A40
+    query: "RecipesService"
+    expect:
+      - { file: "integration/graphql-code-first/src/recipes/recipes.service.ts", lines: [6, 31] }
+      - { file: "sample/23-graphql-code-first/src/recipes/recipes.service.ts", lines: [6, 29] }
+      - { file: "sample/33-graphql-mercurius/src/recipes/recipes.service.ts", lines: [6, 29] }
+  - id: A41
+    query: "InputServiceRef"
+    expect:
+      - { file: "integration/injector/src/circular-modules/circular.service.ts", lines: [5, 5] }
+      - { file: "integration/injector/src/circular-properties/circular.service.ts", lines: [5, 5] }
+      - { file: "integration/injector/src/circular/circular.service.ts", lines: [5, 5] }
+  - id: A42
+    query: "ExternalExceptionsHandler"
+    expect:
+      - { file: "packages/core/exceptions/external-exceptions-handler.ts", lines: [11, 42] }
+  - id: A43
+    query: "MathModule"
+    expect:
+      - { file: "sample/03-microservices/src/math/math.module.ts", lines: [6, 12] }
+  - id: A44
+    query: "ModuleKey"
+    expect:
+      - { file: "packages/core/repl/repl-context.ts", lines: [21, 21] }
+  - id: A45
+    query: "MULTER_MODULE_ID"
+    expect:
+      - { file: "packages/platform-express/multer/multer.constants.ts", lines: [1, 1] }
+      - { file: "packages/platform-node/multer/multer.constants.ts", lines: [1, 1] }
+  - id: A46
+    query: "MaxMqttTopicLengthExceededException"
+    expect:
+      - { file: "packages/microservices/errors/max-mqtt-topic-length-exceeded.exception.ts", lines: [4, 10] }
+  - id: A47
+    query: "RpcExceptionFilter"
+    expect:
+      - { file: "packages/common/interfaces/exceptions/rpc-exception-filter.interface.ts", lines: [11, 20] }
+  - id: A48
+    query: "hasOnModuleDestroyHook"
+    expect:
+      - { file: "packages/core/hooks/on-module-destroy.hook.ts", lines: [14, 18] }
+  - id: A49
+    query: "ClientsProviderAsyncOptions"
+    expect:
+      - { file: "packages/microservices/module/interfaces/clients-module.interface.ts", lines: [21, 31] }
+  - id: A50
+    query: "execRequestScope"
+    expect:
+      - { file: "integration/lazy-modules/src/lazy.controller.ts", lines: [18, 27] }

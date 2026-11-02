@@ -310,3 +310,130 @@ cases:
       - { file: "src/dispatch/plugin/service.py", lines: [197, 197] }
       - { file: "tests/factories.py", lines: [51, 51] }
       - { file: "tests/factories.py", lines: [1359, 1359] }
+  - id: C31
+    query: "send_case_triage_reminder"
+    expect:
+      - { file: "src/dispatch/case/scheduled.py", lines: [20, 20] }
+      - { file: "src/dispatch/case/scheduled.py", lines: [72, 72] }
+  - id: C32
+    query: "CaseCostTypePagination"
+    expect:
+      - { file: "src/dispatch/case_cost_type/views.py", lines: [10, 10] }
+      - { file: "src/dispatch/case_cost_type/views.py", lines: [20, 20] }
+  - id: C33
+    query: "add_members"
+    expect:
+      - { file: "src/dispatch/case/flows.py", lines: [1050, 1050] }
+      - { file: "src/dispatch/storage/flows.py", lines: [122, 122] }
+  - id: C34
+    query: "recalculate_entity_flow"
+    expect:
+      - { file: "src/dispatch/entity_type/views.py", lines: [20, 20] }
+      - { file: "src/dispatch/entity_type/views.py", lines: [112, 112] }
+  - id: C35
+    query: "IncidentExpandedPagination"
+    expect:
+      - { file: "src/dispatch/incident/views.py", lines: [50, 50] }
+      - { file: "src/dispatch/incident/views.py", lines: [86, 86] }
+      - { file: "src/dispatch/incident/views.py", lines: [98, 98] }
+  - id: C36
+    query: "match"
+    expect:
+      - { file: "src/dispatch/incident/scheduled.py", lines: [130, 130] }
+      - { file: "src/dispatch/notification/service.py", lines: [143, 143] }
+      - { file: "src/dispatch/route/service.py", lines: [28, 28] }
+  - id: C37
+    query: "build_model"
+    expect:
+      - { file: "src/dispatch/tag/scheduled.py", lines: [20, 20] }
+      - { file: "src/dispatch/tag/scheduled.py", lines: [62, 62] }
+  - id: C38
+    query: "_request_id_ctx_var"
+    expect:
+      - { file: "src/dispatch/main.py", lines: [109, 109] }
+      - { file: "src/dispatch/main.py", lines: [118, 118] }
+      - { file: "src/dispatch/main.py", lines: [189, 189] }
+  - id: C39
+    query: "_update_signal"
+    expect:
+      - { file: "src/dispatch/signal/views.py", lines: [414, 414] }
+      - { file: "src/dispatch/signal/views.py", lines: [435, 435] }
+  - id: C40
+    query: "DuoConfiguration"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_duo/plugin.py", lines: [16, 16] }
+      - { file: "src/dispatch/plugins/dispatch_duo/plugin.py", lines: [43, 43] }
+      - { file: "src/dispatch/plugins/dispatch_duo/service.py", lines: [4, 4] }
+      - { file: "src/dispatch/plugins/dispatch_duo/service.py", lines: [7, 7] }
+  - id: C41
+    query: "PagerdutyConfiguration"
+    expect:
+      - { file: "src/dispatch/database/revisions/tenant/versions/2021-09-16_3820a792d88a.py", lines: [129, 129] }
+      - { file: "src/dispatch/database/revisions/tenant/versions/2021-09-16_3820a792d88a.py", lines: [135, 135] }
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/plugin.py", lines: [59, 59] }
+  - id: C42
+    query: "get_by_slug_or_raise"
+    expect:
+      - { file: "src/dispatch/auth/permissions.py", lines: [76, 76] }
+      - { file: "src/dispatch/auth/service.py", lines: [162, 162] }
+  - id: C43
+    query: "submitted"
+    expect:
+      - { file: "src/dispatch/workflow/models.py", lines: [99, 99] }
+      - { file: "src/dispatch/workflow/service.py", lines: [130, 130] }
+  - id: C44
+    query: "_build_participants_table"
+    expect:
+      - { file: "src/dispatch/canvas/flows.py", lines: [79, 79] }
+      - { file: "src/dispatch/canvas/flows.py", lines: [243, 243] }
+  - id: C45
+    query: "SourceStatusBase"
+    expect:
+      - { file: "src/dispatch/data/source/status/models.py", lines: [30, 30] }
+      - { file: "src/dispatch/data/source/status/models.py", lines: [35, 35] }
+      - { file: "src/dispatch/data/source/status/models.py", lines: [39, 39] }
+  - id: C46
+    query: "PDNotFoundError"
+    expect:
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [23, 23] }
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [41, 41] }
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [59, 59] }
+      - { file: "src/dispatch/plugins/dispatch_pagerduty/service.py", lines: [176, 176] }
+  - id: C47
+    query: "send_incident_closed_information_review_reminder"
+    expect:
+      - { file: "src/dispatch/incident/flows.py", lines: [46, 46] }
+      - { file: "src/dispatch/incident/flows.py", lines: [606, 606] }
+  - id: C48
+    query: "ContactPlugin"
+    expect:
+      - { file: "src/dispatch/plugins/bases/__init__.py", lines: [5, 5] }
+      - { file: "src/dispatch/plugins/dispatch_core/plugin.py", lines: [46, 46] }
+      - { file: "src/dispatch/plugins/dispatch_core/plugin.py", lines: [478, 478] }
+      - { file: "src/dispatch/plugins/dispatch_slack/plugin.py", lines: [24, 24] }
+      - { file: "src/dispatch/plugins/dispatch_slack/plugin.py", lines: [634, 634] }
+      - { file: "src/dispatch/plugins/dispatch_test/contact.py", lines: [1, 1] }
+      - { file: "src/dispatch/plugins/dispatch_test/contact.py", lines: [4, 4] }
+  - id: C49
+    query: "AIEventDescription"
+    expect:
+      - { file: "src/dispatch/ai/service.py", lines: [34, 34] }
+      - { file: "src/dispatch/ai/service.py", lines: [677, 677] }
+      - { file: "src/dispatch/ai/service.py", lines: [689, 689] }
+      - { file: "src/dispatch/ai/service.py", lines: [772, 772] }
+      - { file: "src/dispatch/event/service.py", lines: [849, 849] }
+      - { file: "src/dispatch/event/service.py", lines: [861, 861] }
+      - { file: "src/dispatch/event/service.py", lines: [876, 876] }
+      - { file: "tests/ai/test_ai_service.py", lines: [7, 7] }
+      - { file: "tests/ai/test_ai_service.py", lines: [106, 106] }
+      - { file: "tests/ai/test_ai_service.py", lines: [168, 168] }
+      - { file: "tests/ai/test_ai_service.py", lines: [559, 559] }
+  - id: C50
+    query: "ParticipantCreate"
+    expect:
+      - { file: "src/dispatch/participant/service.py", lines: [22, 22] }
+      - { file: "src/dispatch/participant/service.py", lines: [207, 207] }
+      - { file: "src/dispatch/participant/service.py", lines: [239, 239] }
+      - { file: "src/dispatch/participant/service.py", lines: [262, 262] }
+      - { file: "tests/participant/test_participant_service.py", lines: [10, 10] }
+      - { file: "tests/participant/test_participant_service.py", lines: [12, 12] }

@@ -123,3 +123,87 @@ cases:
     query: "actionToggleLinearEditor"
     expect:
       - { file: "packages/excalidraw/actions/actionLinearEditor.tsx", lines: [27, 104] }
+  - id: A31
+    query: "useEmitter"
+    expect:
+      - { file: "packages/excalidraw/hooks/useEmitter.ts", lines: [5, 22] }
+  - id: A32
+    query: "rangeInclusiveFromPair"
+    expect:
+      - { file: "packages/math/src/range.ts", lines: [22, 24] }
+  - id: A33
+    query: "showSelectedShapeActions"
+    expect:
+      - { file: "packages/element/src/showSelectedShapeActions.ts", lines: [7, 22] }
+  - id: A34
+    query: "shouldAllowVerticalAlign"
+    expect:
+      - { file: "packages/element/src/textElement.ts", lines: [490, 504] }
+  - id: A35
+    query: "Modal"
+    expect:
+      - { file: "packages/excalidraw/components/Modal.tsx", lines: [13, 72] }
+  - id: A36
+    query: "createESMRawBuild"
+    expect:
+      - { file: "scripts/buildBase.js", lines: [44, 50] }
+      - { file: "scripts/buildPackage.js", lines: [108, 125] }
+      - { file: "scripts/buildUtils.js", lines: [56, 62] }
+  - id: A37
+    query: "RetryIcon"
+    expect:
+      - { file: "packages/excalidraw/components/icons.tsx", lines: [2009, 2016] }
+  - id: A38
+    query: "alignElements"
+    expect:
+      - { file: "packages/element/src/align.ts", lines: [20, 56] }
+  - id: A39
+    query: "toBase64"
+    expect:
+      - { file: "packages/excalidraw/subset/subset-shared.chunk.ts", lines: [65, 81] }
+  - id: A40
+    query: "SvgCache"
+    expect:
+      - { file: "packages/excalidraw/hooks/useLibraryItemSvg.ts", lines: [9, 9] }
+  - id: A41
+    query: "getMinCharWidth"
+    expect:
+      - { file: "packages/element/src/textMeasurements.ts", lines: [274, 282] }
+  - id: A42
+    query: "Section"
+    expect:
+      - { file: "packages/excalidraw/components/HelpDialog.tsx", lines: [62, 67] }
+      - { file: "packages/excalidraw/components/Section.tsx", lines: [7, 30] }
+  - id: A43
+    query: "ExcalidrawPlusPromoBanner"
+    expect:
+      - { file: "excalidraw-app/components/ExcalidrawPlusPromoBanner.tsx", lines: [4, 36] }
+  - id: A44
+    query: "setPointerUp"
+    expect:
+      - { file: "packages/excalidraw/components/App.host.ts", lines: [53, 56] }
+  - id: A45
+    query: "applyListMarkerAdvances"
+    expect:
+      - { file: "packages/element/src/listMarker.ts", lines: [342, 373] }
+  - id: A46
+    query: "AIComponents"
+    expect:
+      - { file: "excalidraw-app/components/AI.tsx", lines: [19, 175] }
+  - id: A47
+    query: "ExcalidrawWithClientOnly"
+    expect:
+      - { file: "examples/with-nextjs/src/app/page.tsx", lines: [8, 13] }
+  - id: A48
+    query: "DarkModeToggle"
+    expect:
+      - { file: "packages/excalidraw/components/DarkModeToggle.tsx", lines: [13, 36] }
+  - id: A49
+    query: "clearTrails"
+    expect:
+      - { file: "packages/excalidraw/animatedTrail.ts", lines: [147, 151] }
+      - { file: "packages/excalidraw/drawShapeTrail.ts", lines: [58, 60] }
+  - id: A50
+    query: "pathSegmentLengthAtParameter"
+    expect:
+      - { file: "packages/element/src/linearElementEditor.ts", lines: [2866, 2871] }
