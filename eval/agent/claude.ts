@@ -159,10 +159,13 @@ export function setups(workspace: string): Record<string, Setup> {
         'for its uses and callers, impact after edits, grep for text. Read a whole file only when you need most of it.',
     },
     // CSyk as `csyk setup` installs it now: it replaces the built-in Grep (removed by a
-    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note and the skill.
+    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note and the skill,
+    // with Claude Code's Skill tool to load it, as every interactive session has. Runs before
+    // 2026-11-03 lacked the Skill tool, so their agents could not load the skill.
     'csyk-lean': {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
       allowed: ['mcp__csyk'],
+      tools: ['Skill'],
       settings: { permissions: { deny: ['Grep'] } },
       guide: note,
       files: { '.claude/skills/csyk/SKILL.md': skill },

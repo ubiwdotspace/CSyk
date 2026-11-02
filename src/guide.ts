@@ -17,12 +17,13 @@ export const note = `## Code search (CSyk)
   \`read <path>\`. Read a file whole when you need most of it.
 - Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
   or path it mentions, called in parallel. Each extra turn re-reads your whole context.
-- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
+- Before changing code others call, or when an answer says \`partial\` or \`unconfirmed\`, load the
+  csyk skill. After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
 
 /** The skill, as .claude/skills/csyk/SKILL.md. */
 export const skill = `---
 name: csyk
-description: How to search code with the CSyk tools (find, grep, read, refs, calls, impact) in few turns and few tokens. Use when locating code for an issue or a change, tracing who uses or calls something, or checking what an edit affects.
+description: Use before editing code (changing a function's behaviour or signature, renaming, moving), when tracing who calls or uses a symbol, after an edit to find what it affects and the tests to run, or when a CSyk answer says partial or unconfirmed. How to use find, grep, read, refs, calls and impact in few turns and tokens, and what their answers mean.
 ---
 
 # Searching code with CSyk
