@@ -17,63 +17,49 @@ export const note = `## Code search (CSyk)
   \`read <path>\`. Read a file whole when you need most of it.
 - Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
   or path it mentions, called in parallel. Each extra turn re-reads your whole context.
-- Before changing code others call, or when an answer says \`partial\` or \`unconfirmed\`, load the
-  csyk skill. After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
+- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
 
-/** The skill, as .claude/skills/csyk/SKILL.md. */
+/**
+ * The skill, as .claude/skills/csyk/SKILL.md: a reference, loaded only when
+ * the agent is unsure. Loading it costs a turn and its text is re-read on
+ * every later turn: on a signature change in mini-ts, a session that loaded
+ * it used 40k tokens against 29k without, for the same answer. What every
+ * search needs is in the note; what one answer needs, it says itself.
+ */
 export const skill = `---
 name: csyk
-description: Use before editing code (changing a function's behaviour or signature, renaming, moving), when tracing who calls or uses a symbol, after an edit to find what it affects and the tests to run, or when a CSyk answer says partial or unconfirmed. How to use find, grep, read, refs, calls and impact in few turns and tokens, and what their answers mean.
+description: Reference for the CSyk code tools (find, grep, read, refs, calls, impact). Load only when unsure which of them fits a question, or what an answer means when it says text, partial or unconfirmed and its own hint is not enough. Not needed for ordinary searches or edits.
 ---
 
-# Searching code with CSyk
+# CSyk reference
 
-CSyk answers from a syntax index and the language's own compiler (tsc, pyright, gopls, the Dart
-analysis server). Its answers are exact and short; trust them instead of re-checking with Grep or a
-whole-file Read. Every extra turn re-reads your whole context, so the fewest calls win.
+CSyk answers from the language's own compiler (tsc, pyright, gopls, the Dart analysis server).
+Trust its answers instead of re-checking with grep or whole-file reads: every extra turn re-reads
+your whole context. Make independent calls in parallel, in one turn.
 
-## Pick the tool
+## Which tool
 
 | You have | Call | You get |
 |---|---|---|
-| a name, or part of one | \`find "token store"\` | one line per symbol: \`file#Name  kind line  signature\` |
-| a symbol and want its uses | \`refs <id or name>\` | per file, each line and the function it is in (\`code: true\` adds the text) |
-| a symbol and want callers or callees | \`calls <id>\` (\`direction\` in or out, \`depth\` 1–3) | callers with call lines, or callees with their declarations |
-| an error message, a label, any text | \`grep "Could not find"\` | each hit with its file, line and enclosing symbol |
-| a file or folder | \`read <path>\` | its symbols with line ranges |
-| one or more symbol ids | \`read <id>, <id>\` (\`mode: signature\` for one line) | exactly their source, in one call |
+| text: a message, a label, a regex | \`grep\` (\`path\`, \`glob\` to narrow) | each hit with its line and enclosing symbol |
+| a name, or part of one | \`find\` (\`kind\`, \`path\`) | \`file#Name  kind line  signature\` per symbol |
+| ids, names or paths | \`read a, b\` | exact source of each symbol; a file's or folder's symbols |
+| a symbol, before a rename or signature change | \`refs <id>\` | every use, per file, with its function |
+| a symbol, before changing what it does | \`calls <id>\` (\`direction\` in or out, \`depth\` 1–3) | its callers, or what it calls |
 | edits in the working tree | \`impact\` (\`since\` a revision) | changed symbols, callers two levels up, test files |
 
-Ids look like \`src/cart/total.ts#Cart.total\`; pass them to \`read\`, \`refs\` and \`calls\` as they are.
+Ids look like \`src/cart/total.ts#Cart.total\`; pass them as they are. \`refs\` lists direct
+uses, calls included; for a method, \`calls\` also finds calls through its interface or base class.
 
-## Recipes
+## What an answer means
 
-**Locate the code an issue needs changed.** \`grep\` the most specific text in the issue (an error
-message, a UI label, an option name) and \`find\` the names it mentions, as parallel calls in one turn. The hits
-already name their functions: that is usually the answer. \`read\` only the one or two candidates
-you need to be sure of, then \`calls direction=in\` if the fix may belong in a caller.
-
-**Understand a function.** \`read <id>\`, then \`calls <id> direction=out\` for what it relies on and
-\`direction=in\` for who relies on it. Do not read whole files around it.
-
-**Change something safely.** \`refs\` before renaming or changing a signature; after editing,
-\`impact\` and run the test files it lists.
-
-## Reading the answers
-
-- The header ends with where the answer came from: \`lsp\` (the compiler), \`index\` (syntax only) or
-  \`text\`, when a language has no server installed.
-- \`complete\`: every use, caller or match is listed. Nothing is left to search for: do not grep
-  again to make sure.
-- \`partial: N of M mentions resolved in time\`: a very common name; narrow with an id or a path.
-- \`unconfirmed …, the compiler cannot tell: <file> <line>·<function>\`: mentions of the name the
-  compiler could not resolve (an untyped receiver, \`any\`, plain JavaScript). They may be uses, so
-  the answer is not \`complete\`; \`read\` those lines to decide, rather than grepping again.
-- \`… N more; <how>\`: the answer was cut to its token budget; the hint says how to see the rest.
-- \`[unchanged: <id>, shown at call #n]\`: you saw that source earlier in this session; reuse it.
-
-## When to use Read instead
-
-Read a file whole only when you need most of it (a short config, a file you will rewrite), or
-with offset and limit around a line CSyk gave you.
+- Its header ends with the source: \`lsp\` (the compiler), \`index\` (syntax only) or \`text\` (no
+  language server: a text search, which may list mentions that are not uses).
+- \`complete\`: everything is listed. Do not search again to make sure.
+- \`partial: N of M mentions resolved in time\`: a very common name. What is listed is right; grep
+  the name in the folder you care about for the rest.
+- \`unconfirmed …, the compiler cannot tell\`: mentions the compiler could not resolve (an untyped
+  receiver, \`any\`, plain JavaScript). They may be uses: read those lines to decide.
+- \`… N more; <how>\`: cut to its token budget; the hint says how to see the rest.
+- \`[unchanged: <id>, shown at call #n]\`: you saw that source earlier; reuse it.
 `;

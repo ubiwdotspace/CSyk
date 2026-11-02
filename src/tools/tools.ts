@@ -494,8 +494,9 @@ export async function references(
       );
       return { found: mentions, precision: `text, unconfirmed: the language server is still loading (${partial.total} mentions)` };
     }
-    // A much-used name has more mentions than one search resolves in time; say so.
-    const cut = partial ? `, partial: ${partial.resolved} of ${partial.total} mentions resolved in time` : '';
+    // A much-used name has more mentions than one search resolves in time; say
+    // so, and what to do, where the agent reads it rather than in a skill.
+    const cut = partial ? `, partial: ${partial.resolved} of ${partial.total} mentions resolved in time; grep the name in a folder for the rest` : '';
     return { found, precision: `lsp${cut}`, ...(unconfirmed?.length ? { unconfirmed } : {}) };
   }
   const extensions = serverFor(symbol.file)?.extensions ?? new Set([extname(symbol.file)]);

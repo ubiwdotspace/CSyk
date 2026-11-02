@@ -14,10 +14,12 @@ import { watchResources } from '../harness/resources.ts';
 import { countTokens } from '../harness/tokens.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
-const tools = 'Read,Grep,Glob';
+// Skill too, as every interactive session has it (with Claude Code's own skills listed): runs
+// before 2026-11-03 left it out, so no setup could load a skill.
+const tools = 'Read,Grep,Glob,Skill';
 
 /**
- * What an agent is given besides Read, Grep and Glob, and the [files]
+ * What an agent is given besides Read, Grep, Glob and Skill, and the [files]
  * written into the workspace before it starts, such as a skill.
  */
 export type Setup = {
@@ -159,13 +161,10 @@ export function setups(workspace: string): Record<string, Setup> {
         'for its uses and callers, impact after edits, grep for text. Read a whole file only when you need most of it.',
     },
     // CSyk as `csyk setup` installs it now: it replaces the built-in Grep (removed by a
-    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note and the skill,
-    // with Claude Code's Skill tool to load it, as every interactive session has. Runs before
-    // 2026-11-03 lacked the Skill tool, so their agents could not load the skill.
+    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note and the skill.
     'csyk-lean': {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
       allowed: ['mcp__csyk'],
-      tools: ['Skill'],
       settings: { permissions: { deny: ['Grep'] } },
       guide: note,
       files: { '.claude/skills/csyk/SKILL.md': skill },
