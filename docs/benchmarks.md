@@ -69,7 +69,8 @@ compared with the fix that was actually merged:
 
 Two setups answer the same issues. **Claude Code alone** has its own `Read`, `Grep` and `Glob`.
 **With CSyk** is Claude Code as `csyk setup` leaves it: CSyk's six tools in place of `Grep`, plus
-`Read` and `Glob`, the note and the skill.
+`Read` and `Glob`, the note and the skill. The runs in the tables had no `Skill` tool, so the skill
+could not be loaded; since 2026-11-03 both setups have it, as every interactive session does.
 
 Each benchmark contributes 30 issues drawn at random from the whole dataset (a fixed seed, no
 filter on difficulty). Each setup ran the same 30 issues several times, and the table shows the
