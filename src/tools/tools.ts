@@ -407,7 +407,23 @@ const hitRow = (h: Hit) => `${h.file}:${h.line}  ${h.home?.name ?? '-'}  ${h.cod
 function linesPerPlace(fileHits: Hit[]): string {
   const byHome = new Map<string, number[]>();
   for (const h of fileHits) byHome.set(h.home?.name ?? '', [...(byHome.get(h.home?.name ?? '') ?? []), h.line]);
-  return [...byHome].map(([name, at]) => `${name ? `${name} ` : ''}${at.join(', ')}`).join(' · ');
+  return [...byHome].map(([name, at]) => `${name ? `${name} ` : ''}${lineRuns(at)}`).join(' · ');
+}
+
+// Lines in order, three or more in a row as a range: `113, 120-168`. A table
+// or an enum hit on every line listed each one (349 tokens of numbers for one
+// grep on vscode); the range says the same.
+function lineRuns(lines: number[]): string {
+  const sorted = [...new Set(lines)].sort((a, b) => a - b);
+  const parts: string[] = [];
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === (sorted[j] ?? 0) + 1) j++;
+    if (j - i >= 2) parts.push(`${sorted[i]}-${sorted[j]}`);
+    else for (let k = i; k <= j; k++) parts.push(String(sorted[k]));
+    i = j + 1;
+  }
+  return parts.join(', ');
 }
 
 /**

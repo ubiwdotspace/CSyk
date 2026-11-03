@@ -113,7 +113,8 @@ describe('Workspace', () => {
     expect(listed).toContain("f39.ts:1  n39  export const n39 = 'needle';");
     const body = Array.from({ length: 150 }, (_, i) => `  const v${i} = ${long};`);
     const lines = await grepIn({ 'big.ts': ['export function big() {', ...body, '}'].join('\n') });
-    expect(lines).toMatch(/^150 hits in 1 place · text · lines per symbol · complete\nbig\.ts {2}big 2, 3, 4, /);
+    // Lines in a row read as a range.
+    expect(lines).toMatch(/^150 hits in 1 place · text · lines per symbol · complete\nbig\.ts {2}big 2-151$/);
     const summed = await grepIn(Object.fromEntries(Array.from({ length: 600 }, (_, i) => [`feature${i}_module.ts`, `export const n${i} = ${long};`])));
     expect(summed).toMatch(/^600 hits in 600 files · text · files with the most hits first/);
   });

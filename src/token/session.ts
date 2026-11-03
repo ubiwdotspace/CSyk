@@ -3,8 +3,9 @@ import { statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// Tokens of answers after which a session counts as long.
-const longSession = 3000;
+// Tokens of answers after which a session counts as long. CSYK_LONG_SESSION
+// changes it, for measuring (Infinity: never long).
+const longSession = Number(process.env.CSYK_LONG_SESSION) || 3000;
 
 /** How long a shown body stays "already shown" for hosts that compact without telling us. */
 const ledgerTtl = 30 * 60 * 1000;

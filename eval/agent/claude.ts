@@ -169,6 +169,14 @@ export function setups(workspace: string): Record<string, Setup> {
       guide: note,
       files: { '.claude/skills/csyk/SKILL.md': skill },
     },
+    // csyk-lean with answers that never turn short in a long session, to measure that rule.
+    'csyk-nolong': {
+      mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace], env: { CSYK_LONG_SESSION: 'Infinity' } } },
+      allowed: ['mcp__csyk'],
+      settings: { permissions: { deny: ['Grep'] } },
+      guide: note,
+      files: { '.claude/skills/csyk/SKILL.md': skill },
+    },
     // CSyk without its hooks: a denied call costs the agent a turn.
     'csyk-nohooks': {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
