@@ -157,7 +157,7 @@ Code on the first ten issues of four public benchmarks of real GitHub issues:
 | | Text search | **CSyk** | Serena | Graphify |
 |---|---|---|---|---|
 | Definition by name: first answer right | 33.1% | **100%** | 85.1% | 79.9% |
-| Uses of a symbol: answers that really are uses | 64.1% | **99.5%** | 81.2% | 41.6% |
+| Uses of a symbol: answers that really are uses | 64.1% | **99.4%** | 81.2% | 41.6% |
 | Tokens per answer | 3,400 | **115** | 243 | 719 |
 | CPU for the same questions on all twelve, from cold | – | **205 s** | 2,764 s | 353 s |
 | Claude Code, tokens per issue against Claude Code alone | – | **−7%** | +8% | +53% |

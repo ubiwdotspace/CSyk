@@ -42,6 +42,11 @@ cases:
     expect:
       - { file: "src/triggers.js", lines: [383, 383] }
       - { file: "src/triggers.js", lines: [491, 491] }
+      # Added 2026-11-03, read in the code: imported and called in a TypeScript file, which the JS project does not read.
+      - { file: "src/LiveQuery/ParseLiveQueryServer.ts", lines: [19, 19] }
+      - { file: "src/LiveQuery/ParseLiveQueryServer.ts", lines: [255, 255] }
+      - { file: "src/LiveQuery/ParseLiveQueryServer.ts", lines: [454, 454] }
+      - { file: "src/LiveQuery/ParseLiveQueryServer.ts", lines: [457, 457] }
   - id: C06
     query: "equalObjects"
     expect:

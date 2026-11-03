@@ -8,7 +8,10 @@ issues.
 
 Twelve public repositories, each pinned to one commit. The test questions are generated from each
 language's own compiler, which also gives the right answers. There are 30 questions of each kind
-per repository, fewer when a small repository has fewer.
+per repository, fewer when a small repository has fewer. Measured on 2026-11-03 with version 0.1.0;
+three answers to uses were completed by reading the code (a default export imported under another
+name, a component rendered in seven files, a JavaScript function called from TypeScript), where
+CSyk listed real uses the key left out.
 
 The six kinds of question:
 
@@ -25,18 +28,18 @@ The six kinds of question:
 
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
-| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 97.4% / 91.8% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 94.7% | 100% | 90.9% / 97.5% |
-| nest (TypeScript, large) | 100% | 100% | 99.2% / 100% | 96.7% / 87.3% | 100% | 93.3% / 96.9% |
-| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 94.3% |
+| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 100% / 90.5% |
+| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 94.7% | 100% | 98.3% / 98.3% |
+| nest (TypeScript, large) | 100% | 100% | 100% / 100% | 96.7% / 87.3% | 100% | 99.8% / 98.8% |
+| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 96.9% |
 | wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
-| flame (Dart, large) | 100% | 100% | 100% / 100% | 97.9% / 100% | 100% | 71.6% / 91% |
+| flame (Dart, large) | 100% | 100% | 100% / 100% | 97.9% / 100% | 100% | 74.4% / 93.8% |
 | fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 100% |
-| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 97.8% / 95.6% |
-| django (Python, large) | 100% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 96.7% / 84.6% |
-| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 98.8% |
-| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 95.1% / 93.4% |
-| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 92.7% / 97.2% |
+| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 99.8% / 95.1% |
+| django (Python, large) | 100% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 97.5% / 85.1% |
+| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 99.2% |
+| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99.2% / 99% |
+| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 96.8% / 98.2% |
 
 Callers and calls are scored against each compiler's call hierarchy, which counts less as a call
 than CSyk does. CSyk also counts a function passed as a callback (`hits.sort(pointDistanceSq)`),
@@ -210,16 +213,17 @@ Queries are passed as the questions are written, the same for every tool.
 The twelve repositories are libraries and frameworks. Two apps join them, both Apache-2.0: jitsi-meet,
 a large React frontend (2,106 TypeScript and 126 JavaScript files), and parse-server, a Node backend
 written mostly in JavaScript, with Flow and TypeScript-style annotations. Same questions, 30 of each
-kind, against text search (ripgrep and a read of the first matching file):
+kind, against text search (ripgrep and a read of the first matching file). CSyk's column is from
+2026-11-03, text search's from the run it was compared in:
 
 | | jitsi-meet: CSyk | text search | parse-server: CSyk | text search |
 |---|---|---|---|---|
 | Exact name: first answer right | **100%** | 50% | **100%** | 23.3% |
 | Part of a name: first answer right | **100%** | 10% | **100%** | 3.3% |
-| Uses: found / correct | **97.5% / 100%** | 100% / 67.6% | **100% / 100%** | 100% / 56% |
-| Callers and calls: found / correct | **96.7% / 96%** | 100% / 66.9% | **100% / 94.8%** | 100% / 52.6% |
+| Uses: found / correct | **100% / 100%** | 100% / 67.6% | **100% / 100%** | 100% / 56% |
+| Callers and calls: found / correct | **100% / 99.2%** | 100% / 66.9% | **100% / 94.3%** | 100% / 52.6% |
 | Message: in the first five | **100%** | 100% | **100%** | 100% |
-| Edit impact: found / correct | **96.9% / 94.5%** | – | **82.4% / 96.7%** | – |
+| Edit impact: found / correct | **99.2% / 96%** | – | **97.2% / 96.3%** | – |
 | Tokens per message answer | **227** | 7426 | **254** | 9535 |
 
 Text search answers callers only, for the 15 questions about them; it has no answer for edit
@@ -249,7 +253,7 @@ scored against the answers before.
 |---|---|---|---|
 | Exact name: first answer right | **100%** | 85.1% | 79.9% |
 | Part of a name: first answer right | **100.0%** | 17.0% | 31.6% |
-| Uses: found / correct | **99.4% / 99.5%** | 76.5% / 81.2% | 28.6% / 41.6% |
+| Uses: found / correct | **99.4% / 99.4%** | 76.5% / 81.2% | 28.6% / 41.6% |
 | Callers and calls: found / correct | **99.5% / 97.1%** | 77.5% / 75.0% | 47.7% / 53.8% |
 | Message: in the first five | **100%** | – | 11.9% |
 | Tokens per answer | **115** | 243 | 719 |
