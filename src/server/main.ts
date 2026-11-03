@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -6,6 +7,8 @@ import { createServer } from './server.ts';
 
 /** Serves [root] over stdio until the client goes away; hooks see it while it runs. */
 export async function serve(root: string): Promise<void> {
+  // Symlinks followed, as the agent's hooks see the folder (macOS's /var is /private/var).
+  root = realpathSync(root);
   const { server, close } = createServer(root);
   const unmark = markServing(root);
   const shutdown = () => {

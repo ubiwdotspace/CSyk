@@ -114,15 +114,14 @@ export const agents: Agent[] = [
     steps(scope, withHooks) {
       const csyk = self();
       const run = (name: string) => [{ type: 'command', command: `${csyk.join(' ')} hook ${name}` }];
+      // A shell search of the code (rg, grep, git grep) is turned down for CSyk grep: with the
+      // built-in Grep off, agents search with the shell instead. --hooks also turns down whole
+      // reads of long files and greps for a bare name.
       const hooks = {
-        ...(withHooks
-          ? {
-              PreToolUse: [
-                { matcher: 'Read', hooks: run('pre-read') },
-                { matcher: 'Grep|Bash', hooks: run('pre-grep') },
-              ],
-            }
-          : {}),
+        PreToolUse: [
+          { matcher: 'Bash', hooks: run('pre-bash') },
+          ...(withHooks ? [{ matcher: 'Read', hooks: run('pre-read') }, { matcher: 'Grep', hooks: run('pre-grep') }] : []),
+        ],
         SessionStart: [{ hooks: run('session-reset') }],
         PreCompact: [{ hooks: run('session-reset') }],
       };

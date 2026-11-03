@@ -23,7 +23,7 @@ const busyMs = 30_000;
 // Folders whose changes never touch the project's own sources.
 const ignoredDirs = /(^|\/)(node_modules|\.git|dist|build|out|coverage|\.next|\.dart_tool)\//;
 // Folders of dependencies and builds, left out when searching what git ignores.
-const dependencyDirs = ['node_modules', '.git', 'dist', 'build', 'out', 'coverage', '.next', '.dart_tool', 'vendor', 'target', '.venv', 'venv', '__pycache__', 'Pods', '.gradle'];
+export const dependencyDirs = ['node_modules', '.git', 'dist', 'build', 'out', 'coverage', '.next', '.dart_tool', 'vendor', 'target', '.venv', 'venv', '__pycache__', 'Pods', '.gradle'];
 
 /** Where the index of [root] is saved between runs. */
 export function snapshotPath(root: string): string {

@@ -1,11 +1,13 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { codeExtensions } from '../index/parse.ts';
-import { hookedExtensions, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
+import { dependencyDirs } from '../workspace/workspace.ts';
+import { fileSearches, hookedDependencyDirs, hookedExtensions, preBash, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
 
-const root = mkdtempSync(join(tmpdir(), 'csyk-hooks-'));
+// Symlinks followed, as servers write their roots (macOS's tmpdir is under /var, a link).
+const root = realpathSync(mkdtempSync(join(tmpdir(), 'csyk-hooks-')));
 writeFileSync(join(root, 'big.ts'), 'const x = 1;\n'.repeat(500));
 writeFileSync(join(root, 'small.ts'), 'const x = 1;\n');
 
@@ -69,5 +71,46 @@ describe('preGrep', () => {
     expect(grep({ tool_name: 'Grep', tool_input: { pattern: 'Token\\w+' } })).toBeUndefined();
     expect(grep({ tool_name: 'Bash', tool_input: { command: 'rg TokenStore /elsewhere' } })).toBeUndefined();
     expect(grep({ tool_name: 'Grep', tool_input: { pattern: 'TokenStore' } }, [])).toBeUndefined();
+  });
+});
+
+describe('hookedDependencyDirs', () => {
+  it('are the folders the workspace leaves out', () => {
+    expect([...hookedDependencyDirs].sort()).toEqual([...dependencyDirs].sort());
+  });
+});
+
+describe('fileSearches', () => {
+  it('reads rg, git grep and grep over files as ripgrep patterns', () => {
+    expect(fileSearches('rg -n "Token Store" src', '/repo')).toEqual([{ pattern: 'Token Store', literal: false, targets: ['/repo/src'] }]);
+    expect(fileSearches('git grep -n saveToken', '/repo')).toEqual([{ pattern: 'saveToken', literal: false, targets: ['/repo'] }]);
+    expect(fileSearches('grep -n "a\\|b(c)" lib/x.ts', '/repo')).toEqual([{ pattern: 'a|b\\(c\\)', literal: false, targets: ['/repo/lib/x.ts'] }]);
+    expect(fileSearches('grep -rE "a|b" --include=*.ts .', '/repo')).toEqual([{ pattern: 'a|b', literal: false, glob: '*.ts', targets: ['/repo'] }]);
+    expect(fileSearches('grep -rF "f(x)" .', '/repo')).toEqual([{ pattern: 'f(x)', literal: true, targets: ['/repo'] }]);
+    expect(fileSearches('grep -rwi "f.x" .', '/repo')).toEqual([{ pattern: '(?i)\\b(?:f.x)\\b', literal: false, targets: ['/repo'] }]);
+  });
+
+  it('leaves out a grep of piped output', () => {
+    expect(fileSearches('npm test 2>&1 | grep FAIL', '/repo')).toEqual([]);
+    expect(fileSearches('git log --oneline | grep -i fix', '/repo')).toEqual([]);
+  });
+});
+
+describe('preBash', () => {
+  const bash = (command: string, roots = [root]) => preBash({ tool_name: 'Bash', tool_input: { command }, cwd: root }, roots)?.hookSpecificOutput.permissionDecisionReason;
+
+  it('turns a shell search of a served workspace into CSyk grep', () => {
+    expect(bash('grep -rn "Could not save" src')).toBe(
+      'Search the code with CSyk grep (pattern: "Could not save", path: "src"): the same matches, each with the function it is in, in fewer tokens. A grep of a command\'s output still runs.',
+    );
+    expect(bash('rg -F "a.b" --glob "*.ts"')).toMatch(/^Search the code with CSyk grep \(pattern: "a\.b", literal: true, glob: "\*\.ts"\)/);
+  });
+
+  it('lets piped greps, dependencies, other folders and unserved workspaces through', () => {
+    expect(bash('npm test | grep FAIL')).toBeUndefined();
+    expect(bash('grep -rn useState node_modules/react')).toBeUndefined();
+    expect(bash('rg TokenStore /elsewhere')).toBeUndefined();
+    expect(bash('rg TokenStore', [])).toBeUndefined();
+    expect(bash('ls -la && npm run build')).toBeUndefined();
   });
 });
