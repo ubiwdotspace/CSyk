@@ -29,6 +29,11 @@ into the agent as an MCP server.
 
 Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS and Linux.
 
+> **Preview (0.1).** The numbers below come from public repositories and benchmarks, all
+> reproducible from this repository. CSyk has not yet been used widely on private codebases. When
+> an answer is wrong or misses something, [open an issue](https://github.com/ubiwdotspace/CSyk/issues)
+> with what you asked, what came back and what was right: each one becomes a test.
+
 ---
 
 ## Install
@@ -134,6 +139,15 @@ knowledge graph to explore. CSyk does one job, finding code for the agent, and d
   turn, so six tools and answers under 2,000 tokens.
 - **The compiler decides.** A use or a caller counts only when the language's compiler confirms it.
 - **Always current.** Every edit is indexed before the next answer; there is nothing to rebuild.
+
+### Why not Claude Code's official LSP plugin?
+
+It gives the agent the same compilers through an `LSP` tool. On 40 TypeScript and JavaScript
+issues, three runs each, the agent never called that tool: it searched and read files as it does
+alone, and paid 11.5% more tokens for the tool's description. With CSyk, as accurate, 11.2% fewer
+tokens than Claude Code alone and 15% faster ([details](docs/benchmarks.md#against-the-official-lsp-plugin-and-codegraph)).
+The plugin's install as its README gives also fails with TypeScript 7. Use the plugin for what CSyk
+does not do: rename, hover and diagnostics.
 
 ## Numbers
 

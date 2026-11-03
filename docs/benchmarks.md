@@ -46,6 +46,25 @@ and in arrow functions held by class properties. On nest and excalidraw, every c
 scored as not correct is of these kinds. The one nest question CSyk finds nothing for imports
 `@nestjs/common`, which the benchmark's checkout, without its packages installed, cannot resolve.
 
+**Dart's edit impact on provider and flame is the answer key's, not missed places.** The Dart
+server's answers follow a method through Flutter's own base classes, and match names the server
+cannot tell apart. Every place CSyk does not list on provider (33 of 98, read one by one) is of
+these kinds, and none of them can run the changed code:
+
+- A change to one widget's `build` lists the `build` of other widgets and the `main()` of eight
+  test files: every `build` overrides Flutter's `Widget.build`, and every widget test renders one.
+- A change to one class's `debugFillProperties` lists another class's, and the example app's
+  `Counter`: all of them override Flutter's `Diagnosticable`.
+- A function calling `ScaffoldMessenger.of(context)` lists provider's own `Provider.of`, `read`
+  and `watch`; a `State.dispose` lists the whole `Provider` class, which has a parameter named
+  `dispose`.
+
+flame's are the same kinds: 144 places, of them 90 functions reached through a lifecycle method
+every component has (`onLoad`, `onMount`), 30 class declarations and 24 `main()`. Following
+Flutter's hierarchy as the key does was tried: flame 74.4% → 75.0% found, 28% slower, and every
+answer longer with places the edit cannot reach. CSyk does not follow calls through Flutter's base
+classes, and its answers say where they come from.
+
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
 
