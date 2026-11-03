@@ -14,10 +14,12 @@ import { watchResources } from '../harness/resources.ts';
 import { countTokens } from '../harness/tokens.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
-const tools = 'Read,Grep,Glob';
+// Skill too, as every interactive session has it (with Claude Code's own skills listed): runs
+// before 2026-11-03 left it out, so no setup could load a skill.
+const tools = 'Read,Grep,Glob,Skill';
 
 /**
- * What an agent is given besides Read, Grep and Glob, and the [files]
+ * What an agent is given besides Read, Grep, Glob and Skill, and the [files]
  * written into the workspace before it starts, such as a skill.
  */
 export type Setup = {
