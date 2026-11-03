@@ -31,6 +31,32 @@ cases:
     expect:
       - { file: "react/features/settings/components/native/FormSection.tsx", lines: [11, 11] }
       - { file: "react/features/settings/components/native/FormSection.tsx", lines: [42, 42] }
+      # Added 2026-11-03, read in the code: the default export, imported and rendered as <FormSection> in seven files.
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [12, 12] }
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [79, 79] }
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [92, 92] }
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [95, 95] }
+      - { file: "react/features/settings/components/native/AdvancedSection.tsx", lines: [109, 109] }
+      - { file: "react/features/settings/components/native/ConferenceSection.tsx", lines: [13, 13] }
+      - { file: "react/features/settings/components/native/ConferenceSection.tsx", lines: [73, 73] }
+      - { file: "react/features/settings/components/native/ConferenceSection.tsx", lines: [97, 97] }
+      - { file: "react/features/settings/components/native/GeneralSection.tsx", lines: [16, 16] }
+      - { file: "react/features/settings/components/native/GeneralSection.tsx", lines: [40, 40] }
+      - { file: "react/features/settings/components/native/GeneralSection.tsx", lines: [62, 62] }
+      - { file: "react/features/settings/components/native/LinksSection.tsx", lines: [10, 10] }
+      - { file: "react/features/settings/components/native/LinksSection.tsx", lines: [39, 39] }
+      - { file: "react/features/settings/components/native/LinksSection.tsx", lines: [53, 53] }
+      - { file: "react/features/settings/components/native/ModeratorSection.tsx", lines: [15, 15] }
+      - { file: "react/features/settings/components/native/ModeratorSection.tsx", lines: [205, 205] }
+      - { file: "react/features/settings/components/native/ModeratorSection.tsx", lines: [219, 219] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [11, 11] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [90, 90] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [104, 104] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [110, 110] }
+      - { file: "react/features/settings/components/native/NotificationsSection.tsx", lines: [123, 123] }
+      - { file: "react/features/settings/components/native/ProfileView.tsx", lines: [27, 27] }
+      - { file: "react/features/settings/components/native/ProfileView.tsx", lines: [131, 131] }
+      - { file: "react/features/settings/components/native/ProfileView.tsx", lines: [151, 151] }
   - id: C06
     query: "WelcomePageTabs"
     expect:

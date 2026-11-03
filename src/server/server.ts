@@ -1,9 +1,13 @@
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { estimateTokens } from '../token/budget.ts';
 import { resetMarker, Session } from '../token/session.ts';
 import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
 import type { ToolResult } from '../tools/tools.ts';
 import { Workspace } from '../workspace/workspace.ts';
+
+// The package's version, from src/ and from dist/ alike (both two folders down).
+const { version } = createRequire(import.meta.url)('../../package.json') as { version: string };
 
 /**
  * The CSyk MCP server for the workspace at [root]. The index is built as
@@ -16,7 +20,7 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
   // A failed build surfaces on a tool call that waits for it, not as an unhandled rejection.
   workspace.ready.catch(() => {});
   const session = new Session({ marker: resetMarker(root) });
-  const server = new McpServer({ name: 'csyk', version: '0.0.0' });
+  const server = new McpServer({ name: 'csyk', version });
 
   const answer = async (run: (ws: Workspace) => Promise<ToolResult>) => {
     session.nextCall();
