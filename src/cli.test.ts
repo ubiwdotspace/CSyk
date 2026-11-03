@@ -25,7 +25,9 @@ describe('csyk setup --write', () => {
     expect(JSON.parse(first[0] ?? '{}').mcpServers.csyk.args.at(-1)).toBe('serve');
     const settings = JSON.parse(first[1] ?? '{}');
     expect(settings.permissions.deny).toEqual(['Grep']);
-    expect(Object.keys(settings.hooks).sort()).toEqual(['PreCompact', 'SessionStart']);
+    expect(Object.keys(settings.hooks).sort()).toEqual(['PreCompact', 'PreToolUse', 'SessionStart']);
+    // Shell searches go through CSyk grep; reads are not turned down without --hooks.
+    expect(settings.hooks.PreToolUse.map((e: { matcher: string }) => e.matcher)).toEqual(['Bash']);
     expect(existsSync(join(dir, '.claude/skills/csyk/SKILL.md'))).toBe(true);
   }, 30_000);
 });

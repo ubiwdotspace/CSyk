@@ -46,8 +46,12 @@ For every project (`--user`):
 A second run replaces what the first wrote and leaves everything else in those files alone.
 
 For Claude Code, setup also writes `.claude/settings.json` (`~/.claude/settings.json`): a hook
-that resets what CSyk has shown when a session starts or is compacted, and a rule that turns off
-Claude Code's own `Grep`.
+that resets what CSyk has shown when a session starts or is compacted, a rule that turns off
+Claude Code's own `Grep`, and a hook that turns down a search of the code from the shell (`rg`,
+`grep` over files or folders, `git grep`) with the CSyk `grep` that finds the same matches, so
+every search of the code goes through CSyk. A `grep` of a command's output (`npm test | grep
+FAIL`), searches in dependencies (`node_modules`, `vendor`, …) or outside the project, and every
+search while no CSyk server serves the folder run as usual.
 
 **Why turn off `Grep`.** CSyk's `grep` searches the same way (ripgrep, regular expressions, a
 `path` and a `glob`), and also says which function each match is in. When an agent has both, it
@@ -71,10 +75,16 @@ the project either way.
 
 ## Hooks
 
-Hooks are small programs Claude Code runs before or after a tool call. `csyk setup` adds one:
+Hooks are small programs Claude Code runs before or after a tool call. `csyk setup` adds two:
 
 - `session-reset`: when a session starts or its context is compacted, tells CSyk to send code
   again that it had already shown.
+- `pre-bash`: refuses a search of the code from the shell (`rg`, `grep` over files or folders,
+  `git grep`) and gives the CSyk `grep` call that finds the same matches, its pattern written as
+  ripgrep reads it (grep's `\|`, `-i`, `-w` and `-F` included). With Claude Code's `Grep` turned
+  off, agents otherwise search with the shell, which costs more tokens and names no function. A
+  `grep` of a command's output, searches in dependencies or outside the project, and every search
+  while no CSyk server serves the folder pass.
 
 `csyk setup --hooks` adds two more, which refuse certain calls and point the agent to CSyk
 instead. They are off by default: each refused call costs the agent a turn, and on the public
@@ -82,7 +92,8 @@ benchmarks the agent used fewer tokens without them.
 
 - `pre-read`: refuses reading a whole source file over 400 lines and suggests `read` with the
   file's path. Reading part of a file is always allowed.
-- `pre-grep`: refuses a text search for a single identifier and suggests `find` and `refs`.
+- `pre-grep`: refuses a `Grep` for a single identifier, if you turn Claude Code's `Grep` back on,
+  and suggests `find` and `refs`.
   Phrases, regular expressions and searches outside the project are allowed.
 
 Each hook only acts while CSyk serves the folder, lets the call through if anything goes wrong,

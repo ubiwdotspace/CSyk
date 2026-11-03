@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
-import { preGrep, preRead, servedRoots, sessionReset, type HookInput } from './hooks/hooks.ts';
+import { preBash, preGrep, preRead, servedRoots, sessionReset, type HookInput } from './hooks/hooks.ts';
 
 const usage = `Usage:
   csyk [serve] [workspace]   serve a workspace (the current folder by default) over MCP stdio
-  csyk hook <name>           run a Claude Code hook: pre-read, pre-grep or session-reset
+  csyk hook <name>           run a Claude Code hook: pre-bash, pre-read, pre-grep or session-reset
   csyk setup                 in a terminal: pick the agents (Claude Code, Codex, Antigravity) and
                              the projects, write their configuration, and install missing
                              language servers
@@ -35,7 +35,8 @@ async function hook(name: string): Promise<void> {
     const input = JSON.parse(Buffer.concat(chunks).toString('utf8')) as HookInput;
     const roots = servedRoots();
     if (name === 'session-reset') return sessionReset(input, roots);
-    const answer = name === 'pre-read' ? preRead(input, roots) : name === 'pre-grep' ? preGrep(input, roots) : undefined;
+    const answer =
+      name === 'pre-bash' ? preBash(input, roots) : name === 'pre-read' ? preRead(input, roots) : name === 'pre-grep' ? preGrep(input, roots) : undefined;
     if (answer) process.stdout.write(JSON.stringify(answer));
   } catch {
     // Fail open.
