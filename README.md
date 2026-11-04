@@ -43,7 +43,7 @@ that supports MCP works too, set up by hand.
 1. **Install CSyk**, once for your machine. With Node.js 22.18 or later:
 
    ```sh
-   npm install -g csyk          # or, with pnpm: pnpm add -g csyk
+   npm install -g @ubiw/csyk    # or, with pnpm: pnpm add -g @ubiw/csyk
    ```
 
    Without Node.js, take the package for your machine, which has Node.js inside, and link it from

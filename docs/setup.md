@@ -1,7 +1,7 @@
 # Setup
 
 ```sh
-npm install -g csyk          # or: pnpm add -g csyk
+npm install -g @ubiw/csyk    # or: pnpm add -g @ubiw/csyk
                              # or from a clone: npm install && npm run build && npm install -g .
 cd your-project
 csyk setup

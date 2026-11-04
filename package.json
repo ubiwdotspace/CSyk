@@ -1,5 +1,5 @@
 {
-  "name": "csyk",
+  "name": "@ubiw/csyk",
   "version": "0.1.0",
   "description": "Code-search MCP server for AI agents: compiler-grade precision, minimal tokens.",
   "license": "Apache-2.0",
@@ -63,5 +63,8 @@
     "dist",
     "grammars",
     "NOTICE"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
