@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +6,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { countTokens } from '../../eval/harness/tokens.ts';
+import { postRead } from '../hooks/hooks.ts';
+import { seenLog } from '../token/session.ts';
 import { createServer } from './server.ts';
 
 const miniTs = join(dirname(fileURLToPath(import.meta.url)), '../../eval/fixtures/mini-ts');
@@ -100,6 +102,18 @@ describe('the MCP server', () => {
     const first = await call('read', { target: 'toTitleCase' });
     expect(first).toContain('export function toTitleCase');
     expect(await call('read', { target: 'toTitleCase' })).toMatch(/^\[unchanged: src\/utils\/strings.ts#toTitleCase, shown at call #\d+\]$/);
+  });
+
+  it("points to a body the agent read with its own Read, not sending it again", async () => {
+    const root = realpathSync(miniTs);
+    try {
+      postRead({ tool_name: 'Read', tool_input: { file_path: 'src/utils/strings.ts', offset: 1, limit: 30 }, cwd: root }, [root]);
+      expect(await call('read', { target: 'toKebabCase' })).toBe('[unchanged: src/utils/strings.ts#toKebabCase, lines 2-8, in your read of src/utils/strings.ts]');
+      // Lines it did not read come as source.
+      expect(await call('read', { target: 'calculateTax' })).toContain('export function calculateTax');
+    } finally {
+      rmSync(seenLog(root), { force: true });
+    }
   });
 
   it('hints once per session', async () => {

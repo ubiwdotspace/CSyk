@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { toPosix } from '../paths.ts';
-import { resetMarker } from '../token/session.ts';
+import { resetMarker, seenLog } from '../token/session.ts';
 
-/** What Claude Code sends a hook on stdin; only the fields used here. */
+/** What Claude Code sends a hook on stdin, the fields used here; other agents' events are read into it (formats.ts). */
 export type HookInput = {
   hook_event_name?: string;
   tool_name?: string;
@@ -237,6 +237,78 @@ function fromBasic(pattern: string): string {
   return out;
 }
 
+// A shell read longer than this may come back cut (Codex and Claude Code shorten long command
+// output), so it is not counted as seen.
+const wholeShellRead = 200;
+
+/**
+ * PostToolUse on the agent's own file reads (Claude Code's Read; `cat`, `sed -n 'a,bp'`,
+ * `head` or `nl` alone in a shell): notes the lines of source files in a served workspace it
+ * now holds, so CSyk `read` points at them instead of sending them again.
+ */
+export function postRead(input: HookInput, roots: readonly string[], now = Date.now()): void {
+  const cwd = cwdOf(input);
+  const reads = input.tool_name === 'Read' ? toolRead(input.tool_input ?? {}, cwd) : shellReads(String(input.tool_input?.command ?? ''), cwd);
+  for (const read of reads) {
+    const root = roots.find((r) => inside(read.file, [r]));
+    if (!root || !hookedExtensions.has(extname(read.file))) continue;
+    const log = seenLog(root);
+    mkdirSync(dirname(log), { recursive: true });
+    appendFileSync(log, `${JSON.stringify({ ...read, at: now })}\n`);
+  }
+}
+
+type FileRead = { file: string; from: number; to: number };
+
+// Claude Code's Read: from line [offset] (1 by default), [limit] lines (2,000 by default).
+function toolRead(args: Record<string, unknown>, cwd: string): FileRead[] {
+  if (typeof args.file_path !== 'string') return [];
+  const from = typeof args.offset === 'number' && args.offset > 0 ? args.offset : 1;
+  const limit = typeof args.limit === 'number' && args.limit > 0 ? args.limit : 2000;
+  return [{ file: real(resolve(cwd, args.file_path)), from, to: from + limit - 1 }];
+}
+
+/** The files a shell [command] prints whole or in part, when it does nothing else (a pipe into grep shows only some lines). */
+export function shellReads(command: string, cwd: string): FileRead[] {
+  const commands = simpleCommands(command);
+  if (!commands) return [];
+  const reads: FileRead[] = [];
+  let dir = cwd;
+  for (const [program = '', ...args] of commands) {
+    if (program === 'cd' && args[0]) {
+      dir = resolve(dir, args[0]);
+      continue;
+    }
+    const tool = basename(program);
+    const files = args.filter((a) => !a.startsWith('-'));
+    const lineCount = (file: string) => {
+      try {
+        return readFileSync(file, 'utf8').split('\n').length;
+      } catch {
+        return Infinity;
+      }
+    };
+    const whole = (names: string[]) =>
+      names.map((name) => real(resolve(dir, name))).map((file) => ({ file, from: 1, to: lineCount(file) }));
+    let found: FileRead[];
+    if ((tool === 'cat' || tool === 'nl') && files.length > 0) found = whole(files);
+    else if (tool === 'sed' && args[0] === '-n') {
+      const range = /^(\d+)(?:,(\d+))?p$/.exec(args[1] ?? '');
+      const file = args[2];
+      if (!range || !file || args.length !== 3) return [];
+      found = [{ file: real(resolve(dir, file)), from: Number(range[1]), to: Number(range[2] ?? range[1]) }];
+    } else if (tool === 'head') {
+      const count = /^-n?(\d+)$/.exec(args[0] ?? '') ?? (args[0] === '-n' ? /^(\d+)$/.exec(args[1] ?? '') : null);
+      const names = files.filter((f) => f !== count?.[1]);
+      if (names.length !== 1) return [];
+      found = [{ file: real(resolve(dir, names[0] ?? '')), from: 1, to: count ? Number(count[1]) : 10 }];
+    } else return [];
+    if (found.some((r) => r.to - r.from + 1 > wholeShellRead)) return [];
+    reads.push(...found);
+  }
+  return reads;
+}
+
 /** SessionStart or PreCompact: what the agent saw is gone, so CSyk shows source again. */
 export function sessionReset(input: HookInput, roots: readonly string[]): void {
   const cwd = cwdOf(input);
@@ -244,6 +316,7 @@ export function sessionReset(input: HookInput, roots: readonly string[]): void {
     const marker = resetMarker(root);
     mkdirSync(dirname(marker), { recursive: true });
     writeFileSync(marker, String(Date.now()));
+    rmSync(seenLog(root), { force: true });
   }
 }
 

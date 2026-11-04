@@ -109,6 +109,10 @@ async function bodies(ws: Workspace, symbols: CodeSymbol[], session: Session, ma
       parts.push(`[unchanged: ${symbol.id}, shown at call #${at}]`);
       continue;
     }
+    if (session.readByAgent(join(ws.root, symbol.file), symbol.range[0], symbol.range[1])) {
+      parts.push(readAlready(symbol));
+      continue;
+    }
     parts.push(`${symbol.id} · lines ${symbol.range[0]}-${symbol.range[1]}`, ...lines);
     shown.push({ id: symbol.id, hash });
   }
@@ -194,6 +198,7 @@ export async function read(
   const hash = bodyHash(body.join('\n'));
   const shownAt = session.shown(symbol.id, hash);
   if (shownAt !== undefined) return { text: `[unchanged: ${symbol.id}, shown at call #${shownAt}]`, locations: location };
+  if (session.readByAgent(join(ws.root, symbol.file), start, end)) return { text: readAlready(symbol), locations: location };
   const header = `${symbol.id} · lines ${start}-${end}${note ? ` · ${note}` : ''}`;
   const budget = options.budget ?? defaultBudget;
   let kept = body.length;
@@ -206,6 +211,9 @@ export async function read(
   const rest = `… ${body.length - kept} more lines; read ${symbol.file}:${start + kept}-${end} for them`;
   return { text: [header, ...body.slice(0, kept), rest].join('\n'), locations: location };
 }
+
+// A body the agent read with its own file tool, unchanged since: where, not the lines again.
+const readAlready = (symbol: CodeSymbol) => `[unchanged: ${symbol.id}, lines ${symbol.range[0]}-${symbol.range[1]}, in your read of ${symbol.file}]`;
 
 /**
  * Mentions the compiler could not resolve, by file, as `file line, line; …`
