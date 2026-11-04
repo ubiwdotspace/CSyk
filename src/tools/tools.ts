@@ -678,6 +678,8 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
   if (qualified.length) return { symbol: qualified[0], note: qualified.length > 1 ? `also: ${qualified.slice(1).map((s) => s.id).join(', ')}` : '' };
   const named = ws.index.named(target);
   if (named.length === 0) {
+    const byFile = defaultExportNamed(ws, target);
+    if (byFile[0]) return { symbol: byFile[0], note: byFile.length > 1 ? `also: ${byFile.slice(1).map((s) => s.id).join(', ')}` : '' };
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);
     return { note: `no symbol named ${target}${near.length ? `; nearest: ${near.join(', ')}` : ''}` };
   }
@@ -689,6 +691,19 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
   if (!best) return { note: `no symbol named ${target}` };
   const others = ranked.filter((s) => s !== best);
   return { symbol: best, note: others.length ? `also named so: ${others.map((s) => s.id).join(', ')}` : '' };
+}
+
+/**
+ * An unnamed `export default function` is indexed as `default`, but every
+ * file that imports it names it after its file: `configurePlugins` for
+ * src/util/configurePlugins.js, or for configurePlugins/index.js.
+ */
+function defaultExportNamed(ws: Workspace, name: string): CodeSymbol[] {
+  return ws.index.named('default').filter((symbol) => {
+    const parts = (symbol.id.split('#')[0] ?? '').split('/');
+    const base = (parts.at(-1) ?? '').replace(/\.\w+$/, '');
+    return (base === 'index' ? parts.at(-2) : base) === name;
+  });
 }
 
 // Among [candidates], the member that [member] overrides: its class's header names the other's class.
