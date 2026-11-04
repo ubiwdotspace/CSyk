@@ -7,20 +7,19 @@ cd your-project
 csyk setup
 ```
 
-With pnpm, CSyk's dependencies (the TypeScript compiler, pyright, ripgrep, the parsers) come
-from pnpm's shared store, so versions another project already installed are not downloaded or
-stored twice. pnpm reports the tree-sitter packages' build scripts as ignored: CSyk only uses
-their WebAssembly parsers, so nothing needs to be approved.
+With pnpm, CSyk's dependencies (the TypeScript compiler, pyright, ripgrep) come from pnpm's
+shared store, so versions another project already installed are not downloaded or stored twice.
+The parsers ship inside CSyk as WebAssembly; nothing is built at install.
 
 `csyk setup` in a terminal asks three things: which agents should use CSyk (Claude Code, Codex,
-Antigravity; the ones installed are ticked), whether for this project or every project, and, once
+Antigravity, Cursor, OpenCode, Hermes Agent; the ones installed are ticked), whether for this project or every project, and, once
 the files are written, whether to install a language server CSyk needs and cannot find (`gopls`
 for Go, the Dart SDK for Dart). It lists every file before writing any.
 
 For scripts, name the agents instead:
 
 ```sh
-csyk setup --write --agent claude,codex,antigravity     # this project
+csyk setup --write --agent claude,codex,cursor,opencode # this project
 csyk setup --write --user --agent codex                 # every project
 csyk setup --agent codex                                # print what it would write
 ```
@@ -34,6 +33,12 @@ For this project, everything goes inside the project and nothing in your home fo
 | Claude Code | `.mcp.json` | `CLAUDE.md` | `.claude/skills/csyk/SKILL.md` |
 | Codex | `.codex/config.toml`, read once Codex trusts the project | `AGENTS.md` | `.agents/skills/csyk/SKILL.md` |
 | Antigravity | a workspace plugin in `.agents/plugins/csyk/`: its `mcp_config.json`, `rules/AGENTS.md` and `skills/` | | |
+| Cursor | `.cursor/mcp.json` | `.cursor/rules/csyk.mdc`, applied to every chat | `.cursor/skills/csyk/SKILL.md` |
+| OpenCode | `opencode.json` | `.opencode/csyk.md`, listed in `opencode.json`'s `instructions` | `.opencode/skills/csyk/SKILL.md` |
+| Hermes Agent | `~/.hermes/config.yaml`: Hermes reads servers from there only, and serves the folder each session runs in | the context file Hermes reads (`.hermes.md`, `AGENTS.override.md`, `AGENTS.md` or `CLAUDE.md`, the first that exists), else a new `AGENTS.md` | `~/.hermes/skills/csyk/SKILL.md` |
+
+OpenCode and Hermes read one of `AGENTS.md` and `CLAUDE.md`, not both: setup never creates an
+`AGENTS.md` that would hide a project's `CLAUDE.md` from them.
 
 For every project (`--user`):
 
@@ -42,6 +47,11 @@ For every project (`--user`):
 | Claude Code | `claude mcp add --scope user` | `~/.claude/rules/csyk.md` | `~/.claude/skills/csyk/SKILL.md` |
 | Codex | `~/.codex/config.toml` | `~/.codex/AGENTS.md` | `~/.codex/skills/csyk/SKILL.md` |
 | Antigravity | `~/.gemini/antigravity/mcp_config.json`, and `~/.gemini/config/mcp_config.json` for `agy` | `~/.gemini/GEMINI.md` | `~/.gemini/config/skills/csyk/SKILL.md` |
+| Cursor | `~/.cursor/mcp.json` | printed, to add as a User Rule in Cursor's settings (they are not a file) | `~/.cursor/skills/csyk/SKILL.md` |
+| OpenCode | `~/.config/opencode/opencode.json` | `~/.config/opencode/csyk.md`, in its `instructions` | `~/.config/opencode/skills/csyk/SKILL.md` |
+| Hermes Agent | `~/.hermes/config.yaml` | none: Hermes has no rules file for every project | `~/.hermes/skills/csyk/SKILL.md` |
+
+Hermes Agent's folder is `$HERMES_HOME` when it is set, as Codex's is `$CODEX_HOME`.
 
 A second run replaces what the first wrote and leaves everything else in those files alone.
 

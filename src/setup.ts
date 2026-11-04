@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { styleText } from 'node:util';
+import { parseDocument } from 'yaml';
 import { note, skill } from './guide.ts';
 import { installHints, onPath, servers } from './precision/lsp-service.ts';
 import { choose, confirm } from './tui.ts';
@@ -213,7 +214,100 @@ export const agents: Agent[] = [
       return [...steps, sectionStep(home('.gemini', 'GEMINI.md'), note), fileStep(home('.gemini', 'config', 'skills', 'csyk', 'SKILL.md'), skill)];
     },
   },
+  {
+    id: 'cursor',
+    name: 'Cursor',
+    found: () => Boolean(onPath('cursor') || onPath('cursor-agent')) || existsSync('/Applications/Cursor.app') || existsSync(home('.cursor')),
+    steps(scope) {
+      const csyk = self();
+      // Cursor names the open project in ${workspaceFolder}, in a project's .cursor/mcp.json and
+      // in the one for every project alike.
+      const server = { command: csyk[0], args: [...csyk.slice(1), 'serve', '${workspaceFolder}'] };
+      if (scope === 'project') {
+        return [
+          jsonStep(join('.cursor', 'mcp.json'), ['mcpServers', 'csyk'], server),
+          // A rule that applies to every chat in this project; Cursor reads .mdc files only.
+          fileStep(join('.cursor', 'rules', 'csyk.mdc'), `---\ndescription: Code search with CSyk\nalwaysApply: true\n---\n\n${note}\n`),
+          fileStep(join('.cursor', 'skills', 'csyk', 'SKILL.md'), skill),
+        ];
+      }
+      // Rules for every project live in Cursor's settings, not in a file setup can write.
+      return [
+        jsonStep(home('.cursor', 'mcp.json'), ['mcpServers', 'csyk'], server),
+        fileStep(home('.cursor', 'skills', 'csyk', 'SKILL.md'), skill),
+        hintStep('Cursor → Settings → Rules', 'add this note as a User Rule', note),
+      ];
+    },
+  },
+  {
+    id: 'opencode',
+    name: 'OpenCode',
+    found: () => Boolean(onPath('opencode')) || existsSync(home('.config', 'opencode')),
+    steps(scope) {
+      const csyk = self();
+      // The note goes in its own file, listed in the config's instructions: OpenCode adds those to
+      // AGENTS.md, where a new AGENTS.md would hide a project's CLAUDE.md from it.
+      const base = scope === 'user' ? home('.config', 'opencode') : '.opencode';
+      const config = scope === 'user' ? join(base, 'opencode.json') : 'opencode.json';
+      const noteFile = join(base, 'csyk.md');
+      const listed = scope === 'user' ? noteFile : noteFile.split('\\').join('/');
+      const server = { type: 'local', command: [...csyk, 'serve'], enabled: true };
+      return [
+        {
+          target: config,
+          preview: JSON.stringify({ mcp: { csyk: server }, instructions: [listed] }, null, 2),
+          apply: () =>
+            merge(config, (current) => {
+              const instructions = Array.isArray(current.instructions) ? (current.instructions as unknown[]) : [];
+              return {
+                ...current,
+                mcp: { ...asRecord(current.mcp), csyk: server },
+                instructions: instructions.includes(listed) ? instructions : [...instructions, listed],
+              };
+            }),
+        },
+        fileStep(noteFile, `${note}\n`),
+        fileStep(join(base, 'skills', 'csyk', 'SKILL.md'), skill),
+      ];
+    },
+  },
+  {
+    id: 'hermes',
+    name: 'Hermes Agent',
+    found: () => Boolean(onPath('hermes')) || existsSync(process.env.HERMES_HOME ?? home('.hermes')),
+    steps(scope) {
+      const csyk = self();
+      // Hermes reads MCP servers from config.yaml in HERMES_HOME (~/.hermes) only, and starts them in the session's
+      // folder: one entry serves whichever project Hermes runs in, for both scopes.
+      const hermesHome = process.env.HERMES_HOME ?? home('.hermes');
+      const config = join(hermesHome, 'config.yaml');
+      const server = { command: csyk[0], args: [...csyk.slice(1), 'serve'] };
+      const steps: Step[] = [
+        {
+          target: config,
+          preview: `mcp_servers:\n  csyk:\n    command: ${server.command}\n    args: ${JSON.stringify(server.args)}`,
+          apply: () => {
+            const doc = parseDocument(existsSync(config) ? readFileSync(config, 'utf8') : '');
+            doc.setIn(['mcp_servers', 'csyk'], doc.createNode(server));
+            write(config, doc.toString());
+          },
+        },
+        fileStep(join(hermesHome, 'skills', 'csyk', 'SKILL.md'), skill),
+      ];
+      // A project's context is the first of these files that exists, and only that one is read.
+      if (scope === 'project') {
+        const context = ['.hermes.md', 'HERMES.md', 'AGENTS.override.md', 'AGENTS.md', 'CLAUDE.md'].find((f) => existsSync(f)) ?? 'AGENTS.md';
+        steps.push(sectionStep(context, note));
+      }
+      return steps;
+    },
+  },
 ];
+
+// Something setup cannot write: what to do by hand, printed when it runs.
+function hintStep(target: string, preview: string, text: string): Step {
+  return { target, preview, apply: () => console.log(`${target}: ${preview}\n\n${text}\n`) };
+}
 
 // Claude Code keeps servers for every project in its own config; `claude mcp add` writes it.
 function claudeUserServer(csyk: string[]): Step {

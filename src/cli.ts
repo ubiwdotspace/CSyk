@@ -5,10 +5,10 @@ import { preBash, preGrep, preRead, servedRoots, sessionReset, type HookInput } 
 const usage = `Usage:
   csyk [serve] [workspace]   serve a workspace (the current folder by default) over MCP stdio
   csyk hook <name>           run a Claude Code hook: pre-bash, pre-read, pre-grep or session-reset
-  csyk setup                 in a terminal: pick the agents (Claude Code, Codex, Antigravity) and
-                             the projects, write their configuration, and install missing
-                             language servers
-  csyk setup [--write] [--user] [--hooks] [--agent claude,codex,antigravity]
+  csyk setup                 in a terminal: pick the agents (Claude Code, Codex, Antigravity,
+                             Cursor, OpenCode, Hermes Agent) and the projects, write their
+                             configuration, and install missing language servers
+  csyk setup [--write] [--user] [--hooks] [--agent claude,codex,antigravity,cursor,opencode,hermes]
                              print, or write, the configuration for the agents named (Claude Code
                              by default): the MCP server, a note the agent always reads and the
                              csyk skill, for this project or with --user for every project; for
