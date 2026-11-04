@@ -7,7 +7,6 @@
 <p align="center"><em>He doesn't read the file. He knows the line.</em></p>
 
 <p align="center">
-  <a href="https://github.com/ubiwdotspace/CSyk/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ubiwdotspace/CSyk/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-blue">
   <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-339933">
   <img alt="Works with Claude Code, Codex and Antigravity" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity-d97757">

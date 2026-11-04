@@ -42,10 +42,11 @@ as the change is clearly worse; a release is measured at 50. The agent sessions 
 Claude account (about $0.05 an issue); `--skip agents` runs only the single questions, which are
 free.
 
-CI also holds the single questions on mini-ts, zustand, parse-server, chi and provider to
-`eval/gate.json`, and fails a pull request when one kind of question falls by more than a point
-there. When a change moves those scores on purpose, rerun them (with Go 1.27.0, `gopls` v0.24.0
-and Flutter 3.47.3, as CI uses) and write the new baseline in the same pull request:
+`npm run gate` holds the single questions on mini-ts, zustand, parse-server, chi and provider to
+`eval/gate.json`, and fails when one kind of question falls by more than a point there; run it
+after the eval below, before asking for a merge. When a change moves those scores on purpose,
+rerun them (with Go 1.27.0, `gopls` v0.24.0 and Flutter 3.47.3, the versions the baseline was
+written with) and write the new baseline in the same pull request:
 
 ```sh
 npm run corpora -- --only zustand,parse-server,chi,provider
@@ -75,10 +76,17 @@ commit code, paths or questions taken from a private repository.
 Commit messages start with a type (`feat`, `fix`, `eval`, `docs`, `chore`) and say what changed in
 plain words, for example `fix: grep hit lines do not repeat the code shown below them`.
 
-Nothing runs on its own when you push or open a pull request. Run the checks locally before
-asking for a merge (`npm run typecheck && npm test && npm run build`; see "Changing answers" for
-the eval and `npm run gate`), or have the maintainer run the CI check on your branch, about three minutes on Linux:
-`gh workflow run CI --ref <branch>`. Keep a pull request to one change.
+Nothing runs on GitHub when you push or open a pull request: this repository uses no GitHub
+Actions. Run the checks on your machine before asking for a merge, and say in the pull request that
+they pass:
+
+```sh
+npm run typecheck && npm test && npm run build
+```
+
+A change to answers also runs the eval and `npm run gate` (see "Changing answers"). The
+maintainer reviews and checks each pull request before merging it. Keep a pull request to one
+change.
 
 `main` takes changes only through pull requests: no direct pushes, force pushes or deletion. Only
 the maintainer merges; anyone can open a pull request from a branch or a fork:
@@ -94,23 +102,26 @@ Release tags (`v*`) are created by maintainers only.
 
 ## Releasing
 
-Maintainers release from an up-to-date, clean `main`, by hand:
+Maintainers release from an up-to-date, clean `main`, by hand. Bump the version on a branch and
+merge it (`main` takes pull requests only), then from the merge commit:
 
 ```sh
-npm version <patch|minor|major> -m "chore: release %s"   # bumps package.json, commits, tags v<version>
-npm publish --access public --otp=<code>
-git push origin v<version>                                # the tag only: main takes pull requests
-gh workflow run Release --ref v<version>
+npm run typecheck && npm test
+npm publish --access public --otp=<code>        # prepack builds dist/ first
+git tag v<version> && git push origin v<version>
 ```
 
-`npm version` commits on `main`, which takes pull requests only: make the bump on a branch and
-merge it first, then tag the merge commit. Before 1.0, use `minor` for new features or changed
-answers and `patch` for fixes. The [release workflow](.github/workflows/release.yml), run on the
-tag, builds a standalone package for each platform with `scripts/package.sh` (Node.js inside), asks
-each, where it can run, a few questions with `scripts/smoke.ts`, checks that the tag matches
-`package.json`, runs typecheck and tests, and creates the GitHub release with notes from the merged
-pull requests and the packages attached. It publishes to npm too only when the repository has an
-`NPM_TOKEN` secret. Run on a branch, it only builds and tries the packages.
+The standalone packages (Node.js inside) are built with `scripts/package.sh <darwin|linux>
+<arm64|x64>`, tried with `node scripts/smoke.ts packages/csyk-<os>-<arch>/bin/csyk` where they can
+run, and attached to the GitHub release:
+
+```sh
+gh release create v<version> --generate-notes --verify-tag packages/*.tar.gz
+```
+
+Before 1.0, use `minor` for new features or changed answers and `patch` for fixes. The workflows in
+`.github/workflows` describe the same steps; they do not run while GitHub Actions is off for this
+repository.
 
 ## Licence
 
