@@ -61,7 +61,8 @@ describe('Workspace', () => {
     expect(answer.text).toContain('z.ts:2  needle');
     await ws.ready;
     await ws.close();
-  });
+    // 3,000 files to write and index: slower on Windows than the default 5 s.
+  }, 60_000);
 
   it('greps every hit in one function when all of them fit', async () => {
     const lines = Array.from({ length: 12 }, (_, i) => `  const v${i} = 'needle ${i}';`);
