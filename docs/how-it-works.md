@@ -197,6 +197,10 @@ If the agent asks again for code it has already seen and that has not changed, C
   limit, and the answer says so.
 - In very large repositories, long search sessions save little: TypeScript, with three VS Code
   issues, is level on tokens on average.
+- On Windows, CSyk installs with npm and answers as it does elsewhere (its tests and an installed
+  package pass there), but the memory budget is not enforced: the memory of CSyk and its language
+  servers is measured with `ps`, which Windows lacks. There is no standalone package for Windows
+  yet. `csyk setup` writes `cmd /c csyk` for an agent's server, since npm installs `csyk.cmd`.
 
 ## Ideas for later
 
@@ -216,4 +220,5 @@ Ideas, not promises: each one lands only if the evaluation shows it helps.
   CSyk still waited 5.3 seconds for its first answer, and the daemon kept 1.2 to 1.8 GB after CSyk
   stopped. It saves memory only when the editor runs `gopls` the same way, so it would be an
   option, not the default.
-- **Windows.** Support and CI on Windows, after macOS and Linux.
+- **Windows, the rest.** A standalone package with Node.js inside, and the memory budget, which
+  needs a way to measure the language servers' memory there.
