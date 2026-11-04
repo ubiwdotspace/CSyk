@@ -23,7 +23,7 @@ into the agent as an MCP server.
 | first answer right when looking up a definition by name (text search: 33.1%) | to answer what costs 16,899 tokens with text search and file reads | per real GitHub issue for Claude Code, over 120 issues in four languages, and faster | per answer, median |
 
 <p align="center">
-  <b><a href="#install">Install</a> · <a href="#languages">Languages</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
+  <b><a href="#install">Install</a> · <a href="#agents">Agents</a> · <a href="#languages">Languages</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
 </p>
 
 Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS, Linux and
@@ -69,6 +69,21 @@ Hermes Agent. Any other agent that supports MCP works too, set up by hand.
 
 3. **Start your agent in the project.** CSyk starts with it, and the agent has six more tools and a
    short note on when to use them.
+
+## Agents
+
+| | Agent | `csyk setup` writes, for this project |
+|:---:|---|---|
+| <img src="https://cdn.simpleicons.org/claude" alt="Claude" width="28"> | [Claude Code](https://www.anthropic.com/claude-code) | `.mcp.json`, a note in `CLAUDE.md`, the skill; CSyk `grep` in place of `Grep`, and searches of the code from the shell sent to it |
+| <img src="https://github.com/openai.png?size=56" alt="OpenAI" width="28"> | [Codex](https://github.com/openai/codex) | `.codex/config.toml`, a note in `AGENTS.md`, the skill |
+| <img src="https://antigravity.google/assets/image/antigravity-logo.png" alt="Antigravity" width="28"> | [Antigravity](https://antigravity.google) | a workspace plugin with the server, a rule and the skill |
+| <img src="https://github.com/cursor.png?size=56" alt="Cursor" width="28"> | [Cursor](https://cursor.com) | `.cursor/mcp.json`, a rule for every chat, the skill |
+| <img src="https://opencode.ai/favicon.svg" alt="OpenCode" width="28"> | [OpenCode](https://opencode.ai) | `opencode.json`, a note in its `instructions`, the skill |
+| <img src="https://github.com/NousResearch.png?size=56" alt="Nous Research" width="28"> | [Hermes Agent](https://hermes-agent.nousresearch.com) | `~/.hermes/config.yaml`, a note in the context file Hermes reads, the skill |
+
+`csyk setup --user` writes the same for every project, in each agent's home folder. Any other agent
+that supports MCP works too: have it start `csyk serve`, which serves the folder it starts in. Every
+file, per agent and scope, is in [setup](docs/setup.md).
 
 ## Languages
 
