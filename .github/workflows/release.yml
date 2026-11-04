@@ -43,11 +43,15 @@ jobs:
           name: csyk-${{ matrix.os }}-${{ matrix.arch }}
           path: packages/csyk-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
 
+  # npm is published from here only when the repository has an NPM_TOKEN secret; without one,
+  # the owner publishes by hand (npm publish) and this job makes the GitHub release alone.
   publish:
     needs: standalone
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -63,7 +67,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       # prepack builds dist/ first.
-      - run: npm publish --provenance --access public
+      - if: env.NPM_TOKEN != ''
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - uses: actions/download-artifact@v4

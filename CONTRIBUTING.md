@@ -90,9 +90,10 @@ Before 1.0, use `minor` for new features or changed answers and `patch` for fixe
 starts the [release workflow](.github/workflows/release.yml): it builds a standalone package for
 each platform with `scripts/package.sh` (Node.js inside) and asks each, where it can run, a few
 questions with `scripts/smoke.ts`; then it checks that the tag matches `package.json`, runs
-typecheck and tests, publishes to npm with provenance and creates the GitHub release with notes
-from the merged pull requests and the packages attached. It needs an npm automation token in the
-`NPM_TOKEN` repository secret. A pull request that changes the packaging runs the build and the
+typecheck and tests, publishes to npm with provenance when the repository has an npm automation
+token in the `NPM_TOKEN` secret, and creates the GitHub release with notes from the merged pull
+requests and the packages attached. Without the secret, publish to npm by hand (`npm publish`)
+before pushing the tag. A pull request that changes the packaging runs the build and the
 questions too.
 
 ## Licence
