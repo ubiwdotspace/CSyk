@@ -17,8 +17,8 @@ mkdir -p "$work/bin" "$work/lib" "$work/node/bin"
 # The package as npm publishes it, with the dependencies of the target platform.
 cd "$root"
 npm pack --silent --pack-destination "$root/packages" > /dev/null
-tar -xzf "$root"/packages/csyk-*.tgz -C "$work/lib"
-rm "$root"/packages/csyk-*.tgz
+tar -xzf "$root"/packages/*csyk-*.tgz -C "$work/lib"
+rm "$root"/packages/*csyk-*.tgz
 mv "$work/lib/package" "$work/lib/csyk"
 cp package-lock.json "$work/lib/csyk/"
 (cd "$work/lib/csyk" && npm ci --omit=dev --ignore-scripts --os="$os" --cpu="$arch" --no-audit --no-fund --silent)
