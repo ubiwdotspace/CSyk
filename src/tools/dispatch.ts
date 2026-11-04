@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { extname } from 'node:path';
 import { z } from 'zod';
 import { sourceExtensions } from '../index/parse.ts';
@@ -145,6 +146,67 @@ function readOne(
   return read(ws, target, options, session);
 }
 
+/**
+ * Absolute paths inside the workspace, as the agent's own tools want them,
+ * read as relative: `grep` given the workspace's absolute path searched a
+ * path that does not exist and answered "no match".
+ */
+function relativeArgs(ws: Workspace, args: unknown): unknown {
+  if (!args || typeof args !== 'object') return args;
+  const roots = new Set([ws.root]);
+  try {
+    roots.add(realpathSync(ws.root));
+  } catch {
+    // The root as given is enough.
+  }
+  for (const root of [...roots]) roots.add(root.replaceAll('\\', '/'));
+  const strip = (value: string) => {
+    let out = value;
+    for (const root of roots) {
+      const r = root.replace(/[\\/]$/, '');
+      if (out === r) return '.';
+      out = out.split(`${r}/`).join('').split(`${r}\\`).join('');
+    }
+    return out;
+  };
+  return Object.fromEntries(
+    Object.entries(args).map(([key, value]) => [key, typeof value === 'string' && pathArgs.has(key) ? strip(value) : value]),
+  );
+}
+
+const pathArgs = new Set(['path', 'file', 'target']);
+
+/**
+ * `read`'s targets, comma-separated. Agents also write a file's symbols the
+ * way answers head them, `file · A, B` (or `file · lines 2-4`): A and B in
+ * that file.
+ */
+export function readTargets(target: string): string[] {
+  const scoped = /^(\S+?\.\w+) · (.+)$/.exec(target.trim());
+  if (!scoped?.[1] || !scoped[2]) return target.split(/\s*,\s*/).filter(Boolean);
+  const file = scoped[1];
+  return scoped[2]
+    .split(/\s*,\s*/)
+    .filter(Boolean)
+    .map((name) => {
+      const lines = /^lines (\d+-\d+)$/.exec(name);
+      return lines ? `${file}:${lines[1]}` : `${file}#${name}`;
+    });
+}
+
+/**
+ * A file read with `offset` and `limit`, as the agent's own Read takes them:
+ * those lines, `file:20-144`. Left out of the schema, they were dropped and
+ * the agent got the file's outline again, then read it with its own tool.
+ */
+function withLines(target: string, args: unknown): string {
+  const { offset, limit } = args as { offset?: unknown; limit?: unknown };
+  if ((offset === undefined && limit === undefined) || /[#:,]/.test(target)) return target;
+  const start = Math.max(1, Number(offset) || 1);
+  const count = Number(limit) > 0 ? Number(limit) : 200;
+  return `${target}:${start}-${start + count - 1}`;
+}
+
 // Drops arguments the caller left out, so tools see their own defaults.
 const given = <T extends object>(args: T) =>
   Object.fromEntries(Object.entries(args).filter(([, v]) => v !== undefined)) as T;
@@ -156,6 +218,7 @@ export async function runTool(
   args: unknown,
   session: Session,
 ): Promise<ToolResult> {
+  args = relativeArgs(ws, args);
   // Until the index is full, grep and a read of a file index only the files they touch.
   const target = (args as { target?: unknown }).target;
   const files = typeof target === 'string' ? target.split(/\s*,\s*/).map((t) => t.replace(/(#|:(?=[\w$]+(-\d+)?$)).*$/, '').replace(/\/$/, '')) : [];
@@ -184,8 +247,8 @@ export async function runTool(
       // Several targets, comma-separated, come back in one answer: reading a
       // class's methods one call at a time cost a turn each, and every turn
       // re-reads the whole context. They share twice one answer's budget.
-      const targets = target.split(/\s*,\s*/).filter(Boolean);
-      if (targets.length < 2) return readOne(ws, target, given(options), session);
+      const targets = readTargets(withLines(target, args));
+      if (targets.length < 2) return readOne(ws, targets[0] ?? target, given(options), session);
       const each = Math.max(500, Math.floor((options.budget ?? 2 * defaultBudget) / targets.length));
       const parts = [];
       for (const one of targets) parts.push(await readOne(ws, one, { ...given(options), budget: each }, session));
