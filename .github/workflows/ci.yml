@@ -77,3 +77,14 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # Installed as a user installs it, then started as csyk setup writes it for an agent:
+      # cmd /c csyk, since npm installs csyk.cmd.
+      - shell: bash
+        run: |
+          npm pack --silent
+          npm install -g ./ubiw-csyk-*.tgz
+          node scripts/smoke.ts cmd /c csyk
+          mkdir -p "$RUNNER_TEMP/project" && cd "$RUNNER_TEMP/project"
+          csyk setup --write --agent claude,cursor,opencode
+          node -e "const c=require('./.mcp.json').mcpServers.csyk; console.log(JSON.stringify(c)); if (c.command !== 'cmd' || c.args.join(' ') !== '/c csyk serve') process.exit(1)"
+          cat .claude/settings.json
