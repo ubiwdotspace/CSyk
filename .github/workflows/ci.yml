@@ -83,6 +83,9 @@ jobs:
         run: |
           npm pack --silent
           npm install -g ./ubiw-csyk-*.tgz
+          # Git Bash would turn the /c of cmd /c into C:/.
+          export MSYS_NO_PATHCONV=1
+          node scripts/smoke.ts node "$(npm prefix -g)/node_modules/@ubiw/csyk/dist/cli.js"
           node scripts/smoke.ts cmd /c csyk
           mkdir -p "$RUNNER_TEMP/project" && cd "$RUNNER_TEMP/project"
           csyk setup --write --agent claude,cursor,opencode
