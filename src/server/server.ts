@@ -37,7 +37,8 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
 
   for (const name of Object.keys(listedTools) as (keyof typeof listedTools)[]) {
     const { description, input } = listedSchema(name);
-    server.registerTool(name, { description, inputSchema: z.object(input) }, (args: unknown) =>
+    // Loose: arguments a tool reads without listing them (read's offset and limit) reach it.
+    server.registerTool(name, { description, inputSchema: z.object(input).loose() }, (args: unknown) =>
       answer((ws) => runTool(ws, name, args, session)),
     );
   }

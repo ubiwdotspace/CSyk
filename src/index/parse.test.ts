@@ -168,6 +168,28 @@ describe('extractSymbols for JavaScript', () => {
     expect(found).toEqual(['function log 1-1', 'function default 2-5', 'function default.inner 4-4 nested']);
   });
 
+  it("indexes a hook's handlers kept by useCallback and the like, not other calls given a function", async () => {
+    const source = [
+      'export function useAutocomplete(props) {',
+      '  const resetInputValue = useEventCallback((event) => {',
+      '    const inner = () => event;',
+      '  });',
+      '  const onBlur = React.useCallback(function () {}, []);',
+      '  const save = debounce(() => {}, 100);',
+      '  const names = props.users.map((u) => u.name);',
+      '  const value = compute(() => 1);',
+      '}',
+    ].join('\n');
+    const found = (await extractSymbols('useAutocomplete.js', source)).map((s) => `${s.kind} ${s.id.split('#')[1]} ${s.range.join('-')}`);
+    expect(found).toEqual([
+      'hook useAutocomplete 1-9',
+      'function useAutocomplete.resetInputValue 2-4',
+      'function resetInputValue.inner 3-3',
+      'function useAutocomplete.onBlur 5-5',
+      'function useAutocomplete.save 6-6',
+    ]);
+  });
+
   it('reads JavaScript with type annotations, as Babel takes it', async () => {
     const source = [
       '// @flow',

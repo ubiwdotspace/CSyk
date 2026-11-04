@@ -76,6 +76,19 @@ describe('the MCP server', () => {
     );
     expect(await call('read', { target: 'TokenStore.clear' })).toContain('this.access = undefined;');
     expect(await call('read', { target: 'src/nope/token-store.ts' })).toContain('similar paths: src/auth/token-store.ts');
+    // A file's symbols the way answers head them.
+    const scoped = await call('read', { target: 'src/auth/token-store.ts · TokenStore.clear, lines 2-4' });
+    expect(scoped).toContain('src/auth/token-store.ts#TokenStore.clear');
+    expect(scoped).toContain('src/auth/token-store.ts · lines 2-4');
+    expect(await call('read', { target: 'src/auth/token-store.ts · TokenStore' })).toContain('src/auth/token-store.ts#TokenStore');
+    // Lines as the agent's own Read takes them.
+    expect(await call('read', { target: 'src/auth/token-store.ts', offset: '2', limit: 3 })).toContain('src/auth/token-store.ts · lines 2-4');
+  });
+
+  it('takes absolute paths inside the workspace as relative ones', async () => {
+    expect(await call('grep', { pattern: 'Session expired', path: miniTs })).toMatch(/^1 hit.*\n.*src\/auth\/token-store\.ts/);
+    expect(await call('grep', { pattern: 'Session expired', path: join(miniTs, 'src/auth') })).not.toContain('no match');
+    expect(await call('read', { target: join(miniTs, 'src/auth/token-store.ts:2-4') })).toContain('src/auth/token-store.ts · lines 2-4');
   });
 
   it('searches everywhere when grep misses in the folder it was given', async () => {
