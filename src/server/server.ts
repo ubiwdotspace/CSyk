@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { estimateTokens } from '../token/budget.ts';
-import { resetMarker, Session } from '../token/session.ts';
+import { resetMarker, seenLog, Session } from '../token/session.ts';
 import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
 import type { ToolResult } from '../tools/tools.ts';
 import { Workspace } from '../workspace/workspace.ts';
@@ -20,7 +20,7 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
   const workspace = Workspace.start(root, { watch: true, persist: true });
   // A failed build surfaces on a tool call that waits for it, not as an unhandled rejection.
   workspace.ready.catch(() => {});
-  const session = new Session({ marker: resetMarker(root) });
+  const session = new Session({ marker: resetMarker(root), seen: seenLog(root) });
   const server = new McpServer({ name: 'csyk', version });
 
   const answer = async (run: (ws: Workspace) => Promise<ToolResult>) => {
