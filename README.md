@@ -9,7 +9,7 @@
 <p align="center">
   <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-blue">
   <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-339933">
-  <img alt="Works with Claude Code, Codex and Antigravity" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity-d97757">
+  <img alt="Works with Claude Code, Codex, Antigravity, Cursor, OpenCode and Hermes Agent" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Cursor%20%C2%B7%20OpenCode%20%C2%B7%20Hermes-d97757">
   <img alt="TypeScript, JavaScript, Python, Go, Dart" src="https://img.shields.io/badge/languages-TypeScript%20%C2%B7%20JavaScript%20%C2%B7%20Python%20%C2%B7%20Go%20%C2%B7%20Dart-555">
 </p>
 
@@ -37,8 +37,8 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 
 ## Install
 
-You need macOS or Linux and an AI coding agent: Claude Code, Codex or Antigravity. Any other agent
-that supports MCP works too, set up by hand.
+You need macOS or Linux and an AI coding agent: Claude Code, Codex, Antigravity, Cursor, OpenCode or
+Hermes Agent. Any other agent that supports MCP works too, set up by hand.
 
 1. **Install CSyk**, once for your machine. With Node.js 22.18 or later:
 

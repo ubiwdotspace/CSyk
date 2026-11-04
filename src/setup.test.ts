@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { PassThrough } from 'node:stream';
@@ -14,7 +14,7 @@ const temp = (name: string) => mkdtempSync(join(tmpdir(), `csyk-${name}-`));
 const run = (cwd: string, home: string, ...args: string[]) =>
   execFileSync(process.execPath, [cli, 'setup', '--write', ...args], {
     cwd,
-    env: { ...process.env, HOME: home, CODEX_HOME: join(home, '.codex'), PATH: '/usr/bin:/bin' },
+    env: { ...process.env, HOME: home, CODEX_HOME: join(home, '.codex'), HERMES_HOME: join(home, '.hermes'), PATH: '/usr/bin:/bin' },
   });
 
 describe('csyk setup --agent', () => {
@@ -57,6 +57,67 @@ describe('csyk setup --agent', () => {
     const servers = JSON.parse(readFileSync(join(home, '.gemini', 'antigravity', 'mcp_config.json'), 'utf8')).mcpServers;
     expect(Object.keys(servers)).toEqual(['other', 'csyk']);
     expect(servers.csyk.args.slice(-2)).toEqual(['serve', '${workspace.path}']);
+    expect(readdirSync(project)).toEqual([]);
+  }, 30_000);
+});
+
+describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
+  it('sets up Cursor and OpenCode in the project, without an AGENTS.md that would hide CLAUDE.md', () => {
+    const project = temp('project');
+    const home = temp('home');
+    writeFileSync(join(project, 'CLAUDE.md'), '# Project\n');
+    writeFileSync(join(project, 'opencode.json'), '{"theme":"dark","instructions":["docs/rules.md"]}');
+    const files = ['.cursor/mcp.json', '.cursor/rules/csyk.mdc', '.cursor/skills/csyk/SKILL.md', 'opencode.json', '.opencode/csyk.md', '.opencode/skills/csyk/SKILL.md'].map(
+      (f) => join(project, f),
+    );
+    run(project, home, '--agent', 'cursor,opencode');
+    const first = files.map((f) => readFileSync(f, 'utf8'));
+    run(project, home, '--agent', 'cursor,opencode');
+    expect(files.map((f) => readFileSync(f, 'utf8'))).toEqual(first);
+    expect(readdirSync(home)).toEqual([]);
+    expect(readFileSync(join(project, 'CLAUDE.md'), 'utf8')).toBe('# Project\n');
+    expect(existsSync(join(project, 'AGENTS.md'))).toBe(false);
+
+    const [cursor = '{}', rule = '', , opencode = '{}', opencodeNote = ''] = first;
+    // Cursor names the open project in ${workspaceFolder}.
+    expect(JSON.parse(cursor).mcpServers.csyk.args.slice(-2)).toEqual(['serve', '${workspaceFolder}']);
+    expect(rule).toMatch(/^---\ndescription: Code search with CSyk\nalwaysApply: true\n---\n\n## Code search \(CSyk\)/);
+    const config = JSON.parse(opencode);
+    expect(config.theme).toBe('dark');
+    expect(config.mcp.csyk).toMatchObject({ type: 'local', enabled: true });
+    expect(config.mcp.csyk.command.at(-1)).toBe('serve');
+    // Added once to what was listed, never twice.
+    expect(config.instructions).toEqual(['docs/rules.md', '.opencode/csyk.md']);
+    expect(opencodeNote).toMatch(/^## Code search \(CSyk\)/);
+  }, 30_000);
+
+  it('adds Hermes Agent to its config, keeping the rest, and the note to the context file it reads', () => {
+    const project = temp('project');
+    const home = temp('home');
+    execFileSync('mkdir', ['-p', join(home, '.hermes')]);
+    writeFileSync(join(home, '.hermes', 'config.yaml'), '# my settings\nmodel: hermes-4\nmcp_servers:\n  other:\n    command: other\n');
+    writeFileSync(join(project, 'CLAUDE.md'), '# Project\n');
+    run(project, home, '--agent', 'hermes');
+    const first = readFileSync(join(home, '.hermes', 'config.yaml'), 'utf8');
+    run(project, home, '--agent', 'hermes');
+    expect(readFileSync(join(home, '.hermes', 'config.yaml'), 'utf8')).toBe(first);
+    expect(first).toMatch(/^# my settings\nmodel: hermes-4\nmcp_servers:\n {2}other:\n {4}command: other\n {2}csyk:\n {4}command: node\n/);
+    expect(first).toMatch(/ {4}args:\n(?: {6}- .+\n)* {6}- serve\n$/);
+    expect(existsSync(join(home, '.hermes', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
+    // Hermes reads one context file, CLAUDE.md here: the note goes there, not into a new AGENTS.md.
+    expect(readFileSync(join(project, 'CLAUDE.md'), 'utf8')).toMatch(/^# Project\n\n<!-- csyk:start -->\n## Code search \(CSyk\)/);
+    expect(existsSync(join(project, 'AGENTS.md'))).toBe(false);
+  }, 30_000);
+
+  it('sets up Cursor and OpenCode for every project in the home folder', () => {
+    const project = temp('project');
+    const home = temp('home');
+    run(project, home, '--user', '--agent', 'cursor,opencode');
+    expect(JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).mcpServers.csyk.args.at(-1)).toBe('${workspaceFolder}');
+    const config = JSON.parse(readFileSync(join(home, '.config', 'opencode', 'opencode.json'), 'utf8'));
+    expect(config.instructions).toEqual([join(home, '.config', 'opencode', 'csyk.md')]);
+    expect(existsSync(join(home, '.cursor', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(home, '.config', 'opencode', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
     expect(readdirSync(project)).toEqual([]);
   }, 30_000);
 });
