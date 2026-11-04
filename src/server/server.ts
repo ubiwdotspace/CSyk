@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
+import { z } from 'zod';
 import { estimateTokens } from '../token/budget.ts';
 import { resetMarker, Session } from '../token/session.ts';
 import { listedSchema, listedTools, runTool } from '../tools/dispatch.ts';
@@ -36,7 +37,7 @@ export function createServer(root: string): { server: McpServer; close: () => Pr
 
   for (const name of Object.keys(listedTools) as (keyof typeof listedTools)[]) {
     const { description, input } = listedSchema(name);
-    server.registerTool(name, { description, inputSchema: input }, (args: unknown) =>
+    server.registerTool(name, { description, inputSchema: z.object(input) }, (args: unknown) =>
       answer((ws) => runTool(ws, name, args, session)),
     );
   }
