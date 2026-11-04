@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Language, Parser, type Node, type Tree } from 'web-tree-sitter';
@@ -11,29 +10,29 @@ import { extractTypeScript } from './extract/typescript.ts';
 import { SymbolSink } from './sink.ts';
 import type { CodeSymbol, Lang } from './symbols.ts';
 
-const require = createRequire(import.meta.url);
 const grammarDir = join(dirname(fileURLToPath(import.meta.url)), '../../grammars');
 
 type Dialect = { lang: Lang; grammar: () => string; extract: (root: Node, sink: SymbolSink) => void };
 
 const typescript: Dialect = {
   lang: 'ts',
-  grammar: () => require.resolve('tree-sitter-typescript/tree-sitter-typescript.wasm'),
+  grammar: () => join(grammarDir, 'tree-sitter-typescript.wasm'),
   extract: extractTypeScript,
 };
-const tsx: Dialect = { ...typescript, grammar: () => require.resolve('tree-sitter-typescript/tree-sitter-tsx.wasm') };
+const tsx: Dialect = { ...typescript, grammar: () => join(grammarDir, 'tree-sitter-tsx.wasm') };
 const javascript: Dialect = {
   lang: 'js',
-  grammar: () => require.resolve('tree-sitter-javascript/tree-sitter-javascript.wasm'),
+  grammar: () => join(grammarDir, 'tree-sitter-javascript.wasm'),
   extract: extractTypeScript,
 };
 const python: Dialect = {
   lang: 'py',
-  grammar: () => require.resolve('tree-sitter-python/tree-sitter-python.wasm'),
+  grammar: () => join(grammarDir, 'tree-sitter-python.wasm'),
   extract: extractPython,
 };
-const go: Dialect = { lang: 'go', grammar: () => require.resolve('tree-sitter-go/tree-sitter-go.wasm'), extract: extractGo };
-// Built from tree-sitter-dart (MIT, UserNobody14); see grammars/README.md.
+const go: Dialect = { lang: 'go', grammar: () => join(grammarDir, 'tree-sitter-go.wasm'), extract: extractGo };
+// Every grammar is a WebAssembly file in grammars/ (MIT; see grammars/README.md): their npm
+// packages also build native bindings at install, which CSyk never loads.
 const dart: Dialect = { lang: 'dart', grammar: () => join(grammarDir, 'tree-sitter-dart.wasm'), extract: extractDart };
 
 const dialects: Record<string, Dialect> = {
