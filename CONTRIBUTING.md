@@ -75,19 +75,18 @@ commit code, paths or questions taken from a private repository.
 Commit messages start with a type (`feat`, `fix`, `eval`, `docs`, `chore`) and say what changed in
 plain words, for example `fix: grep hit lines do not repeat the code shown below them`.
 
-A pull request runs typecheck, tests and the build on macOS and Linux, and the single questions
-on five repositories held to `eval/gate.json` (`gate`), about three minutes in all. Keep it to one
-change.
+A pull request runs one check on Linux, about four minutes: typecheck, tests, the build, then the
+single questions on five repositories held to `eval/gate.json`. Keep it to one change.
 
 `main` takes changes only through pull requests: no direct pushes, force pushes or deletion, and a
-pull request merges once `test (ubuntu-latest)`, `test (macos-latest)` and `gate` pass. Work on a
-branch, open the pull request, and let it merge itself when the checks pass:
+pull request merges once `check` passes. Only the maintainer merges; anyone can open a pull request
+from a branch or a fork:
 
 ```sh
 git switch -c fix/short-name
 git push -u origin fix/short-name
 gh pr create --fill
-gh pr merge --auto --merge       # or --squash; the branch is deleted after the merge
+gh pr merge --auto --merge       # the maintainer: merges once check passes, then deletes the branch
 ```
 
 Release tags (`v*`) are created by maintainers only.

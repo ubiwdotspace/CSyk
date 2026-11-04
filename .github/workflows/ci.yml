@@ -14,13 +14,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+  # One job on one system: typecheck, tests and the build, then the single questions on a few
+  # TypeScript, JavaScript, Go and Dart corpora held to eval/gate.json (a pull request that
+  # answers worse fails here). The answers do not depend on the system, and the release
+  # workflow builds and tries the macOS and Linux packages. Go, gopls and Flutter are the
+  # versions the baseline was written with.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -35,23 +36,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-
-  # The single questions on a few TypeScript, JavaScript, Go and Dart corpora,
-  # held to eval/gate.json: a pull request that answers worse fails here. One
-  # system is enough; the answers do not depend on it. Go, gopls and Flutter
-  # are the versions the baseline was written with.
-  gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-go@v6
         with:
           go-version: 1.27.0
