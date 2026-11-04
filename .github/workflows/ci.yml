@@ -4,6 +4,12 @@ name: CI
 # (or Actions → CI → Run workflow). Nothing runs on pushes or pull requests.
 on:
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which check to run
+        type: choice
+        options: [check, windows, all]
+        default: check
 
 permissions:
   contents: read
@@ -19,6 +25,7 @@ jobs:
   # workflow builds and tries the macOS and Linux packages. Go, gopls and Flutter are the
   # versions the baseline was written with.
   check:
+    if: inputs.job != 'windows'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -50,3 +57,37 @@ jobs:
       - run: for p in eval/corpora/provider/packages/*/; do (cd "$p" && flutter pub get); done
       - run: npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi,provider --limit 30
       - run: npm run gate
+
+  # Windows, run by hand like the rest: typecheck, tests and the build, no gate (the answers do
+  # not depend on the system).
+  windows:
+    if: inputs.job == 'windows' || inputs.job == 'all'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # Installed as a user installs it, then started as csyk setup writes it for an agent:
+      # cmd /c csyk, since npm installs csyk.cmd.
+      - shell: bash
+        run: |
+          npm pack --silent
+          npm install -g ./ubiw-csyk-*.tgz
+          # Git Bash would turn the /c of cmd /c into C:/.
+          export MSYS_NO_PATHCONV=1
+          node scripts/smoke.ts node "$(npm prefix -g)/node_modules/@ubiw/csyk/dist/cli.js"
+          node scripts/smoke.ts cmd /c csyk
+          mkdir -p "$RUNNER_TEMP/project" && cd "$RUNNER_TEMP/project"
+          csyk setup --write --agent claude,cursor,opencode
+          node -e "const c=require('./.mcp.json').mcpServers.csyk; console.log(JSON.stringify(c)); if (c.command !== 'cmd' || c.args.join(' ') !== '/c csyk serve') process.exit(1)"
+          cat .claude/settings.json

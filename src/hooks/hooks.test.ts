@@ -1,10 +1,14 @@
 import { mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { codeExtensions } from '../index/parse.ts';
+import { toPosix } from '../paths.ts';
 import { dependencyDirs } from '../workspace/workspace.ts';
 import { fileSearches, hookedDependencyDirs, hookedExtensions, preBash, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
+
+// A folder as the hooks name it, /repo/src on macOS and Linux, D:/repo/src on Windows.
+const at = (...parts: string[]) => toPosix(resolve('/repo', ...parts));
 
 // Symlinks followed, as servers write their roots (macOS's tmpdir is under /var, a link).
 const root = realpathSync(mkdtempSync(join(tmpdir(), 'csyk-hooks-')));
@@ -37,9 +41,9 @@ describe('simpleCommands', () => {
 describe('shellSearches', () => {
   it('finds the pattern and folders of rg and recursive grep, after a cd', () => {
     expect(shellSearches('cd src && rg -t ts -w TokenStore lib', '/repo')).toEqual([
-      { pattern: 'TokenStore', targets: ['/repo/src/lib'] },
+      { pattern: 'TokenStore', targets: [at('src', 'lib')] },
     ]);
-    expect(shellSearches('grep -rn -e saveToken .', '/repo')).toEqual([{ pattern: 'saveToken', targets: ['/repo'] }]);
+    expect(shellSearches('grep -rn -e saveToken .', '/repo')).toEqual([{ pattern: 'saveToken', targets: [at()] }]);
     expect(shellSearches('grep saveToken file.ts', '/repo')).toEqual([]);
   });
 });
@@ -82,12 +86,12 @@ describe('hookedDependencyDirs', () => {
 
 describe('fileSearches', () => {
   it('reads rg, git grep and grep over files as ripgrep patterns', () => {
-    expect(fileSearches('rg -n "Token Store" src', '/repo')).toEqual([{ pattern: 'Token Store', literal: false, targets: ['/repo/src'] }]);
-    expect(fileSearches('git grep -n saveToken', '/repo')).toEqual([{ pattern: 'saveToken', literal: false, targets: ['/repo'] }]);
-    expect(fileSearches('grep -n "a\\|b(c)" lib/x.ts', '/repo')).toEqual([{ pattern: 'a|b\\(c\\)', literal: false, targets: ['/repo/lib/x.ts'] }]);
-    expect(fileSearches('grep -rE "a|b" --include=*.ts .', '/repo')).toEqual([{ pattern: 'a|b', literal: false, glob: '*.ts', targets: ['/repo'] }]);
-    expect(fileSearches('grep -rF "f(x)" .', '/repo')).toEqual([{ pattern: 'f(x)', literal: true, targets: ['/repo'] }]);
-    expect(fileSearches('grep -rwi "f.x" .', '/repo')).toEqual([{ pattern: '(?i)\\b(?:f.x)\\b', literal: false, targets: ['/repo'] }]);
+    expect(fileSearches('rg -n "Token Store" src', '/repo')).toEqual([{ pattern: 'Token Store', literal: false, targets: [at('src')] }]);
+    expect(fileSearches('git grep -n saveToken', '/repo')).toEqual([{ pattern: 'saveToken', literal: false, targets: [at()] }]);
+    expect(fileSearches('grep -n "a\\|b(c)" lib/x.ts', '/repo')).toEqual([{ pattern: 'a|b\\(c\\)', literal: false, targets: [at('lib', 'x.ts')] }]);
+    expect(fileSearches('grep -rE "a|b" --include=*.ts .', '/repo')).toEqual([{ pattern: 'a|b', literal: false, glob: '*.ts', targets: [at()] }]);
+    expect(fileSearches('grep -rF "f(x)" .', '/repo')).toEqual([{ pattern: 'f(x)', literal: true, targets: [at()] }]);
+    expect(fileSearches('grep -rwi "f.x" .', '/repo')).toEqual([{ pattern: '(?i)\\b(?:f.x)\\b', literal: false, targets: [at()] }]);
   });
 
   it('leaves out a grep of piped output', () => {

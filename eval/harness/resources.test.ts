@@ -8,7 +8,8 @@ describe('resources', () => {
     expect(seconds('2-00:00:01')).toBe(172801);
   });
 
-  it('counts the CPU a busy loop spends and this process memory', async () => {
+  // ps is not on Windows; the benchmarks run on macOS and Linux.
+  it.skipIf(process.platform === 'win32')('counts the CPU a busy loop spends and this process memory', async () => {
     const watch = watchResources();
     // The first sample is the starting point; a busy loop must not block it.
     await new Promise((done) => setTimeout(done, 300));

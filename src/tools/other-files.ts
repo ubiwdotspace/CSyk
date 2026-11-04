@@ -1,13 +1,14 @@
 import { execFile } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 import { rgPath } from '@vscode/ripgrep';
 import { codeExtensions } from '../index/parse.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import type { ToolResult } from './tools.ts';
+import { repoRelative } from '../paths.ts';
 
 const run = promisify(execFile);
 
@@ -19,7 +20,7 @@ const run = promisify(execFile);
 
 /** [path] as a repo-relative file of the workspace, or undefined: nothing outside it is read. */
 export function projectFile(ws: Workspace, path: string): string | undefined {
-  const file = relative(ws.root, join(ws.root, path));
+  const file = repoRelative(ws.root, join(ws.root, path));
   if (!file || file.startsWith('..') || isAbsolute(file)) return undefined;
   const full = join(ws.root, file);
   return existsSync(full) && statSync(full).isFile() ? file : undefined;
@@ -74,7 +75,7 @@ type Hit = { file: string; line: number; text: string };
 async function search(root: string, args: string[]): Promise<Hit[]> {
   let stdout = '';
   try {
-    ({ stdout } = await run(rgPath, ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--max-columns', '300', ...args, '.'], {
+    ({ stdout } = await run(rgPath, ['--path-separator', '/', '--line-number', '--with-filename', '--no-heading', '--color', 'never', '--max-columns', '300', ...args, '.'], {
       cwd: root,
       maxBuffer: 64 * 1024 * 1024,
     }));

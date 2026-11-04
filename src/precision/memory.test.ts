@@ -21,7 +21,8 @@ describe('memory budget', () => {
     expect(memoryBudget('2500', machine(8, 1))).toEqual({ mode: 'normal', mb: 2500, why: 'CSYK_MEMORY=2500' });
   });
 
-  it('measures this process', () => {
+  // ps is not on Windows: the memory budget is not measured there yet.
+  it.skipIf(process.platform === 'win32')('measures this process', () => {
     expect(treeMb(process.pid)).toBeGreaterThan(10);
   });
 });

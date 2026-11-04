@@ -8,7 +8,7 @@ answers are measured, so a change to what an answer contains is judged by its nu
 
 ## Set up
 
-You need Node 22.18 or later (`nvm use` picks the version in `.nvmrc`) on macOS or Linux.
+You need Node 22.18 or later (`nvm use` picks the version in `.nvmrc`) on macOS, Linux or Windows.
 
 ```sh
 git clone https://github.com/ubiwdotspace/CSyk.git

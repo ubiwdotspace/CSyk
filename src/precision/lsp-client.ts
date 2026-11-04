@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { extname, join, relative } from 'node:path';
+import { extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   CallHierarchyIncomingCallsRequest,
@@ -33,6 +33,7 @@ import {
   type ProtocolConnection,
   type SymbolInformation,
 } from 'vscode-languageserver-protocol/node';
+import { repoRelative } from '../paths.ts';
 
 /** A place in a repo: repo-relative file, 0-based line and character. */
 export type Position = { file: string; line: number; character: number };
@@ -103,7 +104,11 @@ export class LspClient {
     settings?: Record<string, unknown>,
     env?: NodeJS.ProcessEnv,
   ): Promise<LspClient> {
-    const child = spawn(command, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'], ...(env ? { env } : {}) });
+    // Node starts a Windows batch file (Flutter's dart.bat) only through the shell.
+    const batch = process.platform === 'win32' && /\.(cmd|bat)$/i.test(command);
+    const child = batch
+      ? spawn(`"${command}"`, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'], shell: true, ...(env ? { env } : {}) })
+      : spawn(command, args, { cwd: root, stdio: ['pipe', 'pipe', 'ignore'], ...(env ? { env } : {}) });
     if (!child.stdout || !child.stdin) throw new Error(`${command} has no stdio`);
     const connection = createProtocolConnection(
       new StreamMessageReader(child.stdout),
@@ -335,7 +340,7 @@ export class LspClient {
     const range = 'targetRange' in loc ? loc.targetRange : loc.range;
     const name = 'targetSelectionRange' in loc ? loc.targetSelectionRange : loc.range;
     if (!uri.startsWith('file:')) return [];
-    const file = relative(this.root, fileURLToPath(uri));
+    const file = repoRelative(this.root, fileURLToPath(uri));
     if (file.startsWith('..') || file.split('/').includes('node_modules')) return [];
     return [
       {

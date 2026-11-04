@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
+import { toPosix } from '../paths.ts';
 import { resetMarker } from '../token/session.ts';
 
 /** What Claude Code sends a hook on stdin; only the fields used here. */
@@ -72,7 +73,13 @@ const real = (path: string) => {
 // The folder the agent's tool runs in, as the served roots are written.
 const cwdOf = (input: HookInput) => real(input.cwd ?? process.cwd());
 
-const inside = (path: string, roots: readonly string[]) => roots.some((root) => path === root || path.startsWith(`${root}/`));
+// Paths compared with forward slashes, and on Windows without regard to case (C: and c:).
+const comparable = (path: string) => (process.platform === 'win32' ? toPosix(path).toLowerCase() : path);
+const inside = (path: string, roots: readonly string[]) =>
+  roots.some((root) => {
+    const [p, r] = [comparable(path), comparable(root)];
+    return p === r || p.startsWith(`${r}/`);
+  });
 
 const deny = (reason: string): Denial => ({
   hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason },
@@ -92,7 +99,7 @@ export function preRead(input: HookInput, roots: readonly string[]): Denial | un
   const lines = readFileSync(absolute, 'utf8').split('\n').length;
   if (lines <= largeFile) return undefined;
   const root = roots.find((r) => inside(absolute, [r])) ?? '';
-  const file = relative(root, absolute);
+  const file = toPosix(relative(root, absolute));
   return deny(
     `Reading a range with offset+limit is allowed and needs no search. ${file} has ${lines} lines: ` +
       `CSyk read "${file}" lists its symbols with line ranges, and read <id> returns just one.`,
@@ -132,11 +139,11 @@ export const hookedDependencyDirs: ReadonlySet<string> = new Set([
 export function preBash(input: HookInput, roots: readonly string[]): Denial | undefined {
   const cwd = cwdOf(input);
   const hit = fileSearches(String(input.tool_input?.command ?? ''), cwd).find(({ targets }) =>
-    targets.every((t) => inside(t, roots) && !t.split('/').some((part) => hookedDependencyDirs.has(part))),
+    targets.every((t) => inside(t, roots) && !toPosix(t).split('/').some((part) => hookedDependencyDirs.has(part))),
   );
   if (!hit) return undefined;
   const root = roots.find((r) => inside(hit.targets[0] ?? '', [r])) ?? cwd;
-  const paths = hit.targets.map((t) => relative(root, t)).filter(Boolean);
+  const paths = hit.targets.map((t) => toPosix(relative(root, t))).filter(Boolean);
   const args = [
     `pattern: ${JSON.stringify(hit.pattern)}`,
     ...(hit.literal ? ['literal: true'] : []),
@@ -203,7 +210,7 @@ export function fileSearches(command: string, cwd: string): FileSearch[] {
       pattern: regex,
       literal,
       ...(glob ? { glob } : {}),
-      targets: (paths.length ? paths : ['.']).map((p) => (isAbsolute(p) ? p : resolve(dir, p))),
+      targets: (paths.length ? paths : ['.']).map((p) => toPosix(isAbsolute(p) ? p : resolve(dir, p))),
     });
   }
   return searches;
@@ -244,7 +251,7 @@ type Search = { pattern: string; targets: string[] };
 
 function grepTool(args: Record<string, unknown>, cwd: string): Search[] {
   if (typeof args.pattern !== 'string') return [];
-  return [{ pattern: args.pattern, targets: [resolve(cwd, typeof args.path === 'string' ? args.path : '.')] }];
+  return [{ pattern: args.pattern, targets: [toPosix(resolve(cwd, typeof args.path === 'string' ? args.path : '.'))] }];
 }
 
 // Options that take the next word as their value: of both, then of rg only,
@@ -284,7 +291,7 @@ export function shellSearches(command: string, cwd: string): Search[] {
       else paths.push(arg);
     }
     if (pattern !== undefined) {
-      searches.push({ pattern, targets: (paths.length ? paths : ['.']).map((p) => (isAbsolute(p) ? p : resolve(dir, p))) });
+      searches.push({ pattern, targets: (paths.length ? paths : ['.']).map((p) => toPosix(isAbsolute(p) ? p : resolve(dir, p))) });
     }
   }
   return searches;

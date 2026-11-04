@@ -26,7 +26,8 @@ into the agent as an MCP server.
   <b><a href="#install">Install</a> · <a href="#languages">Languages</a> · <a href="#before-and-after">Before and after</a> · <a href="#why-csyk">Why CSyk</a> · <a href="#numbers">Numbers</a> · <a href="#tools">Tools</a></b>
 </p>
 
-Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS and Linux.
+Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS, Linux and
+Windows.
 
 > **Preview (0.1).** The numbers below come from public repositories and benchmarks, all
 > reproducible from this repository. CSyk has not yet been used widely on private codebases. When
@@ -37,7 +38,7 @@ Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS 
 
 ## Install
 
-You need macOS or Linux and an AI coding agent: Claude Code, Codex, Antigravity, Cursor, OpenCode or
+You need macOS, Linux or Windows and an AI coding agent: Claude Code, Codex, Antigravity, Cursor, OpenCode or
 Hermes Agent. Any other agent that supports MCP works too, set up by hand.
 
 1. **Install CSyk**, once for your machine. With Node.js 22.18 or later:
@@ -46,8 +47,8 @@ Hermes Agent. Any other agent that supports MCP works too, set up by hand.
    npm install -g @ubiw/csyk    # or, with pnpm: pnpm add -g @ubiw/csyk
    ```
 
-   Without Node.js, take the package for your machine, which has Node.js inside, and link it from
-   a folder on your `PATH`:
+   On macOS and Linux without Node.js, take the package for your machine, which has Node.js
+   inside, and link it from a folder on your `PATH` (on Windows, install with npm):
 
    ```sh
    p=csyk-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/')

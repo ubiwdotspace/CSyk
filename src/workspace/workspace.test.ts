@@ -61,7 +61,8 @@ describe('Workspace', () => {
     expect(answer.text).toContain('z.ts:2  needle');
     await ws.ready;
     await ws.close();
-  });
+    // 3,000 files to write and index: slower on Windows than the default 5 s.
+  }, 60_000);
 
   it('greps every hit in one function when all of them fit', async () => {
     const lines = Array.from({ length: 12 }, (_, i) => `  const v${i} = 'needle ${i}';`);
@@ -146,7 +147,8 @@ describe('Workspace', () => {
   });
 
   // File system events can lag on a busy machine; the test retries rather than wait longer.
-  it('stops a server not asked lately while over the memory budget, not one just asked', async () => {
+  // Measured with ps, which Windows lacks: the budget is not enforced there yet.
+  it.skipIf(process.platform === 'win32')('stops a server not asked lately while over the memory budget, not one just asked', async () => {
     const ws = await Workspace.open(folder({ 'a.ts': 'export const a = 1;', 'tsconfig.json': '{}' }));
     const before = process.env.CSYK_MEMORY;
     process.env.CSYK_MEMORY = '1';

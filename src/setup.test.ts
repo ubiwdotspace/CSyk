@@ -14,7 +14,7 @@ const temp = (name: string) => mkdtempSync(join(tmpdir(), `csyk-${name}-`));
 const run = (cwd: string, home: string, ...args: string[]) =>
   execFileSync(process.execPath, [cli, 'setup', '--write', ...args], {
     cwd,
-    env: { ...process.env, HOME: home, CODEX_HOME: join(home, '.codex'), HERMES_HOME: join(home, '.hermes'), PATH: '/usr/bin:/bin' },
+    env: { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: join(home, '.codex'), HERMES_HOME: join(home, '.hermes'), PATH: '/usr/bin:/bin' },
   });
 
 describe('csyk setup --agent', () => {

@@ -105,6 +105,14 @@ function self(): string[] {
   return ['node', existsSync(built) ? built : resolve(script)];
 }
 
+// How an agent starts the CSyk server: as self() does, but on Windows the installed command is
+// csyk.cmd, which an agent starting servers without a shell runs only through cmd /c. Hooks keep
+// self(): Claude Code runs them in Git Bash, which finds csyk and would mangle a /c.
+function launcher(): string[] {
+  const csyk = self();
+  return process.platform === 'win32' && csyk[0] === 'csyk' ? ['cmd', '/c', 'csyk'] : csyk;
+}
+
 const home = (...parts: string[]) => join(homedir(), ...parts);
 
 export const agents: Agent[] = [
@@ -130,9 +138,10 @@ export const agents: Agent[] = [
       // both, and Grep's tool description costs more tokens on every turn than all of CSyk's tools.
       const permissions = { deny: ['Grep'] };
       const base = scope === 'user' ? home('.claude') : '.claude';
-      const server = { command: csyk[0], args: [...csyk.slice(1), 'serve'] };
+      const launch = launcher();
+      const server = { command: launch[0], args: [...launch.slice(1), 'serve'] };
       return [
-        scope === 'user' ? claudeUserServer(csyk) : jsonStep('.mcp.json', ['mcpServers', 'csyk'], server),
+        scope === 'user' ? claudeUserServer(launch) : jsonStep('.mcp.json', ['mcpServers', 'csyk'], server),
         {
           target: join(base, 'settings.json'),
           preview: JSON.stringify({ permissions, hooks }, null, 2),
@@ -163,7 +172,7 @@ export const agents: Agent[] = [
     name: 'Codex',
     found: () => Boolean(onPath('codex')),
     steps(scope) {
-      const csyk = self();
+      const csyk = launcher();
       // Codex starts MCP servers in the project. It reads a project's .codex/config.toml once the
       // project is trusted, and its skills from .agents/skills.
       const codexHome = process.env.CODEX_HOME ?? home('.codex');
@@ -186,7 +195,7 @@ export const agents: Agent[] = [
     name: 'Antigravity',
     found: () => Boolean(onPath('agy')) || existsSync('/Applications/Antigravity.app') || existsSync(home('.gemini', 'antigravity')),
     steps(scope) {
-      const csyk = self();
+      const csyk = launcher();
       if (scope === 'project') {
         // A workspace plugin: on in this project only, with its server, rule and skill. Antigravity
         // starts a plugin's server in the plugin's folder, three levels below the project.
@@ -219,7 +228,7 @@ export const agents: Agent[] = [
     name: 'Cursor',
     found: () => Boolean(onPath('cursor') || onPath('cursor-agent')) || existsSync('/Applications/Cursor.app') || existsSync(home('.cursor')),
     steps(scope) {
-      const csyk = self();
+      const csyk = launcher();
       // Cursor names the open project in ${workspaceFolder}, in a project's .cursor/mcp.json and
       // in the one for every project alike.
       const server = { command: csyk[0], args: [...csyk.slice(1), 'serve', '${workspaceFolder}'] };
@@ -244,7 +253,7 @@ export const agents: Agent[] = [
     name: 'OpenCode',
     found: () => Boolean(onPath('opencode')) || existsSync(home('.config', 'opencode')),
     steps(scope) {
-      const csyk = self();
+      const csyk = launcher();
       // The note goes in its own file, listed in the config's instructions: OpenCode adds those to
       // AGENTS.md, where a new AGENTS.md would hide a project's CLAUDE.md from it.
       const base = scope === 'user' ? home('.config', 'opencode') : '.opencode';
@@ -276,7 +285,7 @@ export const agents: Agent[] = [
     name: 'Hermes Agent',
     found: () => Boolean(onPath('hermes')) || existsSync(process.env.HERMES_HOME ?? home('.hermes')),
     steps(scope) {
-      const csyk = self();
+      const csyk = launcher();
       // Hermes reads MCP servers from config.yaml in HERMES_HOME (~/.hermes) only, and starts them in the session's
       // folder: one entry serves whichever project Hermes runs in, for both scopes.
       const hermesHome = process.env.HERMES_HOME ?? home('.hermes');
