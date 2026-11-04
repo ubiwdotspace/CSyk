@@ -68,20 +68,23 @@ export function inGitRepo(root: string): boolean {
 
 /**
  * ripgrep's arguments for a search of [path] in [root] that leaves out what is not the project's
- * code: `.gitignore` read in or out of git, dependency folders outside git, generated files and
- * files that hold secrets. A search aimed inside a dependency folder, or at one such file by
- * name, keeps them.
+ * code: generated files and files that hold secrets; outside git, also the dependency folders
+ * and the project's own `.gitignore`, never a parent folder's (read past a repository's root,
+ * a parent's `eval/corpora/` hid a whole checked-out repository). In git, ripgrep reads the
+ * repository's ignore files as git does. A search aimed inside a dependency folder, or at one
+ * such file by name, keeps them.
  */
 export function searchSkips(root: string, path = '.'): string[] {
   const parts = path.split(/[\\/]/);
   const intoDependency = parts.some((part) => skipped.has(part));
   const base = parts.at(-1) ?? '';
   const named = [...generatedFiles, ...secretFiles].some((glob) => new RegExp(`^${glob.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`).test(base));
+  const git = inGitRepo(root);
   const globs = [
-    ...(intoDependency || inGitRepo(root) ? [] : dependencyDirs.map((dir) => `!**/${dir}/**`)),
+    ...(intoDependency || git ? [] : dependencyDirs.map((dir) => `!**/${dir}/**`)),
     ...(named ? [] : [...generatedFiles, ...secretFiles].map((glob) => `!${glob}`)),
   ];
-  return ['--no-require-git', ...globs.flatMap((glob) => ['--glob', glob])];
+  return [...(git ? [] : ['--no-require-git', '--no-ignore-parent']), ...globs.flatMap((glob) => ['--glob', glob])];
 }
 
 /**

@@ -62,6 +62,22 @@ describe('what is not the project code', () => {
     expect(await grepIn(project(true))).toEqual(['src/app.ts', 'build/tool.ts']);
   });
 
+  it("a repository inside another is searched by its own .gitignore, not the outer one's", async () => {
+    // As provider checked out under CSyk's eval/corpora/: CSyk's `packages/` (its standalone
+    // builds) matched provider's packages/, where all its code is, and grep found nothing.
+    const parent = mkdtempSync(join(tmpdir(), 'csyk-parent-'));
+    writeFileSync(join(parent, '.gitignore'), 'packages/\n');
+    execFileSync('git', ['init', '-q'], { cwd: parent });
+    const root = join(parent, 'corpora', 'project');
+    mkdirSync(join(root, 'packages/app/src'), { recursive: true });
+    writeFileSync(join(root, 'packages/app/src/app.ts'), 'export function needle() { return 1; }');
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const ws = Workspace.start(root, {});
+    opened.push(ws);
+    await ws.ready;
+    expect((await runTool(ws, 'grep', { pattern: 'needle' }, new Session())).text).toContain('packages/app/src/app.ts');
+  });
+
   it('a search aimed at a dependency, a generated file or a secrets file by name still finds it', async () => {
     const root = project(false);
     expect(await grepIn(root, { path: 'node_modules/dep' })).toEqual(['node_modules/dep/index.js']);
