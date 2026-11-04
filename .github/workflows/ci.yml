@@ -50,3 +50,22 @@ jobs:
       - run: for p in eval/corpora/provider/packages/*/; do (cd "$p" && flutter pub get); done
       - run: npm run eval -- --adapter csyk --corpus mini-ts,zustand,parse-server,chi,provider --limit 30
       - run: npm run gate
+
+  # Windows, run by hand like the rest: typecheck, tests and the build, no gate (the answers do
+  # not depend on the system).
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
