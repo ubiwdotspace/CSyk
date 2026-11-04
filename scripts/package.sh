@@ -23,11 +23,6 @@ mv "$work/lib/package" "$work/lib/csyk"
 cp package-lock.json "$work/lib/csyk/"
 (cd "$work/lib/csyk" && npm ci --omit=dev --ignore-scripts --os="$os" --cpu="$arch" --no-audit --no-fund --silent)
 rm "$work/lib/csyk/package-lock.json"
-# CSyk reads only the WebAssembly parsers of the tree-sitter grammars, not
-# their C sources or native builds.
-find "$work/lib/csyk/node_modules" -type d -name 'tree-sitter-*' -prune | while read -r grammar; do
-  find "$grammar" -mindepth 1 -maxdepth 1 ! -name '*.wasm' ! -name package.json ! -name 'LICENSE*' ! -name node_modules -exec rm -rf {} +
-done
 
 # Node.js, the same version that built the package.
 curl -fsSL "https://nodejs.org/dist/v$node_version/node-v$node_version-$os-$arch.tar.gz" | tar -xz -C "$work" \
