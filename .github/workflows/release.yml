@@ -1,13 +1,10 @@
 name: Release
 
-# Runs when a version tag made by `npm version` is pushed (see CONTRIBUTING.md).
-# A pull request that changes the packaging builds and tries the standalone
-# packages, without publishing anything.
+# Run by hand only (see CONTRIBUTING.md): on a version tag, it builds the standalone packages
+# and makes the GitHub release, gh workflow run Release --ref v<version>; on a branch, it only
+# builds and tries the packages. Nothing runs on pushes, tags or pull requests.
 on:
-  push:
-    tags: ['v*']
-  pull_request:
-    paths: [scripts/package.sh, scripts/smoke.ts, .github/workflows/release.yml]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -47,7 +44,7 @@ jobs:
   # the owner publishes by hand (npm publish) and this job makes the GitHub release alone.
   publish:
     needs: standalone
-    if: github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

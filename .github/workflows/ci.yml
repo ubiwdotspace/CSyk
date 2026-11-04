@@ -1,17 +1,16 @@
 name: CI
 
+# Run by hand only, on the branch to check: gh workflow run CI --ref <branch>
+# (or Actions → CI → Run workflow). Nothing runs on pushes or pull requests.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
-  # A newer push to a pull request replaces its older run; every run on main finishes.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   # One job on one system: typecheck, tests and the build, then the single questions on a few

@@ -75,40 +75,42 @@ commit code, paths or questions taken from a private repository.
 Commit messages start with a type (`feat`, `fix`, `eval`, `docs`, `chore`) and say what changed in
 plain words, for example `fix: grep hit lines do not repeat the code shown below them`.
 
-A pull request runs one check on Linux, about four minutes: typecheck, tests, the build, then the
-single questions on five repositories held to `eval/gate.json`. Keep it to one change.
+Nothing runs on its own when you push or open a pull request. Run the checks locally before
+asking for a merge (`npm run typecheck && npm test && npm run build`; see "Changing answers" for
+the eval and `npm run gate`), or have the maintainer run the CI check on your branch, about three minutes on Linux:
+`gh workflow run CI --ref <branch>`. Keep a pull request to one change.
 
-`main` takes changes only through pull requests: no direct pushes, force pushes or deletion, and a
-pull request merges once `check` passes. Only the maintainer merges; anyone can open a pull request
-from a branch or a fork:
+`main` takes changes only through pull requests: no direct pushes, force pushes or deletion. Only
+the maintainer merges; anyone can open a pull request from a branch or a fork:
 
 ```sh
 git switch -c fix/short-name
 git push -u origin fix/short-name
 gh pr create --fill
-gh pr merge --auto --merge       # the maintainer: merges once check passes, then deletes the branch
+gh pr merge --merge              # the maintainer; the branch is deleted after the merge
 ```
 
 Release tags (`v*`) are created by maintainers only.
 
 ## Releasing
 
-Maintainers release from an up-to-date, clean `main`:
+Maintainers release from an up-to-date, clean `main`, by hand:
 
 ```sh
 npm version <patch|minor|major> -m "chore: release %s"   # bumps package.json, commits, tags v<version>
-git push --follow-tags
+npm publish --access public --otp=<code>
+git push origin v<version>                                # the tag only: main takes pull requests
+gh workflow run Release --ref v<version>
 ```
 
-Before 1.0, use `minor` for new features or changed answers and `patch` for fixes. The pushed tag
-starts the [release workflow](.github/workflows/release.yml): it builds a standalone package for
-each platform with `scripts/package.sh` (Node.js inside) and asks each, where it can run, a few
-questions with `scripts/smoke.ts`; then it checks that the tag matches `package.json`, runs
-typecheck and tests, publishes to npm with provenance when the repository has an npm automation
-token in the `NPM_TOKEN` secret, and creates the GitHub release with notes from the merged pull
-requests and the packages attached. Without the secret, publish to npm by hand (`npm publish`)
-before pushing the tag. A pull request that changes the packaging runs the build and the
-questions too.
+`npm version` commits on `main`, which takes pull requests only: make the bump on a branch and
+merge it first, then tag the merge commit. Before 1.0, use `minor` for new features or changed
+answers and `patch` for fixes. The [release workflow](.github/workflows/release.yml), run on the
+tag, builds a standalone package for each platform with `scripts/package.sh` (Node.js inside), asks
+each, where it can run, a few questions with `scripts/smoke.ts`, checks that the tag matches
+`package.json`, runs typecheck and tests, and creates the GitHub release with notes from the merged
+pull requests and the packages attached. It publishes to npm too only when the repository has an
+`NPM_TOKEN` secret. Run on a branch, it only builds and tries the packages.
 
 ## Licence
 
