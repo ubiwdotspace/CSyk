@@ -11,6 +11,7 @@ import type { Position } from '../precision/lsp-client.ts';
 import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
+import { searchSkips } from '../workspace/files.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { mentionsOutsideCode, projectFile } from './other-files.ts';
 
@@ -324,6 +325,9 @@ export async function grep(
   const listBudget = options.brief ? briefBudget : (options.budget ?? (session.long ? 600 : defaultBudget));
   // --with-filename: a search of one file names it too, as every hit needs.
   const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
+  // Dependencies and generated files out (see searchSkips); the agent's glob comes last, as
+  // ripgrep lets a later glob win.
+  args.push(...searchSkips(ws.root, options.path));
   if (options.glob) args.push('--glob', options.glob);
   const search = async (literal: boolean) => {
     const { stdout } = await run(rgPath, ['--path-separator', '/', ...args, ...(literal ? ['--fixed-strings'] : []), '-e', pattern, '--', options.path ?? '.'], {

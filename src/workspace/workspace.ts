@@ -9,6 +9,7 @@ import { codeExtensions, sourceExtensions } from '../index/parse.ts';
 import { parsedAtOnce, SymbolIndex } from '../index/symbol-index.ts';
 import { LspService, pool, serverFor, servers } from '../precision/lsp-service.ts';
 import { memoryBudget, treeMb } from '../precision/memory.ts';
+import { dependencyDirs, isMinified } from './files.ts';
 
 const run = promisify(execFile);
 
@@ -21,9 +22,8 @@ const idleMs = 10 * 60 * 1000;
 const busyMs = 30_000;
 
 // Folders whose changes never touch the project's own sources.
-const ignoredDirs = /(^|\/)(node_modules|\.git|dist|build|out|coverage|\.next|\.dart_tool)\//;
-// Folders of dependencies and builds, left out when searching what git ignores.
-export const dependencyDirs = ['node_modules', '.git', 'dist', 'build', 'out', 'coverage', '.next', '.dart_tool', 'vendor', 'target', '.venv', 'venv', '__pycache__', 'Pods', '.gradle'];
+const ignoredDirs = new RegExp(`(^|/)(${dependencyDirs.map((dir) => dir.replace('.', '\\.')).join('|')})/`);
+export { dependencyDirs };
 
 /** Where the index of [root] is saved between runs. */
 export function snapshotPath(root: string): string {
@@ -212,7 +212,7 @@ export class Workspace {
   }
 
   private queue(file: string): void {
-    if (!sourceExtensions.has(extname(file)) || file.endsWith('.d.ts') || ignoredDirs.test(file)) return;
+    if (!sourceExtensions.has(extname(file)) || file.endsWith('.d.ts') || isMinified(file) || ignoredDirs.test(file)) return;
     this.pending.add(file);
     clearTimeout(this.timer);
     this.timer = setTimeout(() => void this.fresh(), debounceMs);

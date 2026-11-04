@@ -96,6 +96,16 @@ widgets and similar are marked as such. The index is saved in `~/.cache/csyk`, s
 only parses files that changed. While running, CSyk watches the files: each tool call first takes
 in any edits, so answers are never out of date.
 
+**What is left out.** In a git repository, what `.gitignore` lists (so `node_modules` and a
+built `dist/` usually), and no other folder: a tracked `build/` can be the project's own code.
+Outside git, the dependency and build folders (`node_modules`, `dist`, `build`, `vendor`,
+`.venv`, …). Minified sources (`*.min.js`) are never indexed. `grep` also leaves out lock files,
+source maps and test snapshots, and files that hold secrets (`.env`, `*.pem`, `*.key`, SSH keys,
+`credentials.json`, `*.tfvars`, `.npmrc`, …), so a search for a name like `API_KEY` does not put a
+key's value in the agent's context; a `path` that names such a file, or reaches into a
+dependency folder, searches it. Secrets written in the code itself are for a scanner such as
+gitleaks.
+
 **Names.** `find` ranks exact matches first, then joined words (`token store` finds `TokenStore`),
 then names that start with or contain the query. Tests and private helpers come lower. When
 nothing matches, it suggests the three closest names.
