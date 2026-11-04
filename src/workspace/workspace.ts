@@ -116,7 +116,7 @@ export class Workspace {
     const globs = [...[...codeExtensions].map((ext) => `*${ext}`), ...dependencyDirs.map((dir) => `!**/${dir}/**`)];
     let stdout = '';
     try {
-      ({ stdout } = await run(rgPath, ['--no-ignore', '--files-with-matches', '-w', '-F', ...globs.flatMap((g) => ['-g', g]), '-e', name, '.'], {
+      ({ stdout } = await run(rgPath, ['--path-separator', '/', '--no-ignore', '--files-with-matches', '-w', '-F', ...globs.flatMap((g) => ['-g', g]), '-e', name, '.'], {
         cwd: this.root,
         maxBuffer: 16 * 1024 * 1024,
       }));

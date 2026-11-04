@@ -326,7 +326,7 @@ export async function grep(
   const args = ['--line-number', '--with-filename', '--no-heading', '--color', 'never', '--smart-case', '--max-columns', '300'];
   if (options.glob) args.push('--glob', options.glob);
   const search = async (literal: boolean) => {
-    const { stdout } = await run(rgPath, [...args, ...(literal ? ['--fixed-strings'] : []), '-e', pattern, '--', options.path ?? '.'], {
+    const { stdout } = await run(rgPath, ['--path-separator', '/', ...args, ...(literal ? ['--fixed-strings'] : []), '-e', pattern, '--', options.path ?? '.'], {
       cwd: ws.root,
       maxBuffer: 256 * 1024 * 1024,
     });

@@ -59,7 +59,7 @@ async function ripgrep(args: string[], cwd: string): Promise<string> {
   try {
     // An explicit "." keeps ripgrep off stdin, which it would otherwise
     // wait on when not run from a terminal.
-    const { stdout } = await run(rgPath, [...base, ...args, '.'], {
+    const { stdout } = await run(rgPath, ['--path-separator', '/', ...base, ...args, '.'], {
       cwd,
       maxBuffer: 64 * 1024 * 1024,
     });

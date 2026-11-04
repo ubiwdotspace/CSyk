@@ -1,7 +1,8 @@
 import { execFile } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
-import { extname, join, relative } from 'node:path';
+import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
+import { repoRelative } from '../paths.ts';
 
 const run = promisify(execFile);
 
@@ -32,7 +33,7 @@ async function walk(root: string, dir: string): Promise<string[]> {
     if (skipped.has(entry.name)) continue;
     const path = join(dir, entry.name);
     if (entry.isDirectory()) files.push(...(await walk(root, path)));
-    else if (entry.isFile()) files.push(relative(root, path));
+    else if (entry.isFile()) files.push(repoRelative(root, path));
   }
   return files;
 }

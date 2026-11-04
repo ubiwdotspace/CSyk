@@ -55,10 +55,14 @@ export type ServerSpec = {
 // The first of [names] found on PATH or in Go's install folder.
 export function onPath(...names: string[]): string | undefined {
   const dirs = [...(process.env.PATH ?? '').split(delimiter), join(process.env.GOPATH ?? join(homedir(), 'go'), 'bin')];
+  // Windows finds a command by the extensions in PATHEXT: gopls.exe, Flutter's dart.bat.
+  const extensions = process.platform === 'win32' ? ['', ...(process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').toLowerCase().split(';')] : [''];
   for (const name of names) {
     for (const dir of dirs) {
-      const path = join(dir, name);
-      if (dir && existsSync(path)) return path;
+      for (const extension of extensions) {
+        const path = join(dir, name + extension);
+        if (dir && existsSync(path)) return path;
+      }
     }
   }
   return undefined;
@@ -440,7 +444,7 @@ export async function textMentions(root: string, name: string, extensions: Reado
   const globs = [...extensions].flatMap((ext) => ['-g', `*${ext}`]);
   let stdout = '';
   try {
-    ({ stdout } = await run(rgPath, ['--vimgrep', '-w', '-F', ...globs, '-e', name, '.'], {
+    ({ stdout } = await run(rgPath, ['--path-separator', '/', '--vimgrep', '-w', '-F', ...globs, '-e', name, '.'], {
       cwd: root,
       maxBuffer: 256 * 1024 * 1024,
     }));
