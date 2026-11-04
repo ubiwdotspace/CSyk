@@ -4,6 +4,12 @@ name: CI
 # (or Actions → CI → Run workflow). Nothing runs on pushes or pull requests.
 on:
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which check to run
+        type: choice
+        options: [check, windows, all]
+        default: check
 
 permissions:
   contents: read
@@ -19,6 +25,7 @@ jobs:
   # workflow builds and tries the macOS and Linux packages. Go, gopls and Flutter are the
   # versions the baseline was written with.
   check:
+    if: inputs.job != 'windows'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -54,6 +61,7 @@ jobs:
   # Windows, run by hand like the rest: typecheck, tests and the build, no gate (the answers do
   # not depend on the system).
   windows:
+    if: inputs.job == 'windows' || inputs.job == 'all'
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
