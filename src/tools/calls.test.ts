@@ -192,6 +192,8 @@ describe('calls of a default export', () => {
     try {
       expect((await calls(repo, 'sum.ts#total')).text.split('\n').slice(1)).toEqual(['main.ts#run  4']);
       expect((await calls(repo, 'cli.ts#default')).text.split('\n').slice(1)).toEqual(['start.ts (top level)  3']);
+      // Named after its file, as the files that import it usually name it.
+      expect((await calls(repo, 'cli')).text.split('\n').slice(1)).toEqual(['start.ts (top level)  3']);
       expect((await calls(repo, 'button.tsx#Button')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9', 'page.tsx#Page  4']);
       // The wrappers' other arguments are not what renders.
       expect((await calls(repo, 'button.tsx#mapState')).text.split('\n').slice(1)).toEqual(['button.tsx (top level)  9']);

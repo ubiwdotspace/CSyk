@@ -6,14 +6,18 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { extractSymbols } from '../../src/index/parse.ts';
 import { buildCsyk, runClaude, setups, type ClaudeRun } from '../agent/claude.ts';
+import { antigravitySetups, runAntigravity } from '../agent/antigravity.ts';
+import { codexSetups, runCodex } from '../agent/codex.ts';
+import { cursorSetups, runCursor } from '../agent/cursor.ts';
+import { qwenSetups, runQwen } from '../agent/qwen.ts';
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify|lsp-plugin|codegraph> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify|lsp-plugin|codegraph> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40] [--agent claude|qwen|antigravity|codex|cursor]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
-base commit, headless Claude Code is asked which files and functions must
+base commit, headless Claude Code (or, with --agent, Qwen Code, Antigravity, Codex or Cursor) is asked which files and functions must
 change, without editing. Its answer is scored against the files and functions
 the real fix changed. Records time, tokens, cost and accuracy; each run is
 billed to your Claude account.
@@ -68,11 +72,16 @@ async function main(): Promise<void> {
       only: { type: 'string' },
       model: { type: 'string', default: 'sonnet' },
       'max-turns': { type: 'string', default: '40' },
+      agent: { type: 'string', default: 'claude' },
       help: { type: 'boolean', short: 'h' },
     },
   });
   const load = loaders[values.dataset];
-  if (values.help || !values.setup || !values.language || !load || !(values.setup in setups('.'))) {
+  const agent = values.agent;
+  const otherSetups: Record<string, readonly string[]> = { qwen: qwenSetups, antigravity: antigravitySetups, codex: codexSetups, cursor: cursorSetups };
+  const known =
+    agent === 'claude' ? Boolean(values.setup) && values.setup! in setups('.') : (otherSetups[agent]?.includes(values.setup ?? '') ?? false);
+  if (values.help || !values.setup || !values.language || !load || !known) {
     console.log(usage);
     return;
   }
@@ -85,7 +94,7 @@ async function main(): Promise<void> {
   console.log(`${values.dataset} ${values.language}: ${sample.length} of ${all.length} issues, seed ${values.seed}`);
   console.log(`  repositories: ${tally(sample, (i) => i.repo)} (dataset: ${tally(all, (i) => i.repo)})`);
   if (all.some((i) => i.difficulty)) console.log(`  difficulty: ${tally(sample, (i) => i.difficulty ?? '?')} (dataset: ${tally(all, (i) => i.difficulty ?? '?')})`);
-  if (values.setup === 'csyk') buildCsyk();
+  if (values.setup === 'csyk' || (agent !== 'claude' && !process.env.CSYK_CLI)) buildCsyk();
   // One file per setup, dataset, language and seed, written after every issue:
   // a run that stops resumes where it was, without paying for an issue twice.
   const name = values.dataset === 'polybench' ? values.language : `${values.dataset}-${values.language}`;
@@ -96,7 +105,7 @@ async function main(): Promise<void> {
     writeFile(
       out,
       // The sample in order: its first n issues are the run at --count n.
-      `${JSON.stringify({ setup: values.setup, dataset: values.dataset, language: values.language, model: values.model, seed: values.seed, sample: sample.map((i) => i.instance_id), results }, null, 2)}\n`,
+      `${JSON.stringify({ setup: values.setup, agent, dataset: values.dataset, language: values.language, model: values.model, seed: values.seed, sample: sample.map((i) => i.instance_id), results }, null, 2)}\n`,
     );
   await mkdir(dirname(out), { recursive: true });
   for (const instance of sample) {
@@ -108,10 +117,18 @@ async function main(): Promise<void> {
     });
     if (!repo) continue;
     const gold = await goldOf(instance, repo);
-    const setup = setups(repo)[values.setup];
-    if (!setup) throw new Error(`no setup ${values.setup}`);
-    await setup.prepare?.();
-    const { answer, ...cost } = await runClaude(prompt(instance.problem_statement), repo, setup, values.model, values['max-turns']);
+    let run: ClaudeRun;
+    if (agent === 'qwen') run = await runQwen(prompt(instance.problem_statement), repo, values.setup, values.model, values['max-turns']);
+    else if (agent === 'antigravity') run = await runAntigravity(prompt(instance.problem_statement), repo, values.setup, values.model);
+    else if (agent === 'codex') run = await runCodex(prompt(instance.problem_statement), repo, values.setup, values.model);
+    else if (agent === 'cursor') run = await runCursor(prompt(instance.problem_statement), repo, values.setup, values.model);
+    else {
+      const setup = setups(repo)[values.setup];
+      if (!setup) throw new Error(`no setup ${values.setup}`);
+      await setup.prepare?.();
+      run = await runClaude(prompt(instance.problem_statement), repo, setup, values.model, values['max-turns']);
+    }
+    const { answer, ...cost } = run;
     const { files, functions } = parseAnswer(answer, repo);
     const score = scoreAnswer(gold, files, functions);
     results.push({ id: instance.instance_id, files, functions, ...score, ...cost });

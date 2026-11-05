@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -42,5 +42,23 @@ describe('Session', () => {
     const session = new Session();
     expect(session.hint('find', 'hint: read')).toEqual(['hint: read']);
     expect(session.hint('find', 'hint: read')).toEqual([]);
+  });
+});
+
+describe('Session.readByAgent', () => {
+  it('counts lines the agent read itself, until 30 minutes have passed', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'csyk-seen-')));
+    const file = join(dir, 'a.ts');
+    const log = join(dir, 'seen.jsonl');
+    writeFileSync(file, 'x\n');
+    utimesSync(file, 1, 1);
+    let now = 10_000;
+    const session = new Session({ seen: log, now: () => now });
+    now += 1;
+    writeFileSync(log, `${JSON.stringify({ file, from: 5, to: 40, at: now })}\n`);
+    expect(session.readByAgent(file, 10, 20)).toBe(true);
+    expect(session.readByAgent(file, 1, 20)).toBe(false);
+    now += 31 * 60 * 1000;
+    expect(session.readByAgent(file, 10, 20)).toBe(false);
   });
 });

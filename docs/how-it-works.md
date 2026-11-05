@@ -87,7 +87,7 @@ flowchart TD
 | Project | `src/workspace/workspace.ts` | the index, the file watcher, starting and stopping servers |
 | Answer size | `src/token/budget.ts`, `src/token/session.ts` | cutting answers to a token budget, remembering what was shown |
 | Hooks | `src/hooks/hooks.ts` | the optional Claude Code hooks |
-| Agent guide | `src/guide.ts` | the note and the skill `csyk setup` writes |
+| Agent guide | `src/guide.ts` | the note `csyk setup` writes |
 
 **Index.** On start, CSyk parses every source file with tree-sitter (a fast parser, about 1 ms per
 file) and keeps the symbols in memory: functions, classes, methods, fields, constants, types and
@@ -95,6 +95,16 @@ enum members, with their line ranges and signatures. React components, NestJS ro
 widgets and similar are marked as such. The index is saved in `~/.cache/csyk`, so the next start
 only parses files that changed. While running, CSyk watches the files: each tool call first takes
 in any edits, so answers are never out of date.
+
+**What is left out.** In a git repository, what `.gitignore` lists (so `node_modules` and a
+built `dist/` usually), and no other folder: a tracked `build/` can be the project's own code.
+Outside git, the dependency and build folders (`node_modules`, `dist`, `build`, `vendor`,
+`.venv`, …). Minified sources (`*.min.js`) are never indexed. `grep` also leaves out lock files,
+source maps and test snapshots, and files that hold secrets (`.env`, `*.pem`, `*.key`, SSH keys,
+`credentials.json`, `*.tfvars`, `.npmrc`, …), so a search for a name like `API_KEY` does not put a
+key's value in the agent's context; a `path` that names such a file, or reaches into a
+dependency folder, searches it. Secrets written in the code itself are for a scanner such as
+gitleaks.
 
 **Names.** `find` ranks exact matches first, then joined words (`token store` finds `TokenStore`),
 then names that start with or contain the query. Tests and private helpers come lower. When

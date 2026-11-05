@@ -5,10 +5,10 @@ import { dirname, join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { withTomlTable } from './setup.ts';
-import { choose } from './tui.ts';
+import { withTomlTable } from './index.ts';
+import { choose } from '../tui.ts';
 
-const cli = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
+const cli = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.ts');
 const temp = (name: string) => mkdtempSync(join(tmpdir(), `csyk-${name}-`));
 
 const run = (cwd: string, home: string, ...args: string[]) =>
@@ -25,11 +25,10 @@ describe('csyk setup --agent', () => {
     const files = [
       '.codex/config.toml',
       'AGENTS.md',
-      '.agents/skills/csyk/SKILL.md',
       '.agents/plugins/csyk/plugin.json',
       '.agents/plugins/csyk/mcp_config.json',
       '.agents/plugins/csyk/rules/AGENTS.md',
-      '.agents/plugins/csyk/skills/csyk/SKILL.md',
+      '.agents/plugins/csyk/hooks.json',
     ].map((f) => join(project, f));
     run(project, home, '--agent', 'codex,antigravity');
     const first = files.map((f) => readFileSync(f, 'utf8'));
@@ -37,7 +36,7 @@ describe('csyk setup --agent', () => {
     expect(files.map((f) => readFileSync(f, 'utf8'))).toEqual(first);
     expect(readdirSync(home)).toEqual([]);
 
-    const [toml = '', agents = '', , , server = '{}'] = first;
+    const [toml = '', agents = '', , server = '{}'] = first;
     expect(toml).toMatch(/^\[mcp_servers\.csyk\]\ncommand = "node"\nargs = \[".+", "serve"\]\n$/);
     expect(agents).toMatch(/^# Agents\n\n<!-- csyk:start -->\n## Code search \(CSyk\)/);
     // Antigravity starts a plugin's server in the plugin's folder.
@@ -67,7 +66,7 @@ describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
     const home = temp('home');
     writeFileSync(join(project, 'CLAUDE.md'), '# Project\n');
     writeFileSync(join(project, 'opencode.json'), '{"theme":"dark","instructions":["docs/rules.md"]}');
-    const files = ['.cursor/mcp.json', '.cursor/rules/csyk.mdc', '.cursor/skills/csyk/SKILL.md', 'opencode.json', '.opencode/csyk.md', '.opencode/skills/csyk/SKILL.md'].map(
+    const files = ['.cursor/mcp.json', '.cursor/rules/csyk.mdc', 'opencode.json', '.opencode/csyk.md'].map(
       (f) => join(project, f),
     );
     run(project, home, '--agent', 'cursor,opencode');
@@ -78,7 +77,7 @@ describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
     expect(readFileSync(join(project, 'CLAUDE.md'), 'utf8')).toBe('# Project\n');
     expect(existsSync(join(project, 'AGENTS.md'))).toBe(false);
 
-    const [cursor = '{}', rule = '', , opencode = '{}', opencodeNote = ''] = first;
+    const [cursor = '{}', rule = '', opencode = '{}', opencodeNote = ''] = first;
     // Cursor names the open project in ${workspaceFolder}.
     expect(JSON.parse(cursor).mcpServers.csyk.args.slice(-2)).toEqual(['serve', '${workspaceFolder}']);
     expect(rule).toMatch(/^---\ndescription: Code search with CSyk\nalwaysApply: true\n---\n\n## Code search \(CSyk\)/);
@@ -103,7 +102,7 @@ describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
     expect(readFileSync(join(home, '.hermes', 'config.yaml'), 'utf8')).toBe(first);
     expect(first).toMatch(/^# my settings\nmodel: hermes-4\nmcp_servers:\n {2}other:\n {4}command: other\n {2}csyk:\n {4}command: node\n/);
     expect(first).toMatch(/ {4}args:\n(?: {6}- .+\n)* {6}- serve\n$/);
-    expect(existsSync(join(home, '.hermes', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(home, '.hermes', 'skills'))).toBe(false);
     // Hermes reads one context file, CLAUDE.md here: the note goes there, not into a new AGENTS.md.
     expect(readFileSync(join(project, 'CLAUDE.md'), 'utf8')).toMatch(/^# Project\n\n<!-- csyk:start -->\n## Code search \(CSyk\)/);
     expect(existsSync(join(project, 'AGENTS.md'))).toBe(false);
@@ -116,9 +115,44 @@ describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
     expect(JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).mcpServers.csyk.args.at(-1)).toBe('${workspaceFolder}');
     const config = JSON.parse(readFileSync(join(home, '.config', 'opencode', 'opencode.json'), 'utf8'));
     expect(config.instructions).toEqual([join(home, '.config', 'opencode', 'csyk.md')]);
-    expect(existsSync(join(home, '.cursor', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(home, '.config', 'opencode', 'skills', 'csyk', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(home, '.cursor', 'skills'))).toBe(false);
+    expect(existsSync(join(home, '.config', 'opencode', 'skills'))).toBe(false);
     expect(readdirSync(project)).toEqual([]);
+  }, 30_000);
+});
+
+describe('the same hooks for every agent that has them', () => {
+  const commands = (value: unknown) => JSON.stringify(value).match(/hook [a-z-]+(?: --agent [a-z]+)?/g) ?? [];
+
+  it('Codex and Cursor in the project: pre-bash and session-reset, in each format, written once', () => {
+    const project = temp('project');
+    const home = temp('home');
+    run(project, home, '--agent', 'codex,cursor');
+    run(project, home, '--agent', 'codex,cursor');
+    const codex = JSON.parse(readFileSync(join(project, '.codex', 'hooks.json'), 'utf8'));
+    expect(Object.keys(codex.hooks).sort()).toEqual(['PostToolUse', 'PreCompact', 'PreToolUse', 'SessionStart']);
+    expect(codex.hooks.PreToolUse[0].matcher).toBe('Bash');
+    expect(commands(codex)).toEqual(['hook pre-bash --agent codex', 'hook post-read --agent codex', 'hook session-reset --agent codex', 'hook session-reset --agent codex']);
+    // Codex reads code with CSyk, Claude Code with both: each note says how.
+    expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toMatch(/Read code with CSyk `read`, not cat, sed or a file tool/);
+    const cursor = JSON.parse(readFileSync(join(project, '.cursor', 'hooks.json'), 'utf8'));
+    expect(cursor.version).toBe(1);
+    expect(Object.keys(cursor.hooks).sort()).toEqual(['beforeShellExecution', 'preCompact', 'sessionStart']);
+    expect(commands(cursor)).toEqual(['hook pre-bash --agent cursor', 'hook session-reset --agent cursor', 'hook session-reset --agent cursor']);
+  }, 30_000);
+
+  it("Antigravity for every project: its own group in agy's hooks, keeping the others", () => {
+    const project = temp('project');
+    const home = temp('home');
+    execFileSync('mkdir', ['-p', join(home, '.gemini', 'config')]);
+    writeFileSync(join(home, '.gemini', 'config', 'hooks.json'), '{"other":{"Stop":[{"type":"command","command":"x"}]}}');
+    run(project, home, '--user', '--agent', 'antigravity');
+    run(project, home, '--user', '--agent', 'antigravity');
+    const hooks = JSON.parse(readFileSync(join(home, '.gemini', 'config', 'hooks.json'), 'utf8'));
+    expect(Object.keys(hooks)).toEqual(['other', 'csyk']);
+    expect(hooks.csyk.PreToolUse[0].matcher).toBe('run_command');
+    expect(commands(hooks.csyk)).toEqual(['hook pre-bash --agent antigravity', 'hook post-read --agent antigravity', 'hook session-reset --agent antigravity']);
+    expect(hooks.csyk.PostToolUse[0].matcher).toBe('read_file');
   }, 30_000);
 });
 

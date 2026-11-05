@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { note, skill } from '../../src/guide.ts';
+import { note } from '../../src/guide.ts';
 import { buildGraphifyGraph, graphifyFrom, graphifyRules } from '../adapters/graphify.ts';
 import { npmToolBin, uvToolBin } from '../adapters/mcp.ts';
 import { serenaFrom, serenaOptions } from '../adapters/serena.ts';
@@ -161,13 +161,12 @@ export function setups(workspace: string): Record<string, Setup> {
         'for its uses and callers, impact after edits, grep for text. Read a whole file only when you need most of it.',
     },
     // CSyk as `csyk setup` installs it now: it replaces the built-in Grep (removed by a
-    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note and the skill.
+    // deny rule, so no call is refused), no denying hooks, the CLAUDE.md note.
     'csyk-lean': {
       mcp: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', workspace] } },
       allowed: ['mcp__csyk'],
       settings: { permissions: { deny: ['Grep'] } },
       guide: note,
-      files: { '.claude/skills/csyk/SKILL.md': skill },
     },
     // csyk-lean with answers that never turn short in a long session, to measure that rule.
     'csyk-nolong': {
@@ -175,7 +174,6 @@ export function setups(workspace: string): Record<string, Setup> {
       allowed: ['mcp__csyk'],
       settings: { permissions: { deny: ['Grep'] } },
       guide: note,
-      files: { '.claude/skills/csyk/SKILL.md': skill },
     },
     // CSyk without its hooks: a denied call costs the agent a turn.
     'csyk-nohooks': {

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { statSync } from 'node:fs';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -19,6 +19,17 @@ export function resetMarker(root: string): string {
   return join(tmpdir(), 'csyk', `${key}.reset`);
 }
 
+/**
+ * The log a hook appends to when the agent reads a file with its own tool (Claude Code's Read,
+ * a `sed -n` in Codex's shell): one JSON line per read, `{ file, from, to, at }`, the file
+ * absolute and the lines 1-based. CSyk counts those lines as shown, as it does its own `read`s.
+ */
+export function seenLog(root: string): string {
+  return resetMarker(root).replace(/\.reset$/, '.seen');
+}
+
+type SeenRead = { file: string; from: number; to: number; at: number };
+
 /** A short content hash for the ledger. */
 export function bodyHash(text: string): string {
   return createHash('sha1').update(text).digest('hex').slice(0, 16);
@@ -37,12 +48,57 @@ export class Session {
   private readonly hinted = new Set<string>();
   private resetAt: number;
   private readonly marker: string | undefined;
+  private readonly seen: string | undefined;
+  private seenCache: { size: number; reads: SeenRead[] } = { size: -1, reads: [] };
   private readonly now: () => number;
 
-  constructor(options: { marker?: string; now?: () => number } = {}) {
+  constructor(options: { marker?: string; seen?: string; now?: () => number } = {}) {
     this.marker = options.marker;
+    this.seen = options.seen;
     this.now = options.now ?? Date.now;
     this.resetAt = this.now();
+  }
+
+  /**
+   * Whether the agent read lines [from] to [to] of the absolute [file] with its own tool, in
+   * this session, within the ledger's 30 minutes and with the file unchanged since.
+   */
+  readByAgent(file: string, from: number, to: number): boolean {
+    this.checkReset();
+    if (!this.seen) return false;
+    let modified: number;
+    try {
+      modified = statSync(file).mtimeMs;
+      // As the hook wrote it: symlinks followed (macOS's /var is /private/var).
+      file = realpathSync(file);
+    } catch {
+      return false;
+    }
+    const now = this.now();
+    return this.seenReads().some(
+      (r) => r.file === file && r.from <= from && r.to >= to && r.at > this.resetAt && r.at >= modified && now - r.at <= ledgerTtl,
+    );
+  }
+
+  // The log, read again only when it grew.
+  private seenReads(): SeenRead[] {
+    let text: string;
+    try {
+      text = readFileSync(this.seen ?? '', 'utf8');
+    } catch {
+      return [];
+    }
+    if (text.length === this.seenCache.size) return this.seenCache.reads;
+    const reads = text.split('\n').flatMap((line) => {
+      try {
+        const r = JSON.parse(line) as SeenRead;
+        return typeof r.file === 'string' && Number.isFinite(r.from) && Number.isFinite(r.to) && Number.isFinite(r.at) ? [r] : [];
+      } catch {
+        return [];
+      }
+    });
+    this.seenCache = { size: text.length, reads };
+    return reads;
   }
 
   /** Counts a tool call and returns its number, 1 for the first. */

@@ -205,6 +205,11 @@ export function extractTypeScript(root: Node, sink: SymbolSink): void {
         inside(value, sink.add(name, functionKind(name.text, jsx), child, false, owner, true));
         continue;
       }
+      const wrapped = name?.type === 'identifier' && value ? wrappedFunction(value) : undefined;
+      if (name && wrapped) {
+        inside(wrapped, sink.add(name, 'function', child, false, owner, true));
+        continue;
+      }
       inside(child, owner);
     }
   };
@@ -252,6 +257,20 @@ function bindingKind(name: string, value: Node | null, jsx: boolean): SymbolKind
   if (value && functionValues.has(value.type)) return functionKind(name, jsx);
   if (value?.type === 'call_expression' && jsx && /^[A-Z]/.test(name)) return 'component';
   return 'const';
+}
+
+// Calls that return the function they are given, as a hook keeps a handler:
+// `useCallback`, `useEventCallback`, `useMemoizedFn`, `debounce`, `throttle`.
+const functionWrappers = /^(use\w*(Callback|Event|Fn)|debounce|throttle|memoize|once)$/;
+
+// The function a local handler is written in, `const reset = useEventCallback((e) => {…})`
+// or `React.useCallback(…)`; not `users.map((u) => …)`, whose result is not a function.
+function wrappedFunction(value: Node): Node | undefined {
+  if (value.type !== 'call_expression') return undefined;
+  const callee = value.childForFieldName('function');
+  const last = callee?.type === 'member_expression' ? callee.childForFieldName('property')?.text : callee?.text;
+  const first = value.childForFieldName('arguments')?.namedChildren[0];
+  return last && functionWrappers.test(last) && first && functionValues.has(first.type) ? first : undefined;
 }
 
 // The names a destructuring pattern binds, nested ones included; not its
