@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { asRecord, type Agent, fileStep, home, launcher, merge } from '../steps.ts';
+import { asRecord, type Agent, fileStep, staleSkillStep, home, launcher, merge } from '../steps.ts';
 
 export const opencode: Agent = {
   id: 'opencode',
@@ -33,7 +33,7 @@ export const opencode: Agent = {
           }),
       },
       fileStep(noteFile, `${noteFor('opencode')}\n`),
-      fileStep(join(base, 'skills', 'csyk', 'SKILL.md'), skill),
+      ...staleSkillStep(join(base, 'skills', 'csyk', 'SKILL.md')),
     ];
   },
 };

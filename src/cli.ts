@@ -13,8 +13,8 @@ const usage = `Usage:
                              configuration, and install missing language servers
   csyk setup [--write] [--user] [--hooks] [--agent claude,codex,antigravity,cursor,opencode,hermes]
                              print, or write, the configuration for the agents named (Claude Code
-                             by default): the MCP server, a note the agent always reads and the
-                             csyk skill, for this project or with --user for every project; for
+                             by default): the MCP server and a note the agent always reads, for
+                             this project or with --user for every project; for
                              Claude Code also CSyk grep in place of the built-in Grep, and with
                              --hooks the hooks that turn down whole-file reads and identifier greps`;
 

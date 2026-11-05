@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { type Agent, fileStep, hintStep, home, hookCommand, hooksStep, jsonStep, launcher } from '../steps.ts';
+import { type Agent, fileStep, staleSkillStep, hintStep, home, hookCommand, hooksStep, jsonStep, launcher } from '../steps.ts';
 
 export const cursor: Agent = {
   id: 'cursor',
@@ -25,14 +25,14 @@ export const cursor: Agent = {
         hooks,
         // A rule that applies to every chat in this project; Cursor reads .mdc files only.
         fileStep(join(base, 'rules', 'csyk.mdc'), `---\ndescription: Code search with CSyk\nalwaysApply: true\n---\n\n${noteFor('cursor')}\n`),
-        fileStep(join(base, 'skills', 'csyk', 'SKILL.md'), skill),
+        ...staleSkillStep(join(base, 'skills', 'csyk', 'SKILL.md')),
       ];
     }
     // Rules for every project live in Cursor's settings, not in a file setup can write.
     return [
       jsonStep(join(base, 'mcp.json'), ['mcpServers', 'csyk'], server),
       hooks,
-      fileStep(join(base, 'skills', 'csyk', 'SKILL.md'), skill),
+      ...staleSkillStep(join(base, 'skills', 'csyk', 'SKILL.md')),
       hintStep('Cursor → Settings → Rules', 'add this note as a User Rule', noteFor('cursor')),
     ];
   },

@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { asRecord, type Agent, fileStep, home, hookCommand, jsonStep, launcher, merge, sectionStep, type Step, withHooks } from '../steps.ts';
+import { asRecord, type Agent, staleSkillStep, home, hookCommand, jsonStep, launcher, merge, sectionStep, type Step, withHooks } from '../steps.ts';
 
 export const claude: Agent = {
   id: 'claude',
@@ -44,7 +44,7 @@ export const claude: Agent = {
       },
       // The note goes where it is always in context: CLAUDE.md here, a rules file for every project.
       sectionStep(scope === 'user' ? join(base, 'rules', 'csyk.md') : 'CLAUDE.md', noteFor('claude')),
-      fileStep(join(base, 'skills', 'csyk', 'SKILL.md'), skill),
+      ...staleSkillStep(join(base, 'skills', 'csyk', 'SKILL.md')),
     ];
   },
 };

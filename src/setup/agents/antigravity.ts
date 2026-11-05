@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { type Agent, fileStep, home, hookCommand, hooksStep, jsonStep, launcher, sectionStep } from '../steps.ts';
+import { type Agent, fileStep, staleSkillStep, home, hookCommand, hooksStep, jsonStep, launcher, sectionStep } from '../steps.ts';
 
 export const antigravity: Agent = {
   id: 'antigravity',
@@ -25,7 +25,7 @@ export const antigravity: Agent = {
       SessionStart: [hook('session-reset')],
     };
     if (scope === 'project') {
-      // A workspace plugin: on in this project only, with its server, rule and skill. Antigravity
+      // A workspace plugin: on in this project only, with its server and rule. Antigravity
       // starts a plugin's server in the plugin's folder, three levels below the project.
       const plugin = join('.agents', 'plugins', 'csyk');
       const server = { mcpServers: { csyk: { command: csyk[0], args: [...csyk.slice(1), 'serve', '../../..'] } } };
@@ -34,7 +34,7 @@ export const antigravity: Agent = {
         fileStep(join(plugin, 'plugin.json'), `${JSON.stringify(manifest, null, 2)}\n`),
         fileStep(join(plugin, 'mcp_config.json'), `${JSON.stringify(server, null, 2)}\n`),
         fileStep(join(plugin, 'rules', 'AGENTS.md'), `${noteFor('antigravity')}\n`),
-        fileStep(join(plugin, 'skills', 'csyk', 'SKILL.md'), skill),
+        ...staleSkillStep(join(plugin, 'skills', 'csyk', 'SKILL.md')),
         hooksStep(join(plugin, 'hooks.json'), hooks, {}, 'csyk'),
       ];
     }
@@ -50,6 +50,6 @@ export const antigravity: Agent = {
       steps.push(jsonStep(home('.gemini', 'config', 'mcp_config.json'), ['mcpServers', 'csyk'], { command: csyk[0], args: [...csyk.slice(1), 'serve'] }));
       steps.push(hooksStep(home('.gemini', 'config', 'hooks.json'), hooks, {}, 'csyk'));
     }
-    return [...steps, sectionStep(home('.gemini', 'GEMINI.md'), noteFor('antigravity')), fileStep(home('.gemini', 'config', 'skills', 'csyk', 'SKILL.md'), skill)];
+    return [...steps, sectionStep(home('.gemini', 'GEMINI.md'), noteFor('antigravity')), ...staleSkillStep(home('.gemini', 'config', 'skills', 'csyk', 'SKILL.md'))];
   },
 };

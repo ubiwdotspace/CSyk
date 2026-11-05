@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseDocument } from 'yaml';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { type Agent, fileStep, home, launcher, sectionStep, type Step, write } from '../steps.ts';
+import { type Agent, staleSkillStep, home, launcher, sectionStep, type Step, write } from '../steps.ts';
 
 export const hermes: Agent = {
   id: 'hermes',
@@ -27,7 +27,7 @@ export const hermes: Agent = {
           write(config, doc.toString());
         },
       },
-      fileStep(join(hermesHome, 'skills', 'csyk', 'SKILL.md'), skill),
+      ...staleSkillStep(join(hermesHome, 'skills', 'csyk', 'SKILL.md')),
     ];
     // A project's context is the first of these files that exists, and only that one is read.
     if (scope === 'project') {

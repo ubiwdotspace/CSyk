@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { noteFor, skill } from '../../guide.ts';
+import { noteFor } from '../../guide.ts';
 import { onPath } from '../../precision/lsp-service.ts';
-import { type Agent, fileStep, home, hookCommand, hooksStep, launcher, sectionStep, withTomlTable, write } from '../steps.ts';
+import { type Agent, staleSkillStep, home, hookCommand, hooksStep, launcher, sectionStep, withTomlTable, write } from '../steps.ts';
 
 export const codex: Agent = {
   id: 'codex',
@@ -38,7 +38,7 @@ export const codex: Agent = {
       },
       { ...hookFile, preview: `${hookFile.preview}\n(run once each is trusted in Codex's /hooks)` },
       sectionStep(scope === 'user' ? join(codexHome, 'AGENTS.md') : 'AGENTS.md', noteFor('codex')),
-      fileStep(scope === 'user' ? join(codexHome, 'skills', 'csyk', 'SKILL.md') : join('.agents', 'skills', 'csyk', 'SKILL.md'), skill),
+      ...staleSkillStep(scope === 'user' ? join(codexHome, 'skills', 'csyk', 'SKILL.md') : join('.agents', 'skills', 'csyk', 'SKILL.md')),
     ];
   },
 };
