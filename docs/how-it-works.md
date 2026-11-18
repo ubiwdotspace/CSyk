@@ -180,11 +180,13 @@ If the agent asks again for code it has already seen and that has not changed, C
 `[unchanged: <id>, shown at call #n]` instead of sending it again. In Claude Code's Code Mode it always sends the code again:
 there a script calls the tools, and the model sees only what the script hands back.
 
-## Components (Astro, Svelte, Vue)
+## Components (Astro, Svelte, Vue, MDX)
 
-An `.astro`, `.svelte` or `.vue` file is read for its code alone: the Astro frontmatter, every
-`<script>`, the expressions in its markup (`{…}`, Vue's `{{ … }}` and bound attributes such as
-`:title` or `@click`) and the names of components used as tags. The markup, styles, comments and
+An `.astro`, `.svelte`, `.vue` or `.mdx` file is read for its code alone: the Astro frontmatter,
+every `<script>`, MDX's `import` and `export` lines, the expressions in its markup (`{…}`, Vue's
+`{{ … }}` and bound attributes such as `:title` or `@click`) and the names of components used as
+tags (Vue's `<my-button>` as `MyButton`). An MDX file's frontmatter, fenced code and inline code are
+examples, not code, and its headings are sections as a Markdown doc's. The markup, styles, comments and
 plain text are blanked, line and column kept, and what is left is parsed as TSX. So `find` gives
 the file's component (named after the file, `my-button.vue` as `MyButton`; a page is a route) and
 what its scripts declare, which belong to the component; `grep` names the component a hit is in;
@@ -195,8 +197,18 @@ name the file imports from the declaration's module (or from a barrel that re-ex
 levels at most) is a use wherever the file writes it in code. A component's own uses are the
 files that import its path, by default or as `{ default as X }`, and then write that name, often
 as a tag; a re-export counts, and the files that import it from there. Such an answer says
-`imports` where a compiler's says `lsp`. A mention imported from a module that cannot be followed
-(a package outside the repository, an alias CSyk does not know) is listed as unconfirmed.
+`imports` where a compiler's says `lsp`. An import is followed as the compiler would: relative,
+by the nearest tsconfig's or jsconfig's `paths` (through `extends`), by `$lib/`, `@/` or `~/`, to a
+module a `.d.ts` declares by name (`declare module 'virtual:…' { … import('./x.astro') … }`), or to
+a workspace package by its `package.json` name and `exports`, a built `dist/` file read as the
+`src/` it came from. Names used with no import count when a `.d.ts` makes them global
+(`TheFooter: typeof import('./components/TheFooter.vue')['default']`, `const isDark: typeof
+import('./composables/dark').isDark`), and in a Nuxt app by Nuxt's conventions, since its
+generated `.d.ts` files are not in git: a component under `components/` by its path's name
+(`components/home/HomeChart.vue` is `HomeChart`, `components/customers/AddModal.vue`
+`CustomersAddModal`), what `composables/` and `utils/` export as it is. A mention imported from a
+module that cannot be followed (a package outside the repository, an alias CSyk does not know) is
+listed as unconfirmed.
 
 ## Limitations
 

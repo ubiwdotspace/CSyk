@@ -71,6 +71,37 @@ classes, and its answers say where they come from.
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
 
+## Components
+
+Who uses a component, or a TypeScript name used in component files, on six public projects
+pinned in `eval/corpora.yaml`. The answers come from each framework's own language server
+(Astro's, Svelte's, Vue's 2), which reads these files with the TypeScript around them; no
+TypeScript compiler reads them for CSyk. Each mention of the name is resolved by the server, as
+for the other languages, through a `.d.ts`'s `typeof import(…)` to the file. Recall and
+precision of `refs`, in percent; the CSyk before is `651fa7c`, before component files.
+
+| Project | What it tests | Cases | CSyk before | CSyk | ripgrep |
+|---|---|---:|---|---|---|
+| astro-paper | an Astro app, the `@/` alias of tsconfig paths | 20 | 28.3 / 30.2 | **100 / 100** | 100 / 74.8 |
+| starlight | an Astro monorepo, imports by package name and virtual modules | 20 | 15.6 / 23.9 | **100 / 100** | 96.7 / 45.0 |
+| svelte-realworld | a SvelteKit app, `$lib` | 10 | 50.0 / 100 | **100 / 100** | 100 / 90.0 |
+| vitesse | Vue, auto-imported components and functions (`components.d.ts`) | 7 | 23.8 / 32.0 | **100 / 100** | 100 / 49.3 |
+| nuxt-dashboard | Nuxt 4, auto-imports by Nuxt's conventions | 12 | 0 / 0 | **100 / 100** | 100 / 94.4 |
+
+ripgrep, given the component's name, finds nearly every use but lists more than the uses (the
+same name elsewhere, comments, other components so named) in more tokens: on starlight 1,950
+tokens an answer against CSyk's 119. The servers read no MDX, so hits in `.mdx` files (and in
+another framework's files) are not scored (`unscored` in the case file); MDX is checked by hand:
+on starlight, 75 docs pages import and use `Tabs`, and `refs` lists those 75.
+
+To run them: `npm install --prefix eval/tools` (the servers need TypeScript's JavaScript API, so
+they live apart from CSyk's TypeScript 7), `npm run corpora`, then in starlight, vitesse and
+nuxt-dashboard `pnpm install --frozen-lockfile --ignore-scripts`, in svelte-realworld `pnpm
+install --ignore-scripts` (its lockfile is broken at that commit) and `svelte-kit sync`, in
+nuxt-dashboard `nuxi prepare`, so the servers resolve packages and generated types. Then
+`npm run generate -- --corpus <name> --category C --lang <astro|svelte|vue>` and `npm run eval
+-- --adapter <csyk|b0> --corpus <name>`.
+
 ## Agent sessions on real issues
 
 Answering single questions well is one thing; what matters in the end is whether an agent finds
