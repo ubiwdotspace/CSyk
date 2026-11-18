@@ -64,7 +64,8 @@ export async function refsToFile(ws: Workspace, file: string, budget = defaultBu
 export async function mentionsOutsideCode(root: string, name: string, limit = 6): Promise<{ shown: string[]; total: number }> {
   if (name.length < 3) return { shown: [], total: 0 };
   // Lock files name every dependency and say nothing about the code.
-  const skip = [...[...codeExtensions].map((ext) => `!*${ext}`), '!*.lock', '!*-lock.json', '!*-lock.yaml'];
+  // MDX is code and prose: its prose names things as a doc does.
+  const skip = [...[...codeExtensions].filter((ext) => ext !== '.mdx').map((ext) => `!*${ext}`), '!*.lock', '!*-lock.json', '!*-lock.yaml'];
   const hits = await search(root, ['-w', '-F', ...skip.flatMap((glob) => ['-g', glob]), '-e', name]);
   return { shown: hits.slice(0, limit).map((h) => `${h.file}:${h.line}`), total: hits.length };
 }

@@ -119,6 +119,8 @@ export async function extractSymbols(file: string, text: string): Promise<CodeSy
     const sink = new SymbolSink(file, dialect.lang, dialect.lang === 'go' && leftOutOfBuild(file, text));
     dialect.extract(tree.rootNode, sink);
     if (!isComponentFile(file)) return sink.symbols;
+    // An MDX file is Markdown too: its sections, as a doc's.
+    const sections = extname(file) === '.mdx' ? extractMarkdown(file, text) : [];
     // The file is the component: imported by its path, used as a tag.
     const { name, kind } = componentOf(file);
     const lines = text.split('\n').length;
@@ -146,7 +148,7 @@ export async function extractSymbols(file: string, text: string): Promise<CodeSy
       while (ids.has(`${s.id}~${n}`)) n++;
       return { ...s, id: `${s.id}~${n}` };
     };
-    return [whole, ...sink.symbols.map(apart).map(own)];
+    return [whole, ...sink.symbols.map(apart).map(own), ...sections.filter((s) => s.id !== whole.id)];
   } finally {
     tree.delete();
   }

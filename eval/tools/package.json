@@ -4,6 +4,7 @@
   "description": "Language servers the eval's oracle asks for answers in Astro and Svelte files. They need TypeScript's JavaScript API (5 or 6), so they live apart from CSyk's TypeScript 7. Install with npm install --prefix eval/tools.",
   "devDependencies": {
     "@astrojs/language-server": "2.17.3",
+    "@mdx-js/language-server": "0.6.4",
     "svelte-language-server": "0.18.6",
     "typescript": "6.0.2"
   }

@@ -86,6 +86,39 @@ describe('maskComponent', () => {
   });
 });
 
+describe('maskComponent of MDX', () => {
+  it('keeps imports, expressions and component tags, not frontmatter, fences or inline code', () => {
+    const text = [
+      '---',
+      'title: Asides',
+      '---',
+      "import { Aside } from '@acme/components';",
+      'export const meta = {',
+      '  shown: true,',
+      '}',
+      '',
+      'Use the `<Aside>` component, written {meta.shown ? "here" : ""}.',
+      '',
+      '<Aside type="tip">A tip.</Aside>',
+      '',
+      '````mdx',
+      "import { Aside } from '@acme/components';",
+      '```js',
+      '<Aside />',
+      '```',
+      '````',
+    ].join('\n');
+    expect(kept('a.mdx', text)).toEqual([
+      [4, "import { Aside } from '@acme/components';"],
+      [5, 'export const meta = {'],
+      [6, 'shown: true,'],
+      [7, '}'],
+      [9, ';meta.shown ? "here" : "";'],
+      [11, ';Aside; ; Aside;'],
+    ]);
+  });
+});
+
 describe('componentOf', () => {
   it('names a component after its file, as it is imported, and a page as a route', () => {
     expect(componentOf('src/components/Badge.astro')).toEqual({ name: 'Badge', kind: 'component' });

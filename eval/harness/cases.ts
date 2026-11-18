@@ -41,6 +41,8 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
   if (!isRecord(doc) || !Array.isArray(doc.cases)) {
     throw new Error(`${path}: expected a "cases" list`);
   }
+  // `unscored: [".mdx"]`: files the oracle does not read (the Astro server reads no MDX).
+  const unscored = Array.isArray(doc.unscored) ? doc.unscored.filter((e): e is string => typeof e === 'string') : [];
   const ids = new Set<string>();
   const cases = doc.cases.map((raw: unknown, i: number): Case => {
     const where = `${path}: case ${i + 1}`;
@@ -66,6 +68,7 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
       ...(kind === undefined ? {} : { kind }),
       ...(direction === undefined ? {} : { direction }),
       expect: expect.map((loc: unknown) => parseLocation(loc, `${where} (${id})`)),
+      ...(unscored.length ? { unscored } : {}),
     };
   });
   if (!categories.includes(category)) throw new Error(`${path}: unknown category`);

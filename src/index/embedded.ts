@@ -3,10 +3,11 @@ import { basename, dirname, extname } from 'node:path';
 /**
  * Component files whose code sits among markup: Astro (a TypeScript frontmatter between `---`
  * lines, `<script>` tags, `{…}` expressions), Svelte (`<script>`, `{…}` expressions and blocks)
- * and Vue (`<script>`, `{{ … }}` and bound attributes). No compiler reads them for CSyk, so
+ * Vue (`<script>`, `{{ … }}` and bound attributes) and MDX (its `import` and `export` lines,
+ * `{…}` expressions and component tags). No compiler reads them for CSyk, so
  * their code is read with the TSX grammar, from the text [maskComponent] keeps.
  */
-export const componentExtensions: ReadonlySet<string> = new Set(['.astro', '.svelte', '.vue']);
+export const componentExtensions: ReadonlySet<string> = new Set(['.astro', '.svelte', '.vue', '.mdx']);
 
 export const isComponentFile = (file: string): boolean => componentExtensions.has(extname(file));
 
@@ -18,6 +19,7 @@ export const isComponentFile = (file: string): boolean => componentExtensions.ha
  */
 export function maskComponent(file: string, text: string): string {
   const ext = extname(file);
+  if (ext === '.mdx') return maskMdx(text);
   const out = text.replace(/[^\n]/g, ' ').split('');
   const keep = (from: number, to: number) => {
     for (let i = from; i < to; i++) out[i] = text[i] ?? ' ';
@@ -75,6 +77,83 @@ export function maskComponent(file: string, text: string): string {
       i = expression(text, i, '{', '}', keep, put);
     } else if (ext === '.vue' && text.startsWith('{{', i)) {
       i = expression(text, i + 1, '{', '}', keep, put) + 1;
+    } else i++;
+  }
+  return out.join('');
+}
+
+/**
+ * An MDX file's code, as [maskComponent] keeps it: the `import` and `export` statements that
+ * start a line (a statement runs on to its end, or to a blank line), `{…}` expressions and the
+ * names of component tags. Its YAML frontmatter, fenced code blocks and inline code are
+ * examples or data, and go with the prose.
+ */
+function maskMdx(text: string): string {
+  const out = text.replace(/[^\n]/g, ' ').split('');
+  const keep = (from: number, to: number) => {
+    for (let i = from; i < to; i++) out[i] = text[i] ?? ' ';
+  };
+  const put = (at: number, c: string) => {
+    if (at >= 0 && at < out.length && text[at] !== '\n') out[at] = c;
+  };
+  // First the lines: frontmatter and fences are skipped, ESM statements kept.
+  const lines = text.split('\n');
+  const starts: number[] = [];
+  for (let n = 0, at = 0; n < lines.length; at += (lines[n] ?? '').length + 1, n++) starts.push(at);
+  const prose: boolean[] = lines.map(() => true);
+  let n = 0;
+  if (/^\uFEFF?---\s*$/.test(lines[0] ?? '')) {
+    for (prose[0] = false, n = 1; n < lines.length && !/^---\s*$/.test(lines[n] ?? ''); n++) prose[n] = false;
+    prose[n] = false;
+    n++;
+  }
+  let fence: string | undefined;
+  let esm = false;
+  for (; n < lines.length; n++) {
+    const line = lines[n] ?? '';
+    if (fence) {
+      prose[n] = false;
+      if (line.trimStart().startsWith(fence)) fence = undefined;
+      continue;
+    }
+    const opened = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
+    if (opened) {
+      prose[n] = false;
+      fence = opened;
+      continue;
+    }
+    if (esm || /^(?:import|export)\s/.test(line)) {
+      prose[n] = false;
+      keep(starts[n] ?? 0, (starts[n] ?? 0) + line.length);
+      // A statement ends with its module (`from '…'`, `import '…'`), a `;`, or a blank line.
+      esm = line.trim() !== '' && !/(?:['"]\s*;?|;)\s*$/.test(line);
+    }
+  }
+  // Then the prose: inline code skipped, `{…}` and component tags kept.
+  const proseAt = (i: number) => {
+    let line = 0;
+    while (line + 1 < starts.length && (starts[line + 1] ?? Infinity) <= i) line++;
+    return prose[line] ?? false;
+  };
+  for (let i = 0; i < text.length; ) {
+    if (!proseAt(i)) {
+      const next = text.indexOf('\n', i);
+      i = next < 0 ? text.length : next + 1;
+    } else if (text[i] === '`') {
+      const run = /^`+/.exec(text.slice(i))?.[0] ?? '`';
+      const close = text.indexOf(run, i + run.length);
+      i = close < 0 ? i + run.length : close + run.length;
+    } else if (text[i] === '<' && /[A-Z/]/.test(text[i + 1] ?? '')) {
+      const name = /^<\/?([A-Z][\w$]*(?:\.[\w$]+)*)/.exec(text.slice(i, i + 200));
+      if (name?.[1]) {
+        const at = i + name[0].length - name[1].length;
+        put(i, ';');
+        keep(at, at + name[1].length);
+        put(at + name[1].length, ';');
+      }
+      i = attributes(text, i + 1, '.mdx', keep, put);
+    } else if (text[i] === '{') {
+      i = expression(text, i, '{', '}', keep, put);
     } else i++;
   }
   return out.join('');
