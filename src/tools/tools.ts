@@ -743,7 +743,11 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
     return { note: `no symbol named ${target}${near.length ? `; nearest: ${near.join(', ')}` : ''}` };
   }
   // Ranked among the symbols of exactly this name, not cut first: a close name can rank higher.
-  const ranked = ws.index.search(target, { limit: Number.MAX_SAFE_INTEGER }).filter((s) => s.name === target);
+  // A page is reached by its URL, never by its name: a declaration of the same name comes first.
+  const ranked = ws.index
+    .search(target, { limit: Number.MAX_SAFE_INTEGER })
+    .filter((s) => s.name === target)
+    .sort((a, b) => Number(a.kind === 'route' && isComponentFile(a.file)) - Number(b.kind === 'route' && isComponentFile(b.file)));
   // An override gives way to the declaration it overrides, which calls through the base type reach.
   let best = ranked[0];
   for (let base = best && baseOf(ws, best, ranked); base; base = baseOf(ws, base, ranked)) best = base;

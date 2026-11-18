@@ -107,3 +107,40 @@ function sourceOf(root: string, dir: string, path: string): string | undefined {
   }
   return undefined;
 }
+
+const ambientCache = new Map<string, { at: number; modules: Map<string, string> }>();
+
+/**
+ * The modules declared by name in the repo's `.d.ts` files, each with the file it stands for:
+ * `declare module 'virtual:starlight/components/Banner' { const Banner: typeof
+ * import('./src/components/Banner.astro').default; … }`, as frameworks type their virtual
+ * modules. The file is the first path the block imports, relative to the `.d.ts` file. Read
+ * again after 30 seconds.
+ */
+export function ambientModules(root: string): Map<string, string> {
+  const kept = ambientCache.get(root);
+  if (kept && Date.now() - kept.at < 30_000) return kept.modules;
+  const modules = new Map<string, string>();
+  let files: string[] = [];
+  try {
+    const out = execFileSync(rgPath, ['-l', '--path-separator', '/', '-g', '*.d.ts', '-g', '!**/node_modules/**', '-F', 'declare module', '.'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    files = out.split('\n').filter(Boolean).map((f) => f.replace(/^\.\//, ''));
+  } catch {
+    // None (rg exits 1).
+  }
+  for (const file of files) {
+    let text = '';
+    try {
+      text = readFileSync(join(root, file), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const block of text.matchAll(/declare\s+module\s+['"]([^'"*]+)['"]\s*\{([^]*?)\n\}/g)) {
+      const path = /\bimport\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)|\bfrom\s*['"](\.{1,2}\/[^'"]+)['"]/.exec(block[2] ?? '');
+      const target = path?.[1] ?? path?.[2];
+      if (block[1] && target) modules.set(block[1], posix.normalize(posix.join(posix.dirname(file), target)));
+    }
+  }
+  ambientCache.set(root, { at: Date.now(), modules });
+  return modules;
+}

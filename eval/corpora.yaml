@@ -90,3 +90,21 @@ flame:
   git: https://github.com/flame-engine/flame.git
   commit: aee8f6f53bbe6225ac07813a2749a2169d75e85f
   path: eval/corpora/flame
+
+# Astro, small: a blog theme, one package, imports through the `@/` alias of tsconfig paths (MIT).
+astro-paper:
+  git: https://github.com/satnaing/astro-paper.git
+  commit: 4bc2dafac5405c6c4f06d1daba275e836e656097
+  path: eval/corpora/astro-paper
+
+# Astro, medium: Starlight, a monorepo whose docs import its components by the package's name (MIT).
+starlight:
+  git: https://github.com/withastro/starlight.git
+  commit: dc7451c127bbf1dc195a2c1ab2c3670fc00dd84c
+  path: eval/corpora/starlight
+
+# Svelte, small: the SvelteKit RealWorld app, imports through `$lib` (MIT).
+svelte-realworld:
+  git: https://github.com/sveltejs/realworld.git
+  commit: df796708040f5200ec572b28ab7f88ecee5794dd
+  path: eval/corpora/svelte-realworld

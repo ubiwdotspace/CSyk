@@ -39,6 +39,15 @@ describe('maskComponent', () => {
     expect(masked.split('\n')[5]?.indexOf('shout')).toBe((text.split('\n')[5] ?? '').indexOf('{shout') + 1);
   });
 
+  it('reads on past a self-closing script, keeping its attributes', () => {
+    const text = ['<Layout>', '  <script type="application/ld+json" set:html={data} />', '  <slot />', '</Layout>'].join('\n');
+    expect(kept('a.astro', text)).toEqual([
+      [1, ';Layout;'],
+      [2, ';data;'],
+      [4, '; Layout;'],
+    ]);
+  });
+
   it("keeps Svelte scripts and expressions, without a block's keyword", () => {
     const text = [
       '<script lang="ts">',

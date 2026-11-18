@@ -48,14 +48,19 @@ export function maskComponent(file: string, text: string): string {
     } else if (c === '<' && /^<(script|style)\b/i.test(text.slice(i, i + 7))) {
       const tag = /^<(script|style)\b/i.exec(text.slice(i, i + 7))?.[1]?.toLowerCase() ?? 'script';
       const open = tagEnd(text, i);
-      const close = text.toLowerCase().indexOf(`</${tag}`, open);
-      const end = close < 0 ? text.length : close;
+      // `<script … />` has no content, only attributes (Astro's `set:html={…}`); one never
+      // closed has none either, rather than the rest of the file.
+      const close = text[open - 2] === '/' ? -1 : text.toLowerCase().indexOf(`</${tag}`, open);
+      if (close < 0) {
+        i = attributes(text, i + 1, ext, keep, put);
+        continue;
+      }
       if (tag === 'script' && isCodeScript(text.slice(i, open))) {
         put(open - 1, ';');
-        keep(open, end);
-        put(end, ';');
+        keep(open, close);
+        put(close, ';');
       }
-      i = close < 0 ? text.length : tagEnd(text, close);
+      i = tagEnd(text, close);
     } else if (c === '<' && /[A-Za-z/]/.test(text[i + 1] ?? '')) {
       // A component used as a tag: `<Badge`, `</Badge>`, `<Foo.Bar`. Its attributes follow.
       const name = /^<\/?([A-Z][\w$]*(?:\.[\w$]+)*)/.exec(text.slice(i, i + 200));

@@ -35,8 +35,11 @@ function searchArgs(c: Case): string[] {
   switch (c.category) {
     case 'B':
       return ['--fixed-strings', '--ignore-case', '-e', c.query];
-    case 'C':
-      return ['--fixed-strings', '--word-regexp', '-e', c.query];
+    case 'C': {
+      // A component asked for by its file (Card.astro): an agent greps the name it is used by.
+      const component = /(?:^|\/)([^/]+)\.(?:astro|svelte|vue)$/.exec(c.query)?.[1];
+      return ['--fixed-strings', '--word-regexp', '-e', component ?? c.query];
+    }
     case 'D': {
       // A call: `name(`, `new Name`, `<Name` (JSX) or `@name` (a decorator).
       const name = c.query.replace(/[$]/g, '\\$&');

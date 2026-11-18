@@ -76,7 +76,8 @@ function parseLocation(raw: unknown, where: string): Location {
   if (!isRecord(raw) || typeof raw.file !== 'string' || !raw.file) {
     throw new Error(`${where}: each expected location needs a file`);
   }
-  if (raw.file.startsWith('/') || raw.file.includes('..')) {
+  // A `..` segment leaves the repo; Astro's `[...slug].astro` does not.
+  if (raw.file.startsWith('/') || raw.file.split('/').includes('..')) {
     throw new Error(`${where}: ${raw.file} must be repo-relative`);
   }
   if (raw.lines === undefined) return { file: raw.file };

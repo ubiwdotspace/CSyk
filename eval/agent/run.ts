@@ -5,73 +5,86 @@ import { parseArgs } from 'node:util';
 import { parse } from 'yaml';
 import { assertPinned, loadCorpora } from '../harness/corpora.ts';
 import { mean, percentile } from '../harness/metrics.ts';
+import { antigravitySetups, runAntigravity } from './antigravity.ts';
 import { buildCsyk, runClaude, setups, type ClaudeRun } from './claude.ts';
 
-const usage = `Usage: npm run agent -- --setup <b0|csyk> --corpus <name> [--model sonnet] [--task T01] [--max-turns 30] --other-model
+const usage = `Usage: npm run agent -- --setup <b0|csyk-setup|csyk-lean> --corpus <name> [--model gemini-3.8-flash-medium] [--task T01] [--run <name>]
+       npm run agent -- --agent claude --other-model --setup <b0|csyk> --corpus <name> [--model sonnet] [--max-turns 30]
 
-Runs each task in eval/agent/tasks/<corpus>.yaml through headless Claude Code
-(claude -p) in the corpus folder, with the setup's tools only, and records
-tokens, tool calls, wall time, cost and whether the answer names every
-expected item. Each run is billed to your Claude account. Gemini through agy is the
-test source (owner, 2026-11-18; \`npm run loc\`): this runs only with --other-model.
+Runs each task in eval/agent/tasks/<corpus>.yaml (npm run agent:tasks) through
+Gemini on the Antigravity command line (agy -p), the test source, in the
+corpus folder: agy alone (b0), or as csyk setup sets it up (csyk-setup). It
+records tokens, tool calls, wall time and whether the answer names every
+expected item, and how many of them it names. Run b0 and the setup under
+the same --run name, side by side: agy's context changes with its version.
 
-With ANTHROPIC_API_KEY set, runs use --bare: no user settings, hooks or
-CLAUDE.md. Without it, user and local settings are skipped
-(--setting-sources project), but a user-level CLAUDE.md may still load.`;
+With --agent claude --other-model, headless Claude Code instead, billed to
+your Claude account.`;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
 type Task = { id: string; prompt: string; expect: string[] };
 
-type Run = Omit<ClaudeRun, 'answer'> & { id: string; pass: boolean; missing: string[] };
+type Run = Omit<ClaudeRun, 'answer'> & { id: string; pass: boolean; named: number; missing: string[]; answer: string };
 
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
+      agent: { type: 'string', default: 'antigravity' },
       setup: { type: 'string' },
       corpus: { type: 'string' },
-      model: { type: 'string', default: 'sonnet' },
+      model: { type: 'string' },
       task: { type: 'string' },
+      run: { type: 'string' },
       'max-turns': { type: 'string', default: '30' },
       'other-model': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
-  if (!values.help && !values['other-model']) {
-    console.log('Gemini through agy is the test source (npm run loc): this Claude Code run needs --other-model.');
+  const claude = values.agent === 'claude';
+  const model = values.model ?? (claude ? 'sonnet' : 'gemini-3.8-flash-medium');
+  if (!values.help && !values['other-model'] && (claude || !model.startsWith('gemini-'))) {
+    console.log(`Gemini through agy is the test source: ${values.agent} with ${model} needs --other-model.`);
     process.exitCode = 1;
     return;
   }
   const corpus = (await loadCorpora(root)).get(values.corpus ?? '');
-  const setup = corpus && setups(corpus.root)[values.setup ?? ''];
-  if (values.help || !corpus || !setup) {
+  const claudeSetup = claude && corpus ? setups(corpus.root)[values.setup ?? ''] : undefined;
+  const known = claude ? claudeSetup !== undefined : (antigravitySetups as readonly string[]).includes(values.setup ?? '');
+  if (values.help || !corpus || !known) {
     console.log(usage);
     return;
   }
   assertPinned(corpus);
-  if (values.setup === 'csyk') buildCsyk();
+  if (values.setup !== 'b0') buildCsyk();
   const doc = parse(await readFile(join(root, 'eval/agent/tasks', `${corpus.name}.yaml`), 'utf8')) as { tasks: Task[] };
   const tasks = doc.tasks.filter((t) => !values.task || t.id === values.task);
-  const runs: Run[] = [];
+  // Written after every task: a run that stops resumes where it was.
+  const out = join(root, 'eval/results', `agent-${values.setup}-${corpus.name}${values.run ? `.${values.run}` : ''}.json`);
+  const runs: Run[] = values.run ? ((await readFile(out, 'utf8').then((t) => (JSON.parse(t) as { runs: Run[] }).runs).catch(() => [])) as Run[]) : [];
+  await mkdir(dirname(out), { recursive: true });
   for (const task of tasks) {
-    const { answer, ...cost } = await runClaude(task.prompt, corpus.root, setup, values.model, values['max-turns']);
+    if (runs.some((r) => r.id === task.id)) continue;
+    const { answer, ...cost } = claudeSetup
+      ? await runClaude(task.prompt, corpus.root, claudeSetup, model, values['max-turns'])
+      : await runAntigravity(task.prompt, corpus.root, values.setup ?? 'b0', model);
     const missing = task.expect.filter((item) => !answer.includes(item));
-    const run: Run = { id: task.id, pass: missing.length === 0, missing, ...cost };
+    const run: Run = { id: task.id, pass: missing.length === 0, named: task.expect.length - missing.length, missing, answer, ...cost };
     runs.push(run);
+    await writeFile(out, `${JSON.stringify({ agent: values.agent, setup: values.setup, corpus: corpus.name, model, runs }, null, 2)}\n`);
     console.log(
-      `${task.id} ${run.pass ? 'pass' : 'FAIL'} · ${run.tokens} tokens · ${run.calls} calls · ${Math.round(run.ms / 1000)} s · $${run.costUsd.toFixed(3)}` +
+      `${task.id} ${run.pass ? 'pass' : 'FAIL'} · named ${run.named}/${task.expect.length} · ${run.tokens} tokens · ${run.calls} calls · ${Math.round(run.ms / 1000)} s` +
         (run.missing.length ? ` · missing ${run.missing.join(', ')}` : ''),
     );
   }
+  const expected = (r: Run) => r.named + r.missing.length;
   const passRate = runs.filter((r) => r.pass).length / Math.max(runs.length, 1);
+  const recall = runs.reduce((a, r) => a + r.named, 0) / Math.max(runs.reduce((a, r) => a + expected(r), 0), 1);
   console.log(
-    `\n${values.setup} · ${corpus.name} · ${values.model}: pass ${(passRate * 100).toFixed(1)}% · ` +
+    `\n${values.setup} · ${corpus.name} · ${model}: pass ${(passRate * 100).toFixed(1)}% · items named ${(recall * 100).toFixed(1)}% · ` +
       `tokens mean ${Math.round(mean(runs.map((r) => r.tokens)))} · calls mean ${mean(runs.map((r) => r.calls)).toFixed(1)} · ` +
-      `wall p50 ${Math.round(percentile(runs.map((r) => r.ms), 50) / 1000)} s · cost $${runs.reduce((a, r) => a + r.costUsd, 0).toFixed(2)}`,
+      `wall p50 ${Math.round(percentile(runs.map((r) => r.ms), 50) / 1000)} s`,
   );
-  const out = join(root, 'eval/results', `agent-${values.setup}-${corpus.name}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-  await mkdir(dirname(out), { recursive: true });
-  await writeFile(out, `${JSON.stringify({ setup: values.setup, corpus: corpus.name, model: values.model, runs }, null, 2)}\n`);
   console.log(`Runs written to ${out.slice(root.length + 1)}`);
 }
 

@@ -8,6 +8,7 @@ import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
+import { componentOf, isComponentFile } from '../index/embedded.ts';
 import { projectFile, readOther, refsToFile } from './other-files.ts';
 import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
@@ -258,6 +259,9 @@ export async function runTool(
       const { target, ...options } = z.object(toolSchemas.refs.input).parse(args);
       // A file (an image, a doc, a config): the places that name it.
       const file = target.includes('#') ? undefined : projectFile(ws, target);
+      // A component file (Badge.astro) is its component: the places that use it.
+      const component = file && isComponentFile(file) ? ws.index.get(`${file}#${componentOf(file).name}`) : undefined;
+      if (component) return refs(ws, component.id, given(options));
       if (file) return refsToFile(ws, file, options.budget);
       return refs(ws, target, given(options));
     }

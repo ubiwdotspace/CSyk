@@ -1,0 +1,33 @@
+# Built by eval/agent/make-tasks.ts from the starlight cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Which files use the component in `packages/starlight/src/components/MarkdownContent.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["packages/starlight/src/components/Page.astro"]
+  - id: T02
+    prompt: "Which files use the component in `docs/src/components/fluid-grid.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["docs/src/components/showcase-sites.astro", "docs/src/components/theme-grid.astro", "docs/src/components/youtube-grid.astro"]
+  - id: T03
+    prompt: "Which files use `PAGE_TITLE_ID`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["packages/starlight/src/components-internals/TableOfContents/starlight-toc.ts", "packages/starlight/src/components/Hero.astro", "packages/starlight/src/components/PageTitle.astro", "packages/starlight/src/components/SkipLink.astro", "packages/starlight/src/utils/generateToC.ts"]
+  - id: T04
+    prompt: "Which files use `SidebarEntry`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["docs/src/components/sidebar-preview.astro", "packages/starlight/__bench_fn__/generate-route-data.bench.ts", "packages/starlight/__tests__/sidebar/navigation.test.ts", "packages/starlight/src/components/SidebarSublist.astro", "packages/starlight/src/utils/navigation.ts"]
+  - id: T05
+    prompt: "Which files use the component in `packages/starlight/src/components/Sidebar.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["packages/starlight/src/components/Page.astro"]
+  - id: T06
+    prompt: "Which files use the component in `packages/starlight/src/components/ThemeSelect.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["packages/starlight/src/components/Header.astro", "packages/starlight/src/components/MobileMenuFooter.astro"]
+  - id: T07
+    prompt: "Which files use the component in `packages/starlight/src/components/Banner.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["packages/starlight/src/components/Page.astro"]
+  - id: T08
+    prompt: "Which files use `getSidebarHash`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["packages/starlight/src/components/SidebarPersister.astro"]
+  - id: T09
+    prompt: "Which files use `InternalSidebarLinkItem`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["docs/src/components/sidebar-preview.astro", "packages/starlight/src/utils/navigation.ts"]
+  - id: T10
+    prompt: "Which files use the component in `packages/starlight/src/components/StarlightPage.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["packages/starlight/__e2e__/fixtures/basics/src/pages/[...param].astro", "packages/starlight/__e2e__/fixtures/basics/src/pages/starlight-page-css-layer-order.astro", "packages/starlight/__e2e__/fixtures/custom src-dir/www/pages/custom.astro", "packages/starlight/__e2e__/fixtures/legacy-collections-backwards-compat/src/pages/custom.astro"]

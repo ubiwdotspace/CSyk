@@ -1,7 +1,8 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
 import { isCallAt, isCodeAt, isImportAt, isMemberAt, parseFile } from '../../src/index/parse.ts';
@@ -11,7 +12,24 @@ import { importAliases, resolvesTo, servers, type ServerSpec } from '../../src/p
 const run = promisify(execFile);
 
 /** The languages cases can be generated for, by the server that answers them. */
-export const oracleServers: Record<string, string> = { ts: 'tsc', py: 'pyright', go: 'gopls', dart: 'dart' };
+export const oracleServers: Record<string, string> = { ts: 'tsc', py: 'pyright', go: 'gopls', dart: 'dart', astro: 'astro-ls', svelte: 'svelteserver' };
+
+// The framework servers, which read Astro and Svelte files with the TypeScript files around them.
+// They need TypeScript's JavaScript API, so they live in eval/tools (npm install --prefix eval/tools).
+const tools = join(dirname(fileURLToPath(import.meta.url)), '../tools/node_modules');
+const scriptExtensions = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
+const frameworkServers: (ServerSpec & { init?: unknown })[] = [
+  { name: 'astro-ls', extension: '.astro', bin: 'astro-ls' },
+  { name: 'svelteserver', extension: '.svelte', bin: 'svelteserver' },
+].map(({ name, extension, bin }) => ({
+  name,
+  extensions: new Set([...scriptExtensions, extension]),
+  command: () => {
+    const command = join(tools, '.bin', bin);
+    return existsSync(command) ? { command, args: ['--stdio'] } : undefined;
+  },
+  init: { typescript: { tsdk: join(tools, 'typescript/lib') } },
+}));
 
 /** Symbol kinds that a case can be about: code you would search for. */
 export const caseKinds: ReadonlySet<SymbolKind> = new Set([
@@ -78,7 +96,7 @@ export class LspOracle {
 
   /** Starts the server for [lang] (`ts`, `py`, `go` or `dart`) in [root]. */
   static async start(root: string, lang = 'ts'): Promise<LspOracle> {
-    const spec = servers.find((s) => s.name === oracleServers[lang]);
+    const spec: (ServerSpec & { init?: unknown }) | undefined = [...servers, ...frameworkServers].find((s) => s.name === oracleServers[lang]);
     const launch = spec?.command();
     if (!spec || !launch || !existsSync(launch.command)) {
       throw new Error(`No language server for ${lang}: install ${oracleServers[lang] ?? lang}`);
@@ -86,7 +104,7 @@ export class LspOracle {
     const files = (await git(root, ['ls-files', ...[...spec.extensions].map((e) => `*${e}`)])).filter(
       (file) => !file.endsWith('.d.ts'),
     );
-    const lsp = await LspClient.start(launch.command, launch.args, root);
+    const lsp = await LspClient.start(launch.command, launch.args, root, undefined, undefined, spec.init);
     await spec.warmup?.(lsp, root);
     return new LspOracle(root, files, lsp, spec);
   }
@@ -206,6 +224,28 @@ export class LspOracle {
       if (spans.some((span) => resolvesTo(span, declared, lines))) refs.push(mention);
     }
     // One per line, in file order: a renamed import names the symbol twice on its line.
+    const byLine = new Map(refs.map((r) => [`${r.file}:${String(r.line).padStart(8, '0')}`, r]));
+    return [...byLine.keys()].sort().map((key) => byLine.get(key) as Position);
+  }
+
+  /**
+   * Every place that uses the component [file] is (`Badge.astro`), by the server: mentions of
+   * [name] that resolve to the file itself, as a tag, an import or a re-export
+   * (`export { default as Badge }`). Mentions under another name are not followed.
+   */
+  async componentReferences(file: string, name: string): Promise<Position[]> {
+    const refs: Position[] = [];
+    for (const mention of await this.mentions(name)) {
+      if (mention.file === file) continue;
+      const { spans } = await this.lsp.definition(mention);
+      if (spans.some((span) => span.file === file && span.nameLine === 0)) refs.push(mention);
+    }
+    // The import that binds it in a file that uses it, as for any other symbol, also where the
+    // server stops at a module a `.d.ts` declares (Starlight's `virtual:starlight/components/…`).
+    const users = new Set(refs.map((r) => r.file));
+    for (const mention of await this.mentions(name)) {
+      if (users.has(mention.file) && (await this.isImport(mention.file, mention))) refs.push(mention);
+    }
     const byLine = new Map(refs.map((r) => [`${r.file}:${String(r.line).padStart(8, '0')}`, r]));
     return [...byLine.keys()].sort().map((key) => byLine.get(key) as Position);
   }

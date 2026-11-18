@@ -57,6 +57,9 @@ const languageIds: Record<string, string> = {
   '.py': 'python',
   '.go': 'go',
   '.dart': 'dart',
+  '.astro': 'astro',
+  '.svelte': 'svelte',
+  '.vue': 'vue',
 };
 
 /**
@@ -95,7 +98,8 @@ export class LspClient {
 
   /**
    * Starts [command] in [root] and completes the initialize handshake. With
-   * [settings], by section, the server gets them asked for or not.
+   * [settings], by section, the server gets them asked for or not; with
+   * [initializationOptions], it gets those in the handshake (the Astro server's TypeScript).
    */
   static async start(
     command: string,
@@ -103,6 +107,7 @@ export class LspClient {
     root: string,
     settings?: Record<string, unknown>,
     env?: NodeJS.ProcessEnv,
+    initializationOptions?: unknown,
   ): Promise<LspClient> {
     // Node starts a Windows batch file (Flutter's dart.bat) only through the shell.
     const batch = process.platform === 'win32' && /\.(cmd|bat)$/i.test(command);
@@ -135,6 +140,7 @@ export class LspClient {
       processId: process.pid,
       rootUri,
       workspaceFolders: [{ uri: rootUri, name: 'root' }],
+      ...(initializationOptions === undefined ? {} : { initializationOptions }),
       capabilities: {
         ...(settings ? { workspace: { configuration: true } } : {}),
         textDocument: {

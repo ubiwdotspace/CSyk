@@ -138,7 +138,15 @@ export async function extractSymbols(file: string, text: string): Promise<CodeSy
     // component's body: what they declare is its own, as a function's locals are, unless exported.
     const own = (s: CodeSymbol): CodeSymbol =>
       s.parent || s.exported || s.kind === 'type' || s.kind === 'interface' ? s : { ...s, parent: whole.id, nested: true };
-    return [whole, ...sink.symbols.filter((s) => s.id !== whole.id).map(own)];
+    // A name in the code that is the file's own (`const about` in about.astro) is a second symbol of that id.
+    const ids = new Set(sink.symbols.map((s) => s.id));
+    const apart = (s: CodeSymbol): CodeSymbol => {
+      if (s.id !== whole.id) return s;
+      let n = 2;
+      while (ids.has(`${s.id}~${n}`)) n++;
+      return { ...s, id: `${s.id}~${n}` };
+    };
+    return [whole, ...sink.symbols.map(apart).map(own)];
   } finally {
     tree.delete();
   }

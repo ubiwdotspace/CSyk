@@ -4,7 +4,7 @@ import { basename, join, posix } from 'node:path';
 import { componentExtensions, isComponentFile, maskComponent } from '../index/embedded.ts';
 import { codeExtensions } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
-import { resolvePackageSpec } from '../workspace/packages.ts';
+import { ambientModules, resolvePackageSpec } from '../workspace/packages.ts';
 import type { Position } from './lsp-client.ts';
 import { inCode, isDefaultExport, textMentions, type Mention, type ReferenceOptions } from './lsp-service.ts';
 
@@ -57,13 +57,14 @@ const stem = (path: string) => path.replace(/\.(?:d\.ts|[cm]?[jt]sx?)$/, '');
 
 /**
  * The repo path [spec] names when written in [from]: relative, an alias of the `src` folder of
- * [from]'s package, as SvelteKit (`$lib/`), Vite and Nuxt (`@/`, `~/`) set them up, or a
- * workspace package's name (workspace/packages.ts); else undefined.
+ * [from]'s package, as SvelteKit (`$lib/`), Vite and Nuxt (`@/`, `~/`) set them up, a module a
+ * `.d.ts` declares by name (a framework's virtual module), or a workspace package's name
+ * (workspace/packages.ts); else undefined.
  */
 export function resolveSpec(root: string, from: string, spec: string): string | undefined {
   if (spec.startsWith('./') || spec.startsWith('../')) return posix.normalize(posix.join(posix.dirname(from), spec));
   const alias = /^(\$lib|@|~)\/(.*)$/.exec(spec);
-  if (!alias) return resolvePackageSpec(root, spec);
+  if (!alias) return ambientModules(root).get(spec) ?? resolvePackageSpec(root, spec);
   let dir = posix.dirname(from);
   while (dir !== '.' && dir !== '/' && !existsSync(join(root, dir, 'package.json'))) dir = posix.dirname(dir);
   const base = dir === '.' || dir === '/' ? '' : `${dir}/`;
@@ -190,7 +191,8 @@ export async function componentRefs(root: string, symbol: CodeSymbol, where?: Re
   for (const importer of importers) {
     const text = await readFile(join(root, importer), 'utf8');
     for (const i of importsIn(importer, text)) {
-      if (posix.basename(i.spec) !== basename(file) && posix.basename(stem(i.spec)) !== basename(file)) continue;
+      const named = posix.basename(i.spec);
+      if (named !== basename(file) && named !== basename(file).replace(/\.[^.]+$/, '')) continue;
       const clause = parseClause(i.clause);
       const lead = await leadsTo(root, importer, i.spec, 'default', file);
       if (lead === 'other') continue;

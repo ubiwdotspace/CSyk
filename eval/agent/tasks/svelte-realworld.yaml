@@ -1,0 +1,33 @@
+# Built by eval/agent/make-tasks.ts from the svelte-realworld cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Which files use the component in `src/routes/Pagination.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/+page.svelte"]
+  - id: T02
+    prompt: "Which files use the component in `src/lib/ArticleList/ArticlePreview.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/lib/ArticleList/index.svelte"]
+  - id: T03
+    prompt: "Which files use the component in `src/lib/ListErrors.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/editor/Editor.svelte", "src/routes/login/+page.svelte", "src/routes/register/+page.svelte", "src/routes/settings/+page.svelte"]
+  - id: T04
+    prompt: "Which files use the component in `src/routes/PreloadingIndicator.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/+layout.svelte"]
+  - id: T05
+    prompt: "Which files use the component in `src/routes/article/[slug]/CommentContainer.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/article/[slug]/+page.svelte"]
+  - id: T06
+    prompt: "Which files use the component in `src/routes/editor/Editor.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/editor/+page.svelte", "src/routes/editor/[slug]/+page.svelte"]
+  - id: T07
+    prompt: "Which files use the component in `src/routes/article/[slug]/ArticleMeta.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/article/[slug]/+page.svelte"]
+  - id: T08
+    prompt: "Which files use the component in `src/routes/Nav.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/+layout.svelte"]
+  - id: T09
+    prompt: "Which files use the component in `src/routes/article/[slug]/CommentInput.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/article/[slug]/CommentContainer.svelte"]
+  - id: T10
+    prompt: "Which files use the component in `src/routes/article/[slug]/Comment.svelte`? List every file that uses it, as repository-relative paths."
+    expect: ["src/routes/article/[slug]/CommentContainer.svelte"]
