@@ -117,6 +117,11 @@ describe('Astro, Svelte and Vue components', () => {
     expect(await ask('refs', { target: 'isDark' })).toMatch(/· 1 ref in 1 file · lsp · complete\napps\/vue\/src\/ui\/TheFooter\.vue  1·TheFooter/);
   });
 
+  it('finds a component by the tag a template writes for it', async () => {
+    expect(await ask('find', { query: 'base-button' })).toContain('apps/vue/src/ui/BaseButton.vue#BaseButton  component 1');
+    expect(await ask('refs', { target: 'base-button' })).toMatch(/^apps\/vue\/src\/ui\/BaseButton\.vue#BaseButton · 4 refs/);
+  });
+
   it('searches code written as it reads as written, when no regex matches it', async () => {
     expect(await ask('grep', { pattern: 'shout(title)' })).toMatch(/^1 hit in 1 place · text, as written: no regex match/);
   });

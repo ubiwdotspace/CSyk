@@ -9,7 +9,9 @@ import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import type { Position } from '../precision/lsp-client.ts';
 import { componentRefs, componentUses } from '../precision/components.ts';
-import { componentExtensions, componentOf, isComponentFile } from '../index/embedded.ts';
+import { componentExtensions, componentOf, isComponentFile, pascalCase } from '../index/embedded.ts';
+import { declaredGlobals } from '../workspace/packages.ts';
+import { nuxtComponents } from '../workspace/nuxt.ts';
 import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
@@ -35,7 +37,9 @@ export async function find(
   options: SearchOptions & { budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
-  const hits = ws.index.search(query, options);
+  let hits = ws.index.search(query, options);
+  // A tag a template writes (`<CustomersAddModal>`, `<base-button>`) names a component file.
+  if (hits.length === 0) hits = componentsByTag(ws, query);
   if (hits.length === 0) {
     const near = ws.index.nearest(query);
     return { text: `no symbol matches${near.length ? `; nearest: ${near.join(', ')}` : ''} · index`, locations: [] };
@@ -737,6 +741,8 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
   if (qualified.length) return { symbol: qualified[0], note: qualified.length > 1 ? `also: ${qualified.slice(1).map((s) => s.id).join(', ')}` : '' };
   const named = ws.index.named(target);
   if (named.length === 0) {
+    const tagged = componentsByTag(ws, target);
+    if (tagged[0]) return { symbol: tagged[0], note: tagged.length > 1 ? `also: ${tagged.slice(1).map((s) => s.id).join(', ')}` : '' };
     const byFile = defaultExportNamed(ws, target);
     if (byFile[0]) return { symbol: byFile[0], note: byFile.length > 1 ? `also: ${byFile.slice(1).map((s) => s.id).join(', ')}` : '' };
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);
@@ -754,6 +760,22 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
   if (!best) return { note: `no symbol named ${target}` };
   const others = ranked.filter((s) => s !== best);
   return { symbol: best, note: others.length ? `also named so: ${others.map((s) => s.id).join(', ')}` : '' };
+}
+
+/**
+ * The component files a template's tag [name] stands for, where the file is named otherwise: in
+ * kebab case (`<base-button>`), by Nuxt's path naming (`<CustomersAddModal>` for
+ * components/customers/AddModal.vue, `Lazy…`) or under a name a `.d.ts` makes global.
+ */
+function componentsByTag(ws: Workspace, name: string): CodeSymbol[] {
+  if (!/^[A-Za-z][\w-]*$/.test(name)) return [];
+  const pascal = name.includes('-') ? pascalCase(name) : name;
+  const files = new Set<string>();
+  for (const c of nuxtComponents(ws.root)) if (c.names.includes(pascal)) files.add(c.file);
+  for (const g of declaredGlobals(ws.root)) if (g.name === pascal && g.exported === 'default' && isComponentFile(g.target)) files.add(g.target);
+  const found = [...files].flatMap((file) => ws.index.get(`${file}#${componentOf(file).name}`) ?? []);
+  if (found.length === 0 && pascal !== name) found.push(...ws.index.named(pascal).filter((s) => isComponentFile(s.file) && s.line === 1));
+  return found;
 }
 
 /**
