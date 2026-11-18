@@ -273,7 +273,7 @@ export async function refs(
     total: options.code ? found.length : new Set(found.map((p) => p.file)).size,
   });
   // Docs, specs, configs and translations that name it, which the compiler does not see.
-  const outside = await mentionsOutsideCode(ws.root, symbol.name);
+  const outside = await mentionsOutsideCode(ws.root, symbol.name, 6, new Set(found.map((p) => `${p.file}:${p.line + 1}`)));
   const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
   // Every use the compiler confirmed, listed, and no mention it could not
   // resolve: nothing to search again for.
