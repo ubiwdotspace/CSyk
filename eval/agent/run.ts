@@ -56,7 +56,8 @@ async function main(): Promise<void> {
     return;
   }
   assertPinned(corpus);
-  if (values.setup !== 'b0') buildCsyk();
+  // CSYK_CLI names a built CSyk to measure (a snapshot), as for npm run loc; else this one, built now.
+  if (values.setup !== 'b0' && !process.env.CSYK_CLI) buildCsyk();
   const doc = parse(await readFile(join(root, 'eval/agent/tasks', `${corpus.name}.yaml`), 'utf8')) as { tasks: Task[] };
   const tasks = doc.tasks.filter((t) => !values.task || t.id === values.task);
   // Written after every task: a run that stops resumes where it was.

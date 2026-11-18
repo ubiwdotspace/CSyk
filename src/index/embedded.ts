@@ -66,11 +66,19 @@ export function maskComponent(file: string, text: string): string {
     } else if (c === '<' && /[A-Za-z/]/.test(text[i + 1] ?? '')) {
       // A component used as a tag: `<Badge`, `</Badge>`, `<Foo.Bar`. Its attributes follow.
       const name = /^<\/?([A-Z][\w$]*(?:\.[\w$]+)*)/.exec(text.slice(i, i + 200));
+      // Vue's `<my-button>` is the component MyButton: written so in place, its column kept.
+      const kebab = ext === '.vue' ? /^<\/?([a-z][a-z0-9]*(?:-[a-z0-9]+)+)(?=[\s/>])/.exec(text.slice(i, i + 200)) : null;
       if (name?.[1]) {
         const at = i + name[0].length - name[1].length;
         put(i, ';');
         keep(at, at + name[1].length);
         put(at + name[1].length, ';');
+      } else if (kebab?.[1]) {
+        const at = i + kebab[0].length - kebab[1].length;
+        const pascal = pascalCase(kebab[1]);
+        put(i, ';');
+        for (let j = 0; j < pascal.length; j++) put(at + j, pascal[j] ?? ' ');
+        put(at + kebab[1].length, ';');
       }
       i = attributes(text, i + 1, ext, keep, put);
     } else if (braces && c === '{') {
@@ -250,12 +258,21 @@ export function componentOf(file: string): { name: string; kind: 'component' | '
   const base = basename(file, ext);
   const route = base.startsWith('+') || /(^|\/)pages\//.test(file) || /[[\]]/.test(base);
   if (route) return { name: base === 'index' ? `${basename(dirname(file))}/index` : base, kind: 'route' };
-  const name = base
+  return { name: pascalCase(base) || base, kind: 'component' };
+}
+
+/** `my-button` as `MyButton`, how Vue and file names spell a component. */
+export function pascalCase(name: string): string {
+  return name
     .split(/[-_.\s]+/)
     .filter(Boolean)
     .map((part) => part[0]?.toUpperCase() + part.slice(1))
     .join('');
-  return { name: name || base, kind: 'component' };
+}
+
+/** `MyButton` as `my-button`, how a Vue template may write the tag. */
+export function kebabCase(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([A-Z])([A-Z][a-z])/g, '$1-$2').toLowerCase();
 }
 
 /** The line that says what a component takes: its Props type, `$props()` or `defineProps`, else undefined. */

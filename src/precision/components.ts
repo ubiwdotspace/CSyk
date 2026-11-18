@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { basename, join, posix } from 'node:path';
-import { componentExtensions, isComponentFile, maskComponent } from '../index/embedded.ts';
+import { componentExtensions, isComponentFile, kebabCase, maskComponent } from '../index/embedded.ts';
 import { codeExtensions } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
 import { ambientModules, resolvePackageSpec } from '../workspace/packages.ts';
+import { byPaths, pathsFor } from '../workspace/tsconfig.ts';
 import type { Position } from './lsp-client.ts';
 import { inCode, isDefaultExport, textMentions, type Mention, type ReferenceOptions } from './lsp-service.ts';
 
@@ -56,13 +57,18 @@ export function parseClause(clause: string): Clause {
 const stem = (path: string) => path.replace(/\.(?:d\.ts|[cm]?[jt]sx?)$/, '');
 
 /**
- * The repo path [spec] names when written in [from]: relative, an alias of the `src` folder of
+ * The repo path [spec] names when written in [from]: relative, by the `paths` of the nearest
+ * tsconfig.json or jsconfig.json (workspace/tsconfig.ts), an alias of the `src` folder of
  * [from]'s package, as SvelteKit (`$lib/`), Vite and Nuxt (`@/`, `~/`) set them up, a module a
  * `.d.ts` declares by name (a framework's virtual module), or a workspace package's name
  * (workspace/packages.ts); else undefined.
  */
 export function resolveSpec(root: string, from: string, spec: string): string | undefined {
   if (spec.startsWith('./') || spec.startsWith('../')) return posix.normalize(posix.join(posix.dirname(from), spec));
+  // The project's own aliases first, as the compiler reads them: the first target that is there.
+  const paths = pathsFor(root, from);
+  const targets = paths ? byPaths(paths, spec) : [];
+  if (targets.length > 0) return targets.find((t) => moduleFile(root, t)) ?? targets[0];
   const alias = /^(\$lib|@|~)\/(.*)$/.exec(spec);
   if (!alias) return ambientModules(root).get(spec) ?? resolvePackageSpec(root, spec);
   let dir = posix.dirname(from);
@@ -205,7 +211,14 @@ export async function componentRefs(root: string, symbol: CodeSymbol, where?: Re
         continue;
       }
       const locals = [...(clause.default ? [clause.default] : []), ...viaDefault];
-      const uses = await inCode(root, locals.flatMap((local) => mentionsIn(importer, text, local)), where);
+      // A Vue template may write the tag in kebab case: `<my-button>` for MyButton.
+      const tags = (local: string) =>
+        importer.endsWith('.vue') && kebabCase(local) !== local.toLowerCase()
+          ? mentionsIn(importer, text, kebabCase(local)).filter(
+              (m) => /<\/?$/.test(m.text.slice(0, m.character)) && !m.text.slice(m.character + kebabCase(local).length).startsWith('-'),
+            )
+          : [];
+      const uses = await inCode(root, locals.flatMap((local) => [...mentionsIn(importer, text, local), ...tags(local)]), where);
       (ours ? found : unconfirmed).push(...uses);
     }
   }

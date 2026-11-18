@@ -34,6 +34,20 @@ const files: Record<string, string> = {
   'apps/site/src/pages/index.astro': ['---', "import { Card } from '@acme/ui';", '---', '<Card title="Shop" />', '<Card title="Again" />'].join('\n'),
   'apps/site/src/pages/about.astro': ['---', "import Card from '@acme/ui/Card.astro';", '---', '<Card title="About" />'].join('\n'),
   'apps/site/src/Elsewhere.astro': ['---', "import { Card } from 'some-ui-kit';", '---', '<Card />'].join('\n'),
+  'apps/vue/package.json': JSON.stringify({ name: 'vue-app' }),
+  'apps/vue/tsconfig.json': '{\n  // aliases of this app\n  "compilerOptions": { "paths": { "#ui/*": ["./src/ui/*"], }, },\n}',
+  'apps/vue/src/ui/BaseButton.vue': ['<script setup lang="ts">', "import { exclaim } from '#ui/../lib/text';", '</script>', '<template><button>{{ exclaim("go") }}</button></template>'].join('\n'),
+  'apps/vue/src/lib/text.ts': 'export function exclaim(s: string) {\n  return s + "!";\n}\n',
+  'apps/vue/src/App.vue': [
+    '<script setup lang="ts">',
+    "import BaseButton from '#ui/BaseButton.vue';",
+    '</script>',
+    '<template>',
+    '  <base-button />',
+    '  <BaseButton></BaseButton>',
+    '  <base-button-group />',
+    '</template>',
+  ].join('\n'),
   'apps/kit/package.json': JSON.stringify({ name: 'kit' }),
   'apps/kit/src/lib/greet.ts': 'export function greet(name: string) {\n  return `hi ${name}`;\n}\n',
   'apps/kit/src/routes/+page.svelte': ['<script lang="ts">', "  import { greet } from '$lib/greet';", '</script>', '{#if true}<b>{greet("you")}</b>{/if}'].join('\n'),
@@ -84,6 +98,13 @@ describe('Astro, Svelte and Vue components', () => {
     // Another package's Card may be a use or another component: not complete, and said so.
     expect(answer).toContain('unconfirmed, imported from where CSyk cannot follow: apps/site/src/Elsewhere.astro 2·Elsewhere, 4·Elsewhere');
     expect(answer).not.toContain('complete');
+  });
+
+  it("follows a tsconfig's paths, and Vue's kebab-case tags", async () => {
+    const answer = await ask('refs', { target: 'apps/vue/src/ui/BaseButton.vue' });
+    expect(answer).toMatch(/^apps\/vue\/src\/ui\/BaseButton\.vue#BaseButton · 4 refs in 1 file · imports · complete/);
+    expect(answer).toContain('apps/vue/src/App.vue  2·App, 5·App, 6·App');
+    expect(await ask('refs', { target: 'exclaim' })).toContain('apps/vue/src/ui/BaseButton.vue  2·BaseButton, 4·BaseButton');
   });
 
   it('searches code written as it reads as written, when no regex matches it', async () => {
