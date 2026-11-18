@@ -7,12 +7,13 @@ import { assertPinned, loadCorpora } from '../harness/corpora.ts';
 import { mean, percentile } from '../harness/metrics.ts';
 import { buildCsyk, runClaude, setups, type ClaudeRun } from './claude.ts';
 
-const usage = `Usage: npm run agent -- --setup <b0|csyk> --corpus <name> [--model sonnet] [--task T01] [--max-turns 30]
+const usage = `Usage: npm run agent -- --setup <b0|csyk> --corpus <name> [--model sonnet] [--task T01] [--max-turns 30] --other-model
 
 Runs each task in eval/agent/tasks/<corpus>.yaml through headless Claude Code
 (claude -p) in the corpus folder, with the setup's tools only, and records
 tokens, tool calls, wall time, cost and whether the answer names every
-expected item. Each run is billed to your Claude account.
+expected item. Each run is billed to your Claude account. Gemini through agy is the
+test source (owner, 2026-11-18; \`npm run loc\`): this runs only with --other-model.
 
 With ANTHROPIC_API_KEY set, runs use --bare: no user settings, hooks or
 CLAUDE.md. Without it, user and local settings are skipped
@@ -32,9 +33,15 @@ async function main(): Promise<void> {
       model: { type: 'string', default: 'sonnet' },
       task: { type: 'string' },
       'max-turns': { type: 'string', default: '30' },
+      'other-model': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
+  if (!values.help && !values['other-model']) {
+    console.log('Gemini through agy is the test source (npm run loc): this Claude Code run needs --other-model.');
+    process.exitCode = 1;
+    return;
+  }
   const corpus = (await loadCorpora(root)).get(values.corpus ?? '');
   const setup = corpus && setups(corpus.root)[values.setup ?? ''];
   if (values.help || !corpus || !setup) {

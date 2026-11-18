@@ -80,8 +80,15 @@ export function withHooks(existing: Record<string, unknown>, entries: Record<str
   const merged: Record<string, unknown> = { ...existing };
   for (const [event, list] of Object.entries(entries)) {
     const current = Array.isArray(existing[event]) ? (existing[event] as unknown[]) : [];
-    const fresh = list.filter((e) => !JSON.stringify(current).includes(JSON.stringify(commandOf(e))));
-    merged[event] = [...current, ...fresh];
+    // An entry an earlier setup wrote (the same matcher, running the same command alone) is
+    // brought up to date in place, so new fields such as Claude Code's onFailure reach it.
+    const same = (old: unknown, entry: Record<string, unknown>) => {
+      const o = asRecord(old);
+      return o.matcher === entry.matcher && commandOf(o) === commandOf(entry) && (!Array.isArray(o.hooks) || o.hooks.length === 1);
+    };
+    const updated = current.map((old) => list.find((entry) => same(old, entry)) ?? old);
+    const fresh = list.filter((e) => !current.some((old) => same(old, e)) && !JSON.stringify(current).includes(JSON.stringify(commandOf(e))));
+    merged[event] = [...updated, ...fresh];
   }
   return merged;
 }

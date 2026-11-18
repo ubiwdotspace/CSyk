@@ -7,13 +7,13 @@ import { parseArgs } from 'node:util';
 import { buildCsyk } from './agent/claude.ts';
 import { mean } from './harness/metrics.ts';
 
-const usage = `Usage: npm run bench -- [--tier 5|10|20|30|50] [--lang ts|py|go|dart] [--only <tools>] [--setup csyk-lean] [--run <name>] [--skip questions|agents]
+const usage = `Usage: npm run bench -- [--tier 5|10|20|30|50] [--lang ts|py|go|dart] [--only <tools>] [--setup csyk-setup] [--run <name>] [--skip questions|agents]
 
 Measures a change at a chosen size: single questions on the twelve
-repositories, then Claude Code on public issues in TypeScript, JavaScript,
-Python and Go, with --setup and with Claude Code alone side by side. Tiers
-nest: a tier's issues and questions are the first ones of every larger
-tier, so going up a tier only runs what is new.
+repositories, then Gemini through agy (the test source) on public issues in
+TypeScript, JavaScript, Python and Go, with --setup and with agy alone side by
+side. Tiers nest: a tier's issues and questions are the first ones of every
+larger tier, so going up a tier only runs what is new.
 
   --tier   questions of each kind per repository, and issues per language
            (default 5). While optimizing: 5, 10, 20, 30; for a release: 50.
@@ -22,12 +22,13 @@ tier, so going up a tier only runs what is new.
            measure a change on ts first, then on the others.
   --only   the tools a change touches (find, grep, read, refs, calls,
            impact): single questions then cover only their kinds
-  --setup  the agent setup to measure (default csyk-lean)
-  --run    names this measurement: the setup and Claude Code alone both run
+  --setup  the agent setup to measure (default csyk-setup: what csyk setup
+           writes for agy, its note and hooks)
+  --run    names this measurement: the setup and agy alone both run
            fresh under it, side by side; use a new name for each version
   --skip   leave out the single questions or the agent sessions
 
-Agent sessions are billed to your Claude account: about $0.05 an issue.`;
+Agent sessions use your agy sign-in's Gemini quota.`;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const kindsOf: Record<string, string[]> = { find: ['A', 'B'], read: ['A'], grep: ['E'], refs: ['C'], calls: ['D'], impact: ['G'] };
@@ -49,7 +50,7 @@ const { values } = parseArgs({
   options: {
     tier: { type: 'string', default: '5' },
     only: { type: 'string' },
-    setup: { type: 'string', default: 'csyk-lean' },
+    setup: { type: 'string', default: 'csyk-setup' },
     run: { type: 'string' },
     skip: { type: 'string' },
     lang: { type: 'string' },
@@ -108,12 +109,12 @@ if (values.skip !== 'questions') {
 if (values.skip !== 'agents' && benchmarks.length === 0) console.log(`Agent sessions: no benchmark of issues in ${values.lang}`);
 if (values.skip !== 'agents' && benchmarks.length > 0) {
   buildCsyk();
-  console.log(`Agent sessions: ${tier} issues per language, ${values.setup} and Claude Code alone side by side`);
+  console.log(`Agent sessions: ${tier} issues per language, ${values.setup} and agy alone side by side, on Gemini`);
   const named = values.run ? ['--run', values.run] : [];
   for (const [dataset, language] of benchmarks) {
     const common = ['--dataset', dataset, '--language', language, '--count', String(tier), '--seed', '1'];
-    // Claude Code alone runs again under the same name: its context changes
-    // with Claude Code and with the plugins and skills of the machine, so a
+    // agy alone runs again under the same name: its context changes with
+    // agy's version and with what is on the machine, so a
     // baseline from another day is not comparable.
     await Promise.all([
       node('eval/loc/run.ts', [...common, '--setup', 'b0', ...named], { CSYK_LOC_DIR: join(root, 'eval/corpora/loc-b0') }),

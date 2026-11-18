@@ -177,7 +177,8 @@ the code), `lsp` (the language's compiler, through its language server) or `text
 when no language server is installed).
 
 If the agent asks again for code it has already seen and that has not changed, CSyk answers
-`[unchanged: <id>, shown at call #n]` instead of sending it again.
+`[unchanged: <id>, shown at call #n]` instead of sending it again. In Claude Code's Code Mode it always sends the code again:
+there a script calls the tools, and the model sees only what the script hands back.
 
 ## Limitations
 

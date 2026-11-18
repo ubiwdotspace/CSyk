@@ -1,11 +1,12 @@
-import { mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { codeExtensions } from '../index/parse.ts';
 import { toPosix } from '../paths.ts';
 import { dependencyDirs } from '../workspace/workspace.ts';
-import { fileSearches, hookedDependencyDirs, hookedExtensions, preBash, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
+import { seenLog } from '../token/session.ts';
+import { fileSearches, hookedDependencyDirs, hookedExtensions, postRead, preBash, preGrep, preRead, shellSearches, simpleCommands } from './hooks.ts';
 
 // A folder as the hooks name it, /repo/src on macOS and Linux, D:/repo/src on Windows.
 const at = (...parts: string[]) => toPosix(resolve('/repo', ...parts));
@@ -110,11 +111,32 @@ describe('preBash', () => {
     expect(bash('rg -F "a.b" --glob "*.ts"')).toMatch(/^Search the code with CSyk grep \(pattern: "a\.b", literal: true, glob: "\*\.ts"\)/);
   });
 
+  it('follows the cd that Code Mode puts before a command run in a folder', () => {
+    expect(bash(`cd 'src' && rg -n TokenStore`)).toMatch(/^Search the code with CSyk grep \(pattern: "TokenStore", path: "src"\)/);
+  });
+
   it('lets piped greps, dependencies, other folders and unserved workspaces through', () => {
     expect(bash('npm test | grep FAIL')).toBeUndefined();
     expect(bash('grep -rn useState node_modules/react')).toBeUndefined();
     expect(bash('rg TokenStore /elsewhere')).toBeUndefined();
     expect(bash('rg TokenStore', [])).toBeUndefined();
     expect(bash('ls -la && npm run build')).toBeUndefined();
+  });
+});
+
+describe('postRead', () => {
+  const read = { tool_name: 'Read', tool_input: { file_path: 'small.ts' }, cwd: root };
+
+  it('notes a Read of a served source file', () => {
+    rmSync(seenLog(root), { force: true });
+    postRead(read, [root], 1_000, {});
+    expect(existsSync(seenLog(root))).toBe(true);
+    rmSync(seenLog(root), { force: true });
+  });
+
+  it('notes nothing in Code Mode, where a script may keep the Read from the model', () => {
+    rmSync(seenLog(root), { force: true });
+    postRead(read, [root], 1_000, { CLAUDE_CODE_EXPERIMENTAL_CODE_MODE: '1' });
+    expect(existsSync(seenLog(root))).toBe(false);
   });
 });

@@ -423,11 +423,14 @@ Code alone again under each `--run` name.
 Agent sessions:
 
 ```sh
-npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-lean> --count 30 --seed 1
+npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-setup> --count 30 --seed 1
 npm run loc:report
 ```
 
-`b0` is Claude Code alone and `csyk-lean` is with CSyk; `lsp-plugin`, `codegraph`, `serena` and
+Since 2026-11-18 the agent is Gemini (`gemini-3.8-flash-medium`) through the Antigravity
+command line, `agy`. `b0` is agy alone and `csyk-setup` is agy as `csyk setup` sets it up. The
+earlier results below were measured with Claude Code; running it again needs `--agent claude
+--other-model`, where `b0` is Claude Code alone and `csyk-lean` is with CSyk; `lsp-plugin`, `codegraph`, `serena` and
 `graphify` are the others above, each installed for the run. Each run writes its results to a file in
 `eval/results/` named after the setup, dataset and language; `--run <name>` keeps repeats of the
 same setup apart. Set `CSYK_LOC_DIR` to give a run its own copies of the repositories, so two
