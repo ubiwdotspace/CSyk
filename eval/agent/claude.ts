@@ -58,6 +58,8 @@ export type ClaudeRun = {
   peakMb: number;
   /** CPU time of Claude Code and every server it started. */
   cpuSeconds: number;
+  /** The session hung past its time limit and was stopped: no answer to score. */
+  timedOut?: true;
 };
 
 /**

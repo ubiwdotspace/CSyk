@@ -77,13 +77,24 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
   const args = ['-p', prompt, '--model', model, '--output-format', 'stream-json', '--dangerously-skip-permissions', '--disable-slash-commands'];
   const start = performance.now();
   let watch: ReturnType<typeof watchResources> | undefined;
+  // A session can hang (once, 79 minutes with 2 s of CPU): stopped at the limit, it is not scored.
+  const limitMs = Number(process.env.CSYK_AGENT_TIMEOUT ?? 1200) * 1000;
+  let timedOut = false;
   const lines = await new Promise<string[]>((done, fail) => {
     const child = spawn('agy', args, { cwd, env: { ...process.env, HOME: home }, stdio: ['ignore', 'pipe', 'inherit'] });
     if (child.pid) watch = watchResources(child.pid);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+      setTimeout(() => child.kill('SIGKILL'), 5000).unref();
+    }, limitMs);
     let out = '';
     child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString('utf8')));
     child.on('error', fail);
-    child.on('close', () => done(out.split('\n').filter(Boolean)));
+    child.on('close', () => {
+      clearTimeout(timer);
+      done(out.split('\n').filter(Boolean));
+    });
   });
   const ms = performance.now() - start;
   const { peakMb, cpuSeconds } = (await watch?.stop()) ?? { peakMb: 0, cpuSeconds: 0 };
@@ -153,5 +164,6 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     ms,
     peakMb,
     cpuSeconds,
+    ...(timedOut ? { timedOut: true as const } : {}),
   };
 }

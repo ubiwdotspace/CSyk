@@ -69,6 +69,10 @@ async function main(): Promise<void> {
     const { answer, ...cost } = claudeSetup
       ? await runClaude(task.prompt, corpus.root, claudeSetup, model, values['max-turns'])
       : await runAntigravity(task.prompt, corpus.root, values.setup ?? 'b0', model);
+    if (cost.timedOut) {
+      console.log(`${task.id} timed out after ${Math.round(cost.ms / 1000)} s · not scored; the next run with this --run name tries it again`);
+      continue;
+    }
     const missing = task.expect.filter((item) => !answer.includes(item));
     const run: Run = { id: task.id, pass: missing.length === 0, named: task.expect.length - missing.length, missing, answer, ...cost };
     runs.push(run);
