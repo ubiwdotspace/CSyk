@@ -115,7 +115,7 @@ export const listedTools = {
   find: { description: 'Find symbols by name or part of one.', args: ['query', 'kind', 'path'] },
   grep: { description: 'Regex search; each hit names its enclosing symbol.', args: ['pattern', 'literal', 'path', 'glob'] },
   read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading); several, comma-separated.", args: ['target'] },
-  refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named.', args: ['target'] },
+  refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named; for a component file (.astro, .svelte, .vue), its uses.', args: ['target'] },
   calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
   impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
 } as const;
