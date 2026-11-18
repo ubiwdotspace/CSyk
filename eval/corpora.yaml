@@ -114,3 +114,9 @@ vitesse:
   git: https://github.com/antfu-collective/vitesse.git
   commit: a8785264f83c2ebe1b3cf689296775a4949957c8
   path: eval/corpora/vitesse
+
+# Nuxt: the Nuxt UI dashboard template, components and composables auto-imported by Nuxt's conventions (MIT).
+nuxt-dashboard:
+  git: https://github.com/nuxt-ui-templates/dashboard.git
+  commit: d92aa0fe93d186e01764d3801cd333394b272f0e
+  path: eval/corpora/nuxt-dashboard

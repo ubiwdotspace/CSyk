@@ -5,6 +5,7 @@ import { componentExtensions, isComponentFile, kebabCase, maskComponent } from '
 import { codeExtensions } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
 import { ambientModules, declaredGlobals, resolvePackageSpec } from '../workspace/packages.ts';
+import { isNuxtAutoImport, nuxtComponents } from '../workspace/nuxt.ts';
 import { byPaths, pathsFor } from '../workspace/tsconfig.ts';
 import type { Position } from './lsp-client.ts';
 import { inCode, isDefaultExport, textMentions, type Mention, type ReferenceOptions } from './lsp-service.ts';
@@ -139,7 +140,9 @@ export async function componentUses(root: string, symbol: CodeSymbol, where?: Re
   const found: Position[] = [];
   const unconfirmed: Position[] = [];
   // Made global by a .d.ts (auto-imports.d.ts): a use needs no import.
-  const global = declaredGlobals(root).some((g) => g.name === symbol.name && g.exported === symbol.name && sameModule(g.target, symbol.file));
+  const global =
+    declaredGlobals(root).some((g) => g.name === symbol.name && g.exported === symbol.name && sameModule(g.target, symbol.file)) ||
+    (symbol.exported && isNuxtAutoImport(root, symbol.file));
   for (const file of files) {
     const text = await readFile(join(root, file), 'utf8');
     const locals = new Set<string>();
@@ -244,8 +247,13 @@ export async function componentRefs(root: string, symbol: CodeSymbol, where?: Re
     }
   }
   // Global components (unplugin-vue-components', Nuxt's components.d.ts): used with no import.
-  // Its line in the .d.ts is no use, as no mention in a .d.ts is (textMentions).
-  for (const g of declaredGlobals(root).filter((g) => g.exported === 'default' && sameModule(g.target, file))) {
+  // Its line in the .d.ts is no use, as no mention in a .d.ts is (textMentions). Nuxt's are by
+  // its conventions, as its .d.ts files are not in git.
+  const globalNames = [
+    ...declaredGlobals(root).filter((g) => g.exported === 'default' && sameModule(g.target, file)).map((g) => g.name),
+    ...nuxtComponents(root).filter((c) => c.file === file).flatMap((c) => c.names),
+  ];
+  for (const g of [...new Set(globalNames)].map((name) => ({ name }))) {
     const tags = kebabCase(g.name) === g.name.toLowerCase() ? [] : (await textMentions(root, kebabCase(g.name), new Set(['.vue']))).filter(
       (m) => /<\/?$/.test(m.text.slice(0, m.character)) && !m.text.slice(m.character + kebabCase(g.name).length).startsWith('-'),
     );
