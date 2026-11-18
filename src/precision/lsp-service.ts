@@ -558,7 +558,7 @@ export function nameColumn(line: string, name: string): number {
  * (`export default function name`, `export default name`, `name as
  * default`) or wrapped (`export default memo(name)`).
  */
-function isDefaultExport(text: string, name: string): boolean {
+export function isDefaultExport(text: string, name: string): boolean {
   if (name === 'default') return true;
   const escaped = name.replace(/[$]/g, '\\$');
   const itself = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${escaped}\\b|\\b${escaped}\\s+as\\s+default\\b`);

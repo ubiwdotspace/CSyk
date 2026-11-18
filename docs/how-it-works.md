@@ -180,6 +180,24 @@ If the agent asks again for code it has already seen and that has not changed, C
 `[unchanged: <id>, shown at call #n]` instead of sending it again. In Claude Code's Code Mode it always sends the code again:
 there a script calls the tools, and the model sees only what the script hands back.
 
+## Components (Astro, Svelte, Vue)
+
+An `.astro`, `.svelte` or `.vue` file is read for its code alone: the Astro frontmatter, every
+`<script>`, the expressions in its markup (`{…}`, Vue's `{{ … }}` and bound attributes such as
+`:title` or `@click`) and the names of components used as tags. The markup, styles, comments and
+plain text are blanked, line and column kept, and what is left is parsed as TSX. So `find` gives
+the file's component (named after the file, `my-button.vue` as `MyButton`; a page is a route) and
+what its scripts declare, which belong to the component; `grep` names the component a hit is in;
+and a name written in the markup's plain text is not a use.
+
+The compiler does not read these files, so `refs` and `calls` add their uses through imports: a
+name the file imports from the declaration's module (or from a barrel that re-exports it, two
+levels at most) is a use wherever the file writes it in code. A component's own uses are the
+files that import its path, by default or as `{ default as X }`, and then write that name, often
+as a tag; a re-export counts, and the files that import it from there. Such an answer says
+`imports` where a compiler's says `lsp`. A mention imported from a module that cannot be followed
+(a package outside the repository, an alias CSyk does not know) is listed as unconfirmed.
+
 ## Limitations
 
 - `complete` means every use or caller CSyk reaches through the workspace's own code and types.

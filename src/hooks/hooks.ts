@@ -21,7 +21,7 @@ export type Denial = {
 // The extensions CSyk indexes, as in index/parse.ts; written out here so a
 // hook, which runs on every tool call, does not load the parsers.
 export const hookedExtensions: ReadonlySet<string> = new Set([
-  '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.dart',
+  '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.dart', '.astro', '.svelte', '.vue',
 ]);
 
 // Files longer than this are worth a list of their symbols before a whole read.

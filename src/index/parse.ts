@@ -1,6 +1,7 @@
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Language, Parser, type Node, type Tree } from 'web-tree-sitter';
+import { componentExtensions, componentOf, isComponentFile, maskComponent, propsLine } from './embedded.ts';
 import { extractDart } from './extract/dart.ts';
 import { extractGo } from './extract/go.ts';
 import { leftOutOfBuild } from './go-build.ts';
@@ -35,7 +36,11 @@ const go: Dialect = { lang: 'go', grammar: () => join(grammarDir, 'tree-sitter-g
 // packages also build native bindings at install, which CSyk never loads.
 const dart: Dialect = { lang: 'dart', grammar: () => join(grammarDir, 'tree-sitter-dart.wasm'), extract: extractDart };
 
+// Astro, Svelte and Vue files: their code, kept at its place among blanked markup (embedded.ts).
+const component: Dialect = tsx;
+
 const dialects: Record<string, Dialect> = {
+  ...Object.fromEntries([...componentExtensions].map((ext) => [ext, component])),
   '.ts': typescript,
   '.mts': typescript,
   '.cts': typescript,
@@ -76,10 +81,19 @@ async function parserFor(dialect: Dialect): Promise<Parser> {
   return parser;
 }
 
-/** The syntax tree of [text]; the caller deletes it when done. */
+// The lines of a component file's tree as parsed: a blank where the file has markup.
+const maskedLines = new WeakMap<Tree, string[]>();
+
+/** The syntax tree of [text]; the caller deletes it when done. A component file's tree is of its code alone. */
 export async function parseFile(file: string, text: string): Promise<Tree | undefined> {
   const dialect = dialects[extname(file)];
   if (!dialect) return undefined;
+  if (isComponentFile(file)) {
+    const masked = maskComponent(file, text);
+    const tree = (await parserFor(dialect)).parse(masked) ?? undefined;
+    if (tree) maskedLines.set(tree, masked.split('\n'));
+    return tree;
+  }
   const tree = (await parserFor(dialect)).parse(text) ?? undefined;
   // JavaScript with type annotations (Flow's, or TypeScript's, which Babel
   // takes: `_uri: string;`, `export type`): the JavaScript grammar fails on
@@ -104,7 +118,27 @@ export async function extractSymbols(file: string, text: string): Promise<CodeSy
   try {
     const sink = new SymbolSink(file, dialect.lang, dialect.lang === 'go' && leftOutOfBuild(file, text));
     dialect.extract(tree.rootNode, sink);
-    return sink.symbols;
+    if (!isComponentFile(file)) return sink.symbols;
+    // The file is the component: imported by its path, used as a tag.
+    const { name, kind } = componentOf(file);
+    const lines = text.split('\n').length;
+    const whole: CodeSymbol = {
+      id: `${file}#${name}`,
+      name,
+      kind,
+      lang: dialect.lang,
+      file,
+      line: 1,
+      range: [1, lines],
+      signature: propsLine(text) ?? `<${name}>`,
+      exported: true,
+      isTest: false,
+    };
+    // An Astro frontmatter, a Svelte instance script and Vue's `<script setup>` are the
+    // component's body: what they declare is its own, as a function's locals are, unless exported.
+    const own = (s: CodeSymbol): CodeSymbol =>
+      s.parent || s.exported || s.kind === 'type' || s.kind === 'interface' ? s : { ...s, parent: whole.id, nested: true };
+    return [whole, ...sink.symbols.filter((s) => s.id !== whole.id).map(own)];
   } finally {
     tree.delete();
   }
@@ -136,6 +170,9 @@ const codeInStrings = new Set(['template_substitution', 'interpolation', 'templa
  * names a member as code would.
  */
 export function isCodeAt(tree: Tree, line: number, column: number): boolean {
+  // Markup, styles and plain text of a component file: blank in its tree, and no code.
+  const masked = maskedLines.get(tree);
+  if (masked && !/[\w$]/.test(masked[line]?.[column] ?? '')) return false;
   let node: Node | null = tree.rootNode.descendantForPosition({ row: line, column });
   while (node) {
     if (codeInStrings.has(node.type)) return true;

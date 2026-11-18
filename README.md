@@ -90,11 +90,16 @@ file, per agent and scope, is in [setup](docs/setup.md).
 | | Language | What you need | Also recognises |
 |:---:|---|---|---|
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg" alt="TypeScript" width="28"> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/javascript/javascript-original.svg" alt="JavaScript" width="28"> | TypeScript and JavaScript | nothing more | React components and hooks, NestJS routes and providers |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/astro/astro-original.svg" alt="Astro" width="28"> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/svelte/svelte-original.svg" alt="Svelte" width="28"> <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/vuejs/vuejs-original.svg" alt="Vue" width="28"> | Astro, Svelte and Vue components | nothing more | each file as a component (a page as a route), its frontmatter and scripts, and where it is used as a tag |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/python/python-original.svg" alt="Python" width="28"> | Python | nothing more | FastAPI routes |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/go/go-original.svg" alt="Go" width="28"> | Go | `gopls`, Go's language server | |
 | <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/dart/dart-original.svg" alt="Dart" width="28"> | Dart and Flutter | the Dart or Flutter SDK | Flutter widgets |
 
 A project can mix these languages: each file is read with its own language's parser and compiler.
+No compiler reads `.astro`, `.svelte` and `.vue` files for CSyk, so a use there is found through the
+file's imports: by a relative path, an alias of `src` (`$lib/`, `@/`, `~/`) or the name of a
+package of the same repository (a monorepo's `packages/*`, by its `package.json`). A use imported
+from anywhere else is listed as unconfirmed, and the answer does not say `complete`.
 TypeScript, JavaScript and Python work as soon as CSyk is installed: their compilers come with it.
 For Go and Dart, CSyk uses the compiler you install for those languages. If `csyk setup` does not
 find it, it offers to install it for you, or says how. Without it, CSyk still finds names and text

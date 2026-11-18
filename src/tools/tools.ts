@@ -8,6 +8,8 @@ import { rgPath } from '@vscode/ripgrep';
 import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import type { Position } from '../precision/lsp-client.ts';
+import { componentRefs, componentUses } from '../precision/components.ts';
+import { componentExtensions, componentOf, isComponentFile } from '../index/embedded.ts';
 import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
@@ -275,9 +277,10 @@ export async function refs(
   const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
   // Every use the compiler confirmed, listed, and no mention it could not
   // resolve: nothing to search again for.
-  const complete = precision === 'lsp' && !fitted.truncated && found.length <= limit && unconfirmed.length === 0;
+  const complete = (precision === 'lsp' || precision === 'imports') && !fitted.truncated && found.length <= limit && unconfirmed.length === 0;
   const listed = complete ? fitted.text.replace(header, `${header} · complete`) : fitted.text;
-  const unknown = unconfirmed.length > 0 ? `\nunconfirmed, the compiler cannot tell: ${unresolvedRow(unconfirmed, where)}` : '';
+  const why = precision === 'imports' ? 'imported from where CSyk cannot follow' : 'the compiler cannot tell';
+  const unknown = unconfirmed.length > 0 ? `\nunconfirmed, ${why}: ${unresolvedRow(unconfirmed, where)}` : '';
   const text = outside.total > 0 ? `${listed}${unknown}\noutside code: ${outside.shown.join(', ')}${more}` : `${listed}${unknown}`;
   const shownFiles = options.code
     ? new Set(rows.slice(0, fitted.shown).map((r) => r.slice(0, r.indexOf(':'))))
@@ -345,6 +348,7 @@ export async function grep(
     return stdout;
   };
   let stdout = '';
+  let asWritten = false;
   try {
     // A missing path is searched as no match, not as ripgrep's error.
     if (options.path && !existsSync(join(ws.root, options.path))) throw Object.assign(new Error(), { code: 1 });
@@ -355,6 +359,12 @@ export async function grep(
     // regex (`f(x`), which is then searched for as written.
     if (code === 2 && !options.literal) stdout = await search(true).catch(() => '');
     else if (code !== 1) throw error;
+    // Code written as it reads (`escapeText(label)`, `a[0].b`) matches nothing as a regex:
+    // searched as written then, unless a regex was asked for.
+    else if (options.literal === undefined && /[()[\]{}.*+?|^$\\]/.test(pattern)) {
+      stdout = await search(true).catch(() => '');
+      asWritten = stdout.trim().length > 0;
+    }
   }
   // Files hit while the index still fills are indexed first, for their symbols.
   await ws.indexNow([...new Set(stdout.split('\n').map((entry) => /^(?:\.\/)?(.+?):\d+:/.exec(entry)?.[1] ?? ''))].slice(0, 200));
@@ -386,10 +396,10 @@ export async function grep(
   // place with its lines, else every file with its count. A rung shows all
   // it covers or gives way to the next: a list cut short hid the files past
   // it, and the agent grepped again for them.
-  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · complete`, ...hits.map(hitRow)]);
+  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text${asWritten ? ', as written: no regex match' : ''} · complete`, ...hits.map(hitRow)]);
   if (estimateTokens(rows.join('\n')) <= listBudget) return withSource(ws, hits, rows, session, options.brief);
   const lines = [
-    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · lines per symbol · complete`,
+    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text${asWritten ? ', as written: no regex match' : ''} · lines per symbol · complete`,
     ...[...byFile].map(([file, fileHits]) => `${file}  ${linesPerPlace(fileHits)}`),
   ];
   if (estimateTokens(lines.join('\n')) <= listBudget) {
@@ -401,7 +411,7 @@ export async function grep(
   const files = [...byFile.entries()].sort(([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b));
   const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
   const fitted = fit(
-    `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
+    `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text${asWritten ? ', as written: no regex match' : ''} · files with the most hits first`,
     files.map(([file, fileHits]) => {
       const names = homes(fileHits);
       return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
@@ -493,6 +503,43 @@ export async function references(
   ws: Workspace,
   symbol: CodeSymbol,
   options: Omit<ReferenceOptions, 'overloads'> = {},
+): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
+  if (isComponentFile(symbol.file)) return componentReferences(ws, symbol, options);
+  const answer = await compilerReferences(ws, symbol, options);
+  if (symbol.lang !== 'ts' && symbol.lang !== 'js') return answer;
+  // Astro, Svelte and Vue files, which the compiler does not read: uses through their imports.
+  const declares = (file: string, name: string) => ws.index.symbolsIn(file).some((s) => s.name === name && !s.parent);
+  const extra = await componentUses(ws.root, symbol, options.where, declares);
+  if (extra.found.length === 0 && extra.unconfirmed.length === 0) return answer;
+  const unconfirmed = [...(answer.unconfirmed ?? []), ...extra.unconfirmed];
+  return { ...answer, found: [...answer.found, ...extra.found], ...(unconfirmed.length ? { unconfirmed } : {}) };
+}
+
+/**
+ * References to what a component file declares: to its component, through the imports of its
+ * path ([componentRefs]); to the rest, mentions in the file itself, where its frontmatter's and
+ * script's names live, and for an export in code elsewhere too.
+ */
+async function componentReferences(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  options: Omit<ReferenceOptions, 'overloads'>,
+): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
+  if (symbol.line === 1 && symbol.name === componentOf(symbol.file).name && symbol.range[0] === 1) {
+    const { found, unconfirmed } = await componentRefs(ws.root, symbol, options.where);
+    return { found, precision: 'imports', ...(unconfirmed.length ? { unconfirmed } : {}) };
+  }
+  const extensions = new Set([...(serverFor('x.ts')?.extensions ?? []), ...componentExtensions]);
+  const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(
+    (p) => !(p.file === symbol.file && p.line === symbol.line - 1) && (symbol.exported || p.file === symbol.file),
+  );
+  return { found, precision: 'text (no compiler reads this file)' };
+}
+
+async function compilerReferences(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  options: Omit<ReferenceOptions, 'overloads'>,
 ): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
   const service = await ws.precision(symbol.file);
   const overloads = ws.index
