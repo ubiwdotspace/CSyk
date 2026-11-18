@@ -12,11 +12,11 @@ import { answerAgain, callCases, impactCases, union, type CallCase } from './ora
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart|astro|svelte] [--count 30] [--seed 1] [--force] [--answer-again]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart|astro|svelte|vue] [--count 30] [--seed 1] [--force] [--answer-again]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
 language's own server (tsc --lsp, pyright, gopls, the Dart analysis server; for
-Astro and Svelte their framework's, from eval/tools, and C cases about components),
+Astro, Svelte and Vue their framework's, from eval/tools, and C cases about components),
 to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
 Review the cases before trusting them. --answer-again keeps the C, D or G
 questions of the existing file and answers them again, as after a fix to
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
 
   const count = Number(values.count);
   // Astro and Svelte: the uses no TypeScript compiler sees, in component files.
-  const components = values.lang === 'astro' || values.lang === 'svelte';
+  const components = values.lang === 'astro' || values.lang === 'svelte' || values.lang === 'vue';
   const random = seeded(Number(values.seed));
   if (!oracleServers[values.lang]) throw new Error(`--lang must be one of ${Object.keys(oracleServers).join(', ')}`);
   const oracle = await LspOracle.start(corpus.root, values.lang);
@@ -233,6 +233,9 @@ async function stringCases(oracle: LspOracle, count: number, random: () => numbe
   return cases;
 }
 
+// The component files each framework's server reads; it reads no other kind.
+const own: Record<string, string> = { 'astro-ls': '.astro', svelteserver: '.svelte', 'vue-language-server': '.vue' };
+
 function render(corpus: Corpus, server: string, category: string, seed: number, cases: Generated[]): string {
   const at = corpus.commit ?? 'its working tree';
   const lines = [
@@ -240,8 +243,8 @@ function render(corpus: Corpus, server: string, category: string, seed: number, 
     `# Answers come from the ${server} language server. Review before trusting:`,
     "# drop cases no person would ask, and rewrite queries that read like a machine's.",
     // Component files the framework's server does not read (MDX, another framework's): not scored.
-    ...(server === 'astro-ls' || server === 'svelteserver'
-      ? [`unscored: [${[...componentExtensions].filter((e) => e !== (server === 'astro-ls' ? '.astro' : '.svelte')).map((e) => JSON.stringify(e)).join(', ')}]`]
+    ...(own[server]
+      ? [`unscored: [${[...componentExtensions].filter((e) => e !== own[server]).map((e) => JSON.stringify(e)).join(', ')}]`]
       : []),
     'cases:',
   ];

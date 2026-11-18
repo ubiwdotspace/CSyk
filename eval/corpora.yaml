@@ -108,3 +108,9 @@ svelte-realworld:
   git: https://github.com/sveltejs/realworld.git
   commit: df796708040f5200ec572b28ab7f88ecee5794dd
   path: eval/corpora/svelte-realworld
+
+# Vue, small: the Vitesse starter, whose components are auto-imported, declared in a generated components.d.ts (MIT).
+vitesse:
+  git: https://github.com/antfu-collective/vitesse.git
+  commit: a8785264f83c2ebe1b3cf689296775a4949957c8
+  path: eval/corpora/vitesse

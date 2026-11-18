@@ -144,3 +144,35 @@ export function ambientModules(root: string): Map<string, string> {
   ambientCache.set(root, { at: Date.now(), modules });
   return modules;
 }
+
+/** A name a `.d.ts` makes global, with the repo file and export it stands for, and where it says so. */
+export type DeclaredGlobal = { name: string; target: string; exported: string; file: string; line: number };
+
+const globalCache = new Map<string, { at: number; globals: DeclaredGlobal[] }>();
+
+/**
+ * The names the repo's `.d.ts` files make usable with no import, each with the file it comes
+ * from: Vue's global components (`TheFooter: typeof import('./components/TheFooter.vue')['default']`
+ * in unplugin-vue-components' or Nuxt's components.d.ts) and auto-imported functions
+ * (`const isDark: typeof import('./composables/dark').isDark` in auto-imports.d.ts, or `['isDark']`). Only
+ * paths inside the repo. Read again after 30 seconds.
+ */
+export function declaredGlobals(root: string): DeclaredGlobal[] {
+  const kept = globalCache.get(root);
+  if (kept && Date.now() - kept.at < 30_000) return kept.globals;
+  const globals: DeclaredGlobal[] = [];
+  let found = '';
+  try {
+    found = execFileSync(rgPath, ['--vimgrep', '--path-separator', '/', '-g', '*.d.ts', '-g', '!**/node_modules/**', '-e', String.raw`typeof import\(['"]\.{1,2}/`, '.'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  } catch {
+    // None (rg exits 1).
+  }
+  for (const hit of found.split('\n')) {
+    const match = /^(?:\.\/)?(.+?):(\d+):\d+:\s*(?:(?:export\s+)?(?:const|let|var)\s+)?['"]?([A-Za-z_$][\w$]*)['"]?\s*:\s*typeof\s+import\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)\s*(?:\[\s*['"]([\w$]+)['"]\s*\]|\.([\w$]+))/.exec(hit);
+    const exported = match?.[5] ?? match?.[6];
+    if (!match?.[1] || !match[3] || !match[4] || !exported) continue;
+    globals.push({ name: match[3], target: posix.normalize(posix.join(posix.dirname(match[1]), match[4])), exported, file: match[1], line: Number(match[2]) - 1 });
+  }
+  globalCache.set(root, { at: Date.now(), globals });
+  return globals;
+}

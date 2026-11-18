@@ -48,6 +48,11 @@ const files: Record<string, string> = {
     '  <base-button-group />',
     '</template>',
   ].join('\n'),
+  'apps/vue/src/components.d.ts': ["declare module 'vue' {", '  export interface GlobalComponents {', "    TheFooter: typeof import('./ui/TheFooter.vue')['default']", '  }', '}'].join('\n'),
+  'apps/vue/src/auto-imports.d.ts': ['declare global {', "  const isDark: typeof import('./lib/dark').isDark", '}', 'export {}'].join('\n'),
+  'apps/vue/src/lib/dark.ts': 'export const isDark = { value: false };\n',
+  'apps/vue/src/ui/TheFooter.vue': '<template><footer>{{ isDark.value }}</footer></template>\n',
+  'apps/vue/src/Layout.vue': '<template>\n  <TheFooter />\n  <the-footer />\n</template>\n',
   'apps/kit/package.json': JSON.stringify({ name: 'kit' }),
   'apps/kit/src/lib/greet.ts': 'export function greet(name: string) {\n  return `hi ${name}`;\n}\n',
   'apps/kit/src/routes/+page.svelte': ['<script lang="ts">', "  import { greet } from '$lib/greet';", '</script>', '{#if true}<b>{greet("you")}</b>{/if}'].join('\n'),
@@ -105,6 +110,11 @@ describe('Astro, Svelte and Vue components', () => {
     expect(answer).toMatch(/^apps\/vue\/src\/ui\/BaseButton\.vue#BaseButton · 4 refs in 1 file · imports · complete/);
     expect(answer).toContain('apps/vue/src/App.vue  2·App, 5·App, 6·App');
     expect(await ask('refs', { target: 'exclaim' })).toContain('apps/vue/src/ui/BaseButton.vue  2·BaseButton, 4·BaseButton');
+  });
+
+  it('follows global components and auto-imported functions a .d.ts declares', async () => {
+    expect(await ask('refs', { target: 'apps/vue/src/ui/TheFooter.vue' })).toMatch(/· 2 refs in 1 file · imports · complete\napps\/vue\/src\/Layout\.vue  2·Layout, 3·Layout/);
+    expect(await ask('refs', { target: 'isDark' })).toMatch(/· 1 ref in 1 file · lsp · complete\napps\/vue\/src\/ui\/TheFooter\.vue  1·TheFooter/);
   });
 
   it('searches code written as it reads as written, when no regex matches it', async () => {

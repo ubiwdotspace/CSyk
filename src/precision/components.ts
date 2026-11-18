@@ -4,7 +4,7 @@ import { basename, join, posix } from 'node:path';
 import { componentExtensions, isComponentFile, kebabCase, maskComponent } from '../index/embedded.ts';
 import { codeExtensions } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
-import { ambientModules, resolvePackageSpec } from '../workspace/packages.ts';
+import { ambientModules, declaredGlobals, resolvePackageSpec } from '../workspace/packages.ts';
 import { byPaths, pathsFor } from '../workspace/tsconfig.ts';
 import type { Position } from './lsp-client.ts';
 import { inCode, isDefaultExport, textMentions, type Mention, type ReferenceOptions } from './lsp-service.ts';
@@ -138,6 +138,8 @@ export async function componentUses(root: string, symbol: CodeSymbol, where?: Re
   files.delete(symbol.file);
   const found: Position[] = [];
   const unconfirmed: Position[] = [];
+  // Made global by a .d.ts (auto-imports.d.ts): a use needs no import.
+  const global = declaredGlobals(root).some((g) => g.name === symbol.name && g.exported === symbol.name && sameModule(g.target, symbol.file));
   for (const file of files) {
     const text = await readFile(join(root, file), 'utf8');
     const locals = new Set<string>();
@@ -170,6 +172,10 @@ export async function componentUses(root: string, symbol: CodeSymbol, where?: Re
     // Imported from a package or an alias this cannot follow, or not imported but named in code:
     // perhaps a use, perhaps another declaration of the name.
     if (locals.has(symbol.name) || imported === 'elsewhere' || declares?.(file, symbol.name)) continue;
+    if (global && imported === false && locals.size === 0) {
+      found.push(...(await inCode(root, mentionsIn(file, text, symbol.name), where)));
+      continue;
+    }
     if (imported === 'unknown' || !locals.size) {
       const others = mentionsIn(file, text, symbol.name).filter((m) => !uses.some((u) => key(u) === key(m)));
       unconfirmed.push(...(await inCode(root, others, where)));
@@ -235,6 +241,26 @@ export async function componentRefs(root: string, symbol: CodeSymbol, where?: Re
       const leads = await Promise.all(named.map((i) => leadsTo(root, user, i.spec, barrel.name, barrel.file)));
       if (leads.every((lead) => lead === 'other')) continue;
       (leads.includes('ours') ? found : unconfirmed).push(...(await inCode(root, mentions, where)));
+    }
+  }
+  // Global components (unplugin-vue-components', Nuxt's components.d.ts): used with no import.
+  // Its line in the .d.ts is no use, as no mention in a .d.ts is (textMentions).
+  for (const g of declaredGlobals(root).filter((g) => g.exported === 'default' && sameModule(g.target, file))) {
+    const tags = kebabCase(g.name) === g.name.toLowerCase() ? [] : (await textMentions(root, kebabCase(g.name), new Set(['.vue']))).filter(
+      (m) => /<\/?$/.test(m.text.slice(0, m.character)) && !m.text.slice(m.character + kebabCase(g.name).length).startsWith('-'),
+    );
+    const byFile = new Map<string, Mention[]>();
+    for (const m of [...(await textMentions(root, g.name, componentExtensions)), ...tags]) {
+      if (m.file !== file) byFile.set(m.file, [...(byFile.get(m.file) ?? []), m]);
+    }
+    for (const [user, mentions] of byFile) {
+      const text = await readFile(join(root, user), 'utf8');
+      // A file that imports a name of its own so is not using the global one.
+      const own = importsIn(user, text).some((i) => {
+        const c = parseClause(i.clause);
+        return c.default === g.name || c.named.some(([, local]) => local === g.name);
+      });
+      if (!own) found.push(...(await inCode(root, mentions, where)));
     }
   }
   const have = new Set(found.map(key));
