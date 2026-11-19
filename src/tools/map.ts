@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import { importsIn, parseClause, resolveSpec } from '../precision/components.ts';
 import { isTestFile } from '../index/symbols.ts';
+import { distance } from '../precision/lsp-service.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import type { ToolResult } from './tools.ts';
@@ -42,6 +43,21 @@ export async function repoMap(ws: Workspace, folder: string, budget = defaultBud
     { budget, narrow: 'read a folder for its own map', compact: code },
   );
   return { text: fitted.text, locations: code.slice(0, fitted.shown).map((file) => ({ file, line: 1 })) };
+}
+
+/**
+ * The files that import any of [files], nearest the imported first: what a change to them may
+ * break. Go and Dart count a package's files as importing each of its importers' targets.
+ */
+export async function importersOf(ws: Workspace, files: readonly string[]): Promise<string[]> {
+  const graph = await graphOf(ws);
+  const wanted = new Set(files);
+  const found = new Map<string, number>();
+  for (const [from, tos] of graph.edges) {
+    if (wanted.has(from)) continue;
+    for (const to of tos) if (wanted.has(to)) found.set(from, Math.min(found.get(from) ?? Infinity, distance(to, from)));
+  }
+  return [...found].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0])).map(([f]) => f);
 }
 
 // The import graph, built once and again when the index has other files or after a minute.

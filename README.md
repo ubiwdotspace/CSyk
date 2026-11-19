@@ -195,7 +195,7 @@ Serena and Graphify take longer.
 
 ## Tools
 
-Six tools, 595 tokens of descriptions in all. Every answer stays under 2,000 tokens (twice that
+Six tools, 598 tokens of descriptions in all. Every answer stays under 2,000 tokens (twice that
 for several symbols read in one call) and says what it left out.
 
 | Tool | Question |
@@ -205,7 +205,7 @@ for several symbols read in one call) and says what it left out.
 | `read` | Show me this symbol, file or line range; for a folder or `.`, a map of its files by how much the rest imports them |
 | `refs` | Who uses this symbol or component? With `unused`, which exports of a folder nothing else uses |
 | `calls` | Who calls this, or what does it call? |
-| `impact` | What does my change touch, up to the tests? |
+| `impact` | What does my change break (new compiler errors) and touch, up to the tests? |
 
 How each answer is built, and what CSyk cannot do yet, is in [how it works](docs/how-it-works.md).
 

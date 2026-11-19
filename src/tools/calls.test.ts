@@ -219,6 +219,32 @@ describe('calls of an override whose base is imported under another name', () =>
 });
 
 describe('impact', () => {
+  it('names the errors an edit makes in the files that import it, not the ones there before', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "strict": true }, "include": ["*.ts"] }');
+    writeFileSync(join(dir, 'price.ts'), 'export function price(n: number): number {\n  return n * 2;\n}\n');
+    // An error from before the edit, which impact must leave out.
+    writeFileSync(join(dir, 'cart.ts'), "import { price } from './price';\n\nconst old: string = 1;\n\nexport function cart() {\n  return price(3);\n}\n");
+    // A use through a file that re-exports it.
+    writeFileSync(join(dir, 'index.ts'), "export * from './price';\n");
+    writeFileSync(join(dir, 'shop.ts'), "import { price } from './index';\n\nexport const shop = price(1);\n");
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    git('init', '-q');
+    git('add', '.');
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
+    writeFileSync(join(dir, 'price.ts'), 'export function price(n: number, tax: number): number {\n  return n * 2 + tax;\n}\n');
+    const shop = await Workspace.open(dir);
+    try {
+      const text = (await impact(shop)).text;
+      expect(text).toContain('2 new errors in 4 files compiled');
+      expect(text).toMatch(/^error {2}shop\.ts:3 {2}shop\.ts#shop {2}Expected 2 arguments/m);
+      expect(text).toMatch(/^error {2}cart\.ts:6 {2}cart\.ts#cart {2}Expected 2 arguments, but got 1\. \(2554\)$/m);
+      expect(text).not.toContain('cart.ts:3');
+    } finally {
+      await shop.close();
+    }
+  }, 60_000);
+
   it('lists a caller reached through two changed callees once, with the lines of both', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'csyk-impact-'));
     writeFileSync(join(dir, 'tsconfig.json'), '{ "include": ["*.ts"] }');
@@ -296,7 +322,7 @@ describe('impact', () => {
     writeFileSync(join(root, 'total.ts'), 'export function total(xs: number[]) {\n  return xs.reduce((a, b) => a + b, 1);\n}\n');
     const result = await impact(ws);
     expect(result.text.split('\n')).toEqual([
-      'impact · since HEAD · 1 symbol changed in 1 file · 1 test file · lsp · complete',
+      'impact · since HEAD · 1 symbol changed in 1 file · 1 test file · no new errors in 2 files compiled · lsp · complete',
       'changed  total.ts#total  1',
       'caller 1  checkout.ts#checkout  4  ← total',
       'caller 2  checkout.test.ts (top level)  3  ← checkout',

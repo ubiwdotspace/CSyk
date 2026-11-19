@@ -43,7 +43,8 @@ export const note = `## Code search (CSyk)
   or callees → \`calls\`.
 ${reading.claude}- Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
   or path it mentions, called in parallel. Each extra turn re-reads your whole context.
-- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
+- After editing, \`impact\` lists the compiler errors the edit made (no need to run tsc, go build
+  or dart analyze), the changed symbols, their callers and the tests to run.`;
 
 /**
  * The skill, as .claude/skills/csyk/SKILL.md: a reference, loaded only when
@@ -72,7 +73,7 @@ your whole context. Make independent calls in parallel, in one turn.
 | ids, names or paths | \`read a, b\` | exact source of each symbol; a file's or folder's symbols |
 | a symbol, before a rename or signature change | \`refs <id>\` | every use, per file, with its function |
 | a symbol, before changing what it does | \`calls <id>\` (\`direction\` in or out, \`depth\` 1–3) | its callers, or what it calls |
-| edits in the working tree | \`impact\` (\`since\` a revision) | changed symbols, callers two levels up, test files |
+| edits in the working tree | \`impact\` (\`since\` a revision) | new compiler errors, changed symbols, callers two levels up, test files |
 
 Ids look like \`src/cart/total.ts#Cart.total\`; pass them as they are. \`refs\` lists direct
 uses, calls included; for a method, \`calls\` also finds calls through its interface or base class.

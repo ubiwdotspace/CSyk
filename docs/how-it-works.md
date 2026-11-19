@@ -123,6 +123,19 @@ calls are the calls in its body, each followed to its definition. `impact` reads
 the symbols the change touches and follows their callers two levels up, stopping at tests, through
 at most 200 callers a level, code before tests and nearest first.
 
+**What an edit breaks.** `impact` first lists the compiler errors the change made, from the
+servers already running (tsc, pyright, gopls, the Dart server), so an agent need not run the
+compiler to find out. It asks the changed files and the files that use them: their importers,
+through files that re-export them (an `index.ts`, a Dart library, an `__init__.py`), and a Go
+package's other files, those that name what changed first, at most 30, within 15 seconds. Errors
+that were there before the edit are left out: each changed file's text at the revision is given to
+its server in memory (the disk is not touched), the files with errors are asked again, and only
+errors that run lacks are new, matched by code and message, not line. Three a file are shown, the
+rest counted. Checked by hand against the compilers themselves, a signature or name changed in one
+file: zustand 28 of 28 new errors (161 older ones left out), chi 15 of 15 call sites, provider 68
+of 68, fastapi-template 13 of 13 (102 older left out), in 0.7 to 6 seconds. Component files are
+not compiled, and a deleted file's importers are not found.
+
 **Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
 mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
 two levels up and may wait for a language server still loading a large project; when it stops

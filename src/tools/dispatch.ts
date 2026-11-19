@@ -65,7 +65,7 @@ export const toolSchemas = {
     },
   },
   impact: {
-    description: 'Changed symbols since a revision, their callers, tests.',
+    description: 'New compiler errors since a revision, changed symbols, their callers, tests.',
     input: {
       since: z.string().optional().describe('Git revision, default HEAD'),
       depth: z.number().optional().describe('Caller levels, 1-3, default 2'),
@@ -120,7 +120,7 @@ export const listedTools = {
   read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading); several, comma-separated.", args: ['target'] },
   refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named; for a component file (.astro, .svelte, .vue), its uses.', args: ['target', 'unused'] },
   calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
-  impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
+  impact: { description: 'New compiler errors, changed symbols, callers, tests since a revision.', args: ['since'] },
 } as const;
 
 /** A listed tool's description and its listed arguments' schemas. */
