@@ -268,9 +268,12 @@ export async function runTool(
       const file = target.includes('#') ? undefined : projectFile(ws, target);
       // A component file (Badge.astro) is its component: the places that use it.
       const component = file && isComponentFile(file) ? ws.index.get(`${file}#${componentOf(file).name}`) : undefined;
-      if (component) return refs(ws, component.id, given(options));
-      if (file) return refsToFile(ws, file, options.budget);
-      return refs(ws, target, given(options));
+      if (file && !component) return refsToFile(ws, file, options.budget);
+      const answer = await refs(ws, component?.id ?? target, given(options));
+      // Agents read on to confirm a complete answer (Gemini, 9 reads after one on starlight):
+      // said once a session, where it applies.
+      const done = / · complete(\n|$)/.test(answer.text.split('\n')[0] ?? '') ? session.hint('complete', 'hint: complete means every use is listed above; no grep or read is needed to confirm it') : [];
+      return done.length ? { ...answer, text: `${answer.text}\n${done[0]}` } : answer;
     }
     case 'calls': {
       const { target, ...options } = z.object(toolSchemas.calls.input).parse(args);

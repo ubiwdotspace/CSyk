@@ -74,7 +74,7 @@ describe('files that are not code', () => {
   });
 
   it('adds the mentions of a symbol outside code to its references', async () => {
-    expect(await ask('refs', { target: 'greet' })).toMatch(/outside code: config\.json:1, docs\/spec\.md:4$/);
+    expect(await ask('refs', { target: 'greet' })).toMatch(/outside code: config\.json:1, docs\/spec\.md:4(\n|$)/);
   }, 30_000);
 
   it('finds a symbol declared in generated code that git ignores', async () => {
