@@ -26,3 +26,13 @@ describe('read of a folder: its map', () => {
     expect((await runTool(ws, 'read', { target: 'src/cart/' }, new Session())).text).toMatch(/^src\/cart\/ · \d+ files/);
   });
 });
+
+describe('refs <folder> unused', () => {
+  it('lists exports no other file names, and those the compiler finds no use of', async () => {
+    const text = (await runTool(ws, 'refs', { target: 'src', unused: true }, new Session())).text;
+    expect(text).toMatch(/^src · \d+ of \d+ exported symbols unused · candidates/);
+    expect(text).toContain('src/cart/receipt.ts:5  function receiptTotal  no other file names it');
+    expect(text).toContain('src/api/client.ts:6  function get  named elsewhere, used nowhere else (lsp)');
+    expect(text).not.toContain('calculateTotal');
+  }, 60_000);
+});

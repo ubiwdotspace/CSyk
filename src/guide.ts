@@ -27,7 +27,7 @@ const reading: Record<'claude' | 'other', string> = {
  * calls with the wrong arguments before its first answer.
  */
 const argumentsLine = `- Arguments: \`grep(pattern, path?, glob?, literal?)\`, \`find(query, kind?, path?)\`, \`read(target)\`,
-  \`refs(target)\`, \`calls(target, direction?: in|out, depth?)\`, \`impact(since?)\`.`;
+  \`refs(target, unused?)\`, \`calls(target, direction?: in|out, depth?)\`, \`impact(since?)\`.`;
 
 /** The note for [agent]'s always-read instructions; kept short, as it costs tokens on every turn. */
 export const noteFor = (agent: string) =>
