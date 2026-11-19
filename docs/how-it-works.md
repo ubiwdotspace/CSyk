@@ -210,6 +210,27 @@ generated `.d.ts` files are not in git: a component under `components/` by its p
 module that cannot be followed (a package outside the repository, an alias CSyk does not know) is
 listed as unconfirmed.
 
+## Maps, meaning and unused code
+
+Three answers borrow from tools built for other jobs, each kept light and given only when asked.
+
+- **A map** (`read .`, `read <folder>`), as Aider's repo map: the folder's files ranked by PageRank
+  over the file import graph, so a file the much-imported files import ranks high, each with how
+  many files import it and the names they import from it. Imports are read for TS and JS (as for
+  components), Python (`from … import`, from any folder above the file, submodules apart), Go
+  (packages, by every `go.mod`) and Dart (`package:` imports, by every `pubspec.yaml`).
+- **Meaning** (`find` given a question of two words or more), without embeddings: BM25 over the
+  stemmed words of each symbol's name, its file's path, its signature, the comment above it or its
+  docstring, and the names its body uses; a small table of code verbs that mean the same (make,
+  create, build) at half weight; what code does before the types it uses. It is fused with the
+  name search by reciprocal rank fusion, the names at half weight. Built on the first such
+  question, kept until the index changes.
+- **Unused exports** (`refs <folder>` with `unused`), as knip or Go's deadcode: a name no other
+  file mentions is unused; one named elsewhere is asked of the compiler, within 20 seconds, and
+  unused when none of its references is outside its own file. Index and main files, pages and
+  routes and what a package.json exports are entry points and stay out; the answer calls the rest
+  candidates, since a dynamic import, a string or a framework may still reach them.
+
 ## Limitations
 
 - `complete` means every use or caller CSyk reaches through the workspace's own code and types.

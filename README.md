@@ -195,15 +195,15 @@ Serena and Graphify take longer.
 
 ## Tools
 
-Six tools, 539 tokens of descriptions in all. Every answer stays under 2,000 tokens (twice that
+Six tools, 595 tokens of descriptions in all. Every answer stays under 2,000 tokens (twice that
 for several symbols read in one call) and says what it left out.
 
 | Tool | Question |
 |---|---|
-| `find` | Where is a symbol, by name or part of a name? |
+| `find` | Where is a symbol, by name or part of a name? Or, asked in words (where are tokens refreshed), by meaning |
 | `grep` | Where does this text appear, and in which function? |
-| `read` | Show me this symbol, file, folder or line range. |
-| `refs` | Who uses this symbol? |
+| `read` | Show me this symbol, file or line range; for a folder or `.`, a map of its files by how much the rest imports them |
+| `refs` | Who uses this symbol or component? With `unused`, which exports of a folder nothing else uses |
 | `calls` | Who calls this, or what does it call? |
 | `impact` | What does my change touch, up to the tests? |
 
