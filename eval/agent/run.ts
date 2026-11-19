@@ -73,6 +73,12 @@ async function main(): Promise<void> {
       console.log(`${task.id} timed out after ${Math.round(cost.ms / 1000)} s · not scored; the next run with this --run name tries it again`);
       continue;
     }
+    // No model turn and no tool call: the agent never ran (agy's "Eligibility check failed: 500",
+    // a sign-in that expired), which says nothing of the setup.
+    if (cost.tokens === 0 && cost.calls === 0) {
+      console.log(`${task.id} the agent did not run (no model reply) · not scored; the next run with this --run name tries it again`);
+      continue;
+    }
     const missing = task.expect.filter((item) => !answer.includes(item));
     const run: Run = { id: task.id, pass: missing.length === 0, named: task.expect.length - missing.length, missing, answer, ...cost };
     runs.push(run);
