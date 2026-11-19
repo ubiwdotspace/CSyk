@@ -2,7 +2,8 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, symlinkSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { note } from '../../src/guide.ts';
 import { watchResources } from '../harness/resources.ts';
@@ -19,7 +20,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 export const antigravitySetups = ['b0', 'csyk-lean', 'csyk-setup'] as const;
 
 async function homeFor(setup: string, cwd: string): Promise<string> {
-  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${setup}`);
+  // One home per setup and project: runs side by side on two projects each rewrite their own
+  // (a shared one was wiped under a running session, which then hung).
+  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${setup}-${basename(cwd)}-${createHash('sha1').update(cwd).digest('hex').slice(0, 8)}`);
   const config = join(home, '.gemini/config');
   await mkdir(config, { recursive: true });
   // agy keeps its sign-in in the login keychain, which macOS finds under HOME: only that is
