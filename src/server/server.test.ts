@@ -55,7 +55,7 @@ describe('the MCP server', () => {
     expect(file).toContain("throw new Error('Session expired");
     expect(await call('read', { target: 'src/cart/total.ts:calculateTotal' })).toContain('src/cart/total.ts#calculateTotal');
     expect(await call('read', { target: 'src/auth/token-store.ts#save' })).toContain('save(');
-    expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  calculateTotal');
+    expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  ← 3  calculateTotal, calculateTax');
   });
 
   it('answers references from the compiler', async () => {

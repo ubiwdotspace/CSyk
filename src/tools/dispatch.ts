@@ -10,6 +10,7 @@ import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
 import { componentOf, isComponentFile } from '../index/embedded.ts';
 import { projectFile, readOther, refsToFile } from './other-files.ts';
+import { repoMap } from './map.ts';
 import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
@@ -140,7 +141,10 @@ function readOne(
   session: Session,
 ): Promise<ToolResult> {
   const path = target.replace(/^\.\//, '').replace(/\/$/, '');
-  const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
+  // The repository or a folder: its map, files by how much the rest imports them.
+  if (path === '.' || path === '') return repoMap(ws, '', options.budget);
+  if (!target.includes('#') && !ws.index.has(path) && ws.index.files.some((f) => f.startsWith(`${path}/`))) return repoMap(ws, path, options.budget);
+  const isPath = !target.includes('#') && ws.index.has(path);
   if (isPath) return readPath(ws, path, options.budget);
   const other = target.includes('#') ? undefined : projectFile(ws, path);
   if (other) return readOther(ws, other, options.budget);
