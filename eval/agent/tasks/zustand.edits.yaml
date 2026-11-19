@@ -1,0 +1,11 @@
+# Edit tasks (npm run agent -- --tasks edits): each changes code in a worktree of the corpus and
+# passes when the compiler finds no more errors than before and the diff names every expected item.
+tasks:
+  - id: E01
+    check: tsc
+    prompt: Rename the middleware subscribeWithSelector (src/middleware/subscribeWithSelector.ts) to withSelectorSubscription, and update every place that uses it.
+    expect: [withSelectorSubscription]
+  - id: E02
+    check: tsc
+    prompt: Rename createJSONStorage in src/middleware/persist.ts to createJsonStorage and update all its uses.
+    expect: [createJsonStorage]

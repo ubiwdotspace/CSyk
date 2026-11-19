@@ -1,0 +1,10 @@
+# Edit tasks (npm run agent -- --tasks edits): see zustand.edits.yaml.
+tasks:
+  - id: E01
+    check: pyright
+    prompt: Add a required keyword-only parameter `active: bool` to get_user_by_email in backend/app/crud.py that, when true, only returns active users; update every caller to pass active=True.
+    expect: ['active: bool', 'active=True']
+  - id: E02
+    check: pyright
+    prompt: Rename authenticate in backend/app/crud.py to authenticate_user and update its callers.
+    expect: [authenticate_user]

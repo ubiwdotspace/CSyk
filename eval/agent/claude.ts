@@ -42,6 +42,8 @@ export type ClaudeRun = {
   tokens: number;
   /** Tokens of what the tools returned (o200k_base), the part a search tool controls. */
   toolTokens: number;
+  /** The shell commands the agent ran, as it gave them (agy's run_command), for edit tasks. */
+  commands?: string[];
   /** Calls per tool, such as Read, Grep or mcp__csyk__find. */
   byTool: Record<string, number>;
   /** Tool calls that came back as errors, a hook's denial included: each costs a turn. */

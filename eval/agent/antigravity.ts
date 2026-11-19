@@ -119,6 +119,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
   let errors = 0;
   let peakContext = 0;
   const byTool: Record<string, number> = {};
+  const commands: string[] = [];
   const total: Required<Usage> = { input_tokens: 0, output_tokens: 0, thinking_tokens: 0, cache_read_tokens: 0 };
   let answer = '';
   for (const line of lines) {
@@ -147,6 +148,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
       const message = typeof error === 'object' && error ? String((error as { message?: unknown }).message ?? '') : String(error ?? '');
       const name = step.state === 'DONE' ? tool : message.includes('pre-tool hook') ? `denied:${tool}` : `failed:${tool}`;
       byTool[name] = (byTool[name] ?? 0) + 1;
+      if (tool === 'run_command') commands.push(String(params.CommandLine ?? params.commandLine ?? params.command ?? JSON.stringify(params)).slice(0, 300));
       toolTokens += countTokens(step.tool_info?.output ?? message);
       if (error) errors++;
     }
@@ -157,6 +159,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     // Everything the model read and wrote, the cache included, as for the other agents.
     tokens: total.input_tokens + total.cache_read_tokens + total.output_tokens + total.thinking_tokens,
     toolTokens,
+    commands,
     byTool,
     errors,
     peakContext,
