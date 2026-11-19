@@ -24,7 +24,11 @@ async function homeFor(setup: string, cwd: string): Promise<string> {
   // (a shared one was wiped under a running session, which then hung).
   // Named by a hash, not the setup: a session that looks around its HOME must not learn which
   // setup it is, nor find another's (edit1: one read a concurrent session's transcript).
-  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${createHash('sha1').update(`${setup}\0${cwd}`).digest('hex').slice(0, 12)}`);
+  // CSYK_AGY_HOME_<SETUP> (CSYK_AGY_HOME_CSYK_SETUP) names a home to reuse: since 2026-11-19 agy
+  // asks a new home to sign in again, while one that has run before keeps working. Reused one
+  // session at a time only, as its brain folder is wiped after each.
+  const kept = process.env[`CSYK_AGY_HOME_${setup.toUpperCase().replace(/-/g, '_')}`];
+  const home = kept ?? join(homedir(), '.cache/csyk-bench-home', `agy-${createHash('sha1').update(`${setup}\0${cwd}`).digest('hex').slice(0, 12)}`);
   const config = join(home, '.gemini/config');
   await mkdir(config, { recursive: true });
   // agy keeps its sign-in in the login keychain, which macOS finds under HOME: only that is
@@ -164,6 +168,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     tokens: total.input_tokens + total.cache_read_tokens + total.output_tokens + total.thinking_tokens,
     toolTokens,
     commands,
+    home,
     byTool,
     errors,
     peakContext,

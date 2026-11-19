@@ -44,6 +44,8 @@ export type ClaudeRun = {
   toolTokens: number;
   /** The shell commands the agent ran, as it gave them (agy's run_command), for edit tasks. */
   commands?: string[];
+  /** The HOME the agent ran with (agy keeps its plans there, which it may read back). */
+  home?: string;
   /** Calls per tool, such as Read, Grep or mcp__csyk__find. */
   byTool: Record<string, number>;
   /** Tool calls that came back as errors, a hook's denial included: each costs a turn. */
