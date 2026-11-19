@@ -102,6 +102,27 @@ nuxt-dashboard `nuxi prepare`, so the servers resolve packages and generated typ
 `npm run generate -- --corpus <name> --category C --lang <astro|svelte|vue>` and `npm run eval
 -- --adapter <csyk|b0> --corpus <name>`.
 
+### Gemini, asked who uses a component
+
+Who-uses-it tasks built from those cases (`npm run agent:tasks`, then `npm run agent`): Gemini
+(`gemini-3.8-flash-medium`) on the Antigravity command line, agy alone (`b0`) against agy as
+`csyk setup` sets it up, on CSyk `cdba0d0`. A task passes when the answer names every file that
+uses it. One run each; agy alone ran on another day than CSyk for astro-paper (2026-11-18),
+starlight (2026-11-18 and 19) and svelte-realworld (2026-11-18), on the same day for the other two.
+
+| Project | Tasks | Right, agy / with CSyk | Tokens mean, agy → with CSyk | Calls mean | Fewer tokens with CSyk |
+|---|---:|---|---|---|---|
+| astro-paper | 10 | 10 / 10 | 67k → **44k (−34.8%)** | 5.1 → 3.5 | 9 of 10 |
+| starlight | 10 | 10 / 10 | 234k → **111k (−52.6%)** | 12.1 → 8.0 | 9 of 10 |
+| svelte-realworld | 10 | 10 / 10 | 51k → **38k (−24.9%)** | 4.1 → 3.1 | 9 of 10 |
+| vitesse | 7 | 7 / 7 | 135k → **64k (−52.5%)** | 10.3 → 5.6 | 7 of 7 |
+| nuxt-dashboard | 10 | 10 / 10 | 100k → **42k (−57.9%)** | 7.9 → 3.4 | 10 of 10 |
+
+Both find every file; CSyk saves the reading. It saves most where components are used with no
+import (Vue's and Nuxt's auto-imports), which agy alone finds by opening files. The note's line
+that `refs` takes a component file by its path (`cdba0d0`) cut svelte-realworld's tokens from
+49k to 38k and starlight's from 181k to 111k, against CSyk without it.
+
 ## Agent sessions on real issues
 
 Answering single questions well is one thing; what matters in the end is whether an agent finds
