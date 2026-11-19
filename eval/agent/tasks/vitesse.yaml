@@ -1,0 +1,24 @@
+# Built by eval/agent/make-tasks.ts from the vitesse cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Which files use the component in `src/components/TheInput.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["src/pages/index.vue"]
+  - id: T02
+    prompt: "Which files use `isDark`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/App.vue"]
+  - id: T03
+    prompt: "Which files use `useUserStore`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/pages/hi/[name].vue", "src/pages/index.vue"]
+  - id: T04
+    prompt: "Which files use the component in `src/App.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["src/main.ts"]
+  - id: T05
+    prompt: "Which files use the component in `src/components/TheFooter.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["src/layouts/default.vue", "src/layouts/home.vue"]
+  - id: T06
+    prompt: "Which files use the component in `src/components/TheCounter.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["test/component.test.ts"]
+  - id: T07
+    prompt: "Which files use `availableLocales`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/components/TheFooter.vue"]

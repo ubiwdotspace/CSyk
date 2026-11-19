@@ -101,6 +101,13 @@ async function main(): Promise<void> {
       };
     }
     if (task.check) await remove(corpus.root, cwd);
+    // A session that read the harness's own folders (another session's transcript, its worktree)
+    // may have copied its answer: not scored.
+    const peeked = (cost.commands ?? []).find((c) => /csyk-bench-home|csyk-edits\//.test(c) && !c.includes(cwd));
+    if (peeked) {
+      console.log(`${task.id} looked into the harness (${peeked.slice(0, 80)}) · not scored; the next run with this --run name tries it again`);
+      continue;
+    }
     if (cost.timedOut) {
       console.log(`${task.id} timed out after ${Math.round(cost.ms / 1000)} s · not scored; the next run with this --run name tries it again`);
       continue;

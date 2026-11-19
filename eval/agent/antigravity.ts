@@ -2,7 +2,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, symlinkSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { note } from '../../src/guide.ts';
@@ -22,7 +22,9 @@ export const antigravitySetups = ['b0', 'csyk-lean', 'csyk-setup'] as const;
 async function homeFor(setup: string, cwd: string): Promise<string> {
   // One home per setup and project: runs side by side on two projects each rewrite their own
   // (a shared one was wiped under a running session, which then hung).
-  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${setup}-${basename(cwd)}-${createHash('sha1').update(cwd).digest('hex').slice(0, 8)}`);
+  // Named by a hash, not the setup: a session that looks around its HOME must not learn which
+  // setup it is, nor find another's (edit1: one read a concurrent session's transcript).
+  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${createHash('sha1').update(`${setup}\0${cwd}`).digest('hex').slice(0, 12)}`);
   const config = join(home, '.gemini/config');
   await mkdir(config, { recursive: true });
   // agy keeps its sign-in in the login keychain, which macOS finds under HOME: only that is
@@ -100,6 +102,8 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     });
   });
   const ms = performance.now() - start;
+  // What agy keeps of the session (its transcript, its plans): gone, so no later session reads it.
+  await rm(join(home, '.gemini/antigravity-cli/brain'), { recursive: true, force: true });
   const { peakMb, cpuSeconds } = (await watch?.stop()) ?? { peakMb: 0, cpuSeconds: 0 };
   if (process.env.CSYK_TRANSCRIPTS) {
     await mkdir(process.env.CSYK_TRANSCRIPTS, { recursive: true });

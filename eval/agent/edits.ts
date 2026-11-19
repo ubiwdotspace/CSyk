@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -19,7 +20,8 @@ const csyk = join(import.meta.dirname, '../..');
 
 /** A fresh worktree of [root] at HEAD for [name], with the corpus's installed dependencies. */
 export async function worktree(root: string, name: string): Promise<string> {
-  const dir = join(tmpdir(), 'csyk-edits', name);
+  // Named by a hash: the agent sees its own path, which must not say the setup.
+  const dir = join(tmpdir(), 'csyk-edits', createHash('sha1').update(name).digest('hex').slice(0, 12));
   await remove(root, dir);
   await mkdir(join(tmpdir(), 'csyk-edits'), { recursive: true });
   await run('git', ['-C', root, 'worktree', 'add', '-q', '--detach', dir, 'HEAD']);

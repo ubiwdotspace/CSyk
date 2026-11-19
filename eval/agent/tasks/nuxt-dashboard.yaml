@@ -1,0 +1,33 @@
+# Built by eval/agent/make-tasks.ts from the nuxt-dashboard cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Which files use the component in `app/components/home/HomeChart.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/index.vue"]
+  - id: T02
+    prompt: "Which files use `randomFrom`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["app/components/home/HomeSales.vue"]
+  - id: T03
+    prompt: "Which files use the component in `app/components/home/HomePeriodSelect.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/index.vue"]
+  - id: T04
+    prompt: "Which files use the component in `app/components/inbox/InboxList.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/inbox.vue"]
+  - id: T05
+    prompt: "Which files use the component in `app/components/home/HomeStats.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/index.vue"]
+  - id: T06
+    prompt: "Which files use the component in `app/components/home/HomeSales.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/index.vue"]
+  - id: T07
+    prompt: "Which files use the component in `app/components/TeamsMenu.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/layouts/default.vue"]
+  - id: T08
+    prompt: "Which files use `useDashboard`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["app/components/NotificationsSlideover.vue", "app/pages/index.vue"]
+  - id: T09
+    prompt: "Which files use the component in `app/components/home/HomeDateRangePicker.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/pages/index.vue"]
+  - id: T10
+    prompt: "Which files use the component in `app/components/UserMenu.vue`? List every file that uses it, as repository-relative paths."
+    expect: ["app/layouts/default.vue"]
