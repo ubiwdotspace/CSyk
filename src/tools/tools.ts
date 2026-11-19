@@ -9,6 +9,7 @@ import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import type { Position } from '../precision/lsp-client.ts';
 import { componentRefs, componentUses } from '../precision/components.ts';
+import { ConceptIndex, terms } from '../index/concepts.ts';
 import { componentExtensions, componentOf, isComponentFile, pascalCase } from '../index/embedded.ts';
 import { declaredGlobals } from '../workspace/packages.ts';
 import { nuxtComponents } from '../workspace/nuxt.ts';
@@ -40,11 +41,15 @@ export async function find(
   let hits = ws.index.search(query, options);
   // A tag a template writes (`<CustomersAddModal>`, `<base-button>`) names a component file.
   if (hits.length === 0) hits = componentsByTag(ws, query);
+  // A question in words (`where are tokens refreshed`): names and meaning, fused.
+  const byMeaning = /\s/.test(query.trim()) && terms(query).length >= 2;
+  // A question's words match many names in part, so its names count half as much as its meaning.
+  if (byMeaning) hits = fuse([hits, 0.5], [(await conceptsOf(ws)).search(query, { ...options, limit: 10 }).map((c) => c.symbol), 1]).slice(0, options.limit ?? 10);
   if (hits.length === 0) {
     const near = ws.index.nearest(query);
     return { text: `no symbol matches${near.length ? `; nearest: ${near.join(', ')}` : ''} · index`, locations: [] };
   }
-  const fitted = fit(`${plural(hits.length, 'symbol')} · index`, hits.map(row), {
+  const fitted = fit(`${plural(hits.length, 'symbol')} · index${byMeaning ? ', by name and meaning (words of names, paths and comments)' : ''}`, hits.map(row), {
     budget: options.budget ?? defaultBudget,
     narrow: 'pass kind or path',
     compact: hits.map((s) => `${s.id}  ${s.kind} ${s.line}`),
@@ -57,6 +62,30 @@ export async function find(
     text: [fitted.text, ...body, ...hint].join('\n'),
     locations: hits.slice(0, fitted.shown).map((s) => ({ file: s.file, line: s.line })),
   };
+}
+
+// The meaning index of [ws], built on its first question in words and again when it has other files.
+const concepts = new WeakMap<Workspace, { count: number; at: number; index: Promise<ConceptIndex> }>();
+function conceptsOf(ws: Workspace): Promise<ConceptIndex> {
+  const kept = concepts.get(ws);
+  if (kept && kept.count === ws.index.files.length && Date.now() - kept.at < 60_000) return kept.index;
+  const index = ConceptIndex.build(ws.root, ws.index.files.flatMap((f) => ws.index.symbolsIn(f)));
+  concepts.set(ws, { count: ws.index.files.length, at: Date.now(), index });
+  return index;
+}
+
+// Reciprocal rank fusion of rankings, as hybrid search engines merge them: each symbol scores
+// weight/(60 + its rank) in each list it is in.
+function fuse(...lists: [CodeSymbol[], number][]): CodeSymbol[] {
+  const score = new Map<string, { symbol: CodeSymbol; score: number }>();
+  for (const [list, weight] of lists) {
+    list.forEach((symbol, rank) => {
+      const entry = score.get(symbol.id) ?? { symbol, score: 0 };
+      entry.score += weight / (60 + rank);
+      score.set(symbol.id, entry);
+    });
+  }
+  return [...score.values()].sort((a, b) => b.score - a.score).map((e) => e.symbol);
 }
 
 // Tokens a grep may add for the source around its hits. Measured on public
