@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -6,8 +6,8 @@ export type Scope = 'project' | 'user';
 /** One thing setup does for an agent: a file it writes, or a command it runs. */
 export type Step = { target: string; preview: string; apply: () => void };
 /**
- * An agent CSyk can set up. Every agent gets the same three: the MCP server, the note always in
- * its context and the skill. Where the agent allows it, also the hooks: `session-reset`, so CSyk
+ * An agent CSyk can set up. Every agent gets the same two: the MCP server and the note always in
+ * its context. Where the agent allows it, also the hooks: `session-reset`, so CSyk
  * shows code again once the agent's context no longer holds it, and `pre-bash`, so a shell search
  * of the code goes through CSyk `grep`. [gaps] says what this agent cannot be given, and why.
  */
@@ -58,6 +58,26 @@ export function jsonStep(path: string, [section, name]: [string, string], value:
 
 export function sectionStep(path: string, text: string): Step {
   return { target: path, preview: text, apply: () => writeSection(path, text) };
+}
+
+/**
+ * Removes the csyk skill an earlier setup wrote at [path], and its folder once empty; nothing when
+ * there is none, or the file there is not CSyk's. No agent loaded the skill in about 2,700
+ * benchmark sessions, and its listing cost tokens on every request.
+ */
+export function staleSkillStep(path: string): Step[] {
+  if (!existsSync(path) || !readFileSync(path, 'utf8').startsWith('---\nname: csyk\n')) return [];
+  return [
+    {
+      target: path,
+      preview: 'remove the csyk skill an earlier setup wrote: agents never loaded it',
+      apply: () => {
+        rmSync(path);
+        const folder = dirname(path);
+        if (readdirSync(folder).length === 0) rmSync(folder, { recursive: true });
+      },
+    },
+  ];
 }
 
 export function fileStep(path: string, text: string): Step {

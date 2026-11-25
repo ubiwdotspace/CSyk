@@ -87,7 +87,7 @@ flowchart TD
 | Project | `src/workspace/workspace.ts` | the index, the file watcher, starting and stopping servers |
 | Answer size | `src/token/budget.ts`, `src/token/session.ts` | cutting answers to a token budget, remembering what was shown |
 | Hooks | `src/hooks/hooks.ts` | the optional Claude Code hooks |
-| Agent guide | `src/guide.ts` | the note and the skill `csyk setup` writes |
+| Agent guide | `src/guide.ts` | the note `csyk setup` writes |
 
 **Index.** On start, CSyk parses every source file with tree-sitter (a fast parser, about 1 ms per
 file) and keeps the symbols in memory: functions, classes, methods, fields, constants, types and

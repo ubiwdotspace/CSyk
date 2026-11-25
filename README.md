@@ -74,12 +74,12 @@ Hermes Agent. Any other agent that supports MCP works too, set up by hand.
 
 | | Agent | `csyk setup` writes, for this project |
 |:---:|---|---|
-| <img src="https://cdn.simpleicons.org/claude" alt="Claude" width="28"> | [Claude Code](https://www.anthropic.com/claude-code) | `.mcp.json`, a note in `CLAUDE.md`, the skill; CSyk `grep` in place of `Grep`, and searches of the code from the shell sent to it |
-| <img src="https://github.com/openai.png?size=56" alt="OpenAI" width="28"> | [Codex](https://github.com/openai/codex) | `.codex/config.toml`, a note in `AGENTS.md`, the skill |
-| <img src="https://antigravity.google/assets/image/antigravity-logo.png" alt="Antigravity" width="28"> | [Antigravity](https://antigravity.google) | a workspace plugin with the server, a rule and the skill |
-| <img src="https://github.com/cursor.png?size=56" alt="Cursor" width="28"> | [Cursor](https://cursor.com) | `.cursor/mcp.json`, a rule for every chat, the skill |
-| <img src="https://opencode.ai/favicon.svg" alt="OpenCode" width="28"> | [OpenCode](https://opencode.ai) | `opencode.json`, a note in its `instructions`, the skill |
-| <img src="https://github.com/NousResearch.png?size=56" alt="Nous Research" width="28"> | [Hermes Agent](https://hermes-agent.nousresearch.com) | `~/.hermes/config.yaml`, a note in the context file Hermes reads, the skill |
+| <img src="https://cdn.simpleicons.org/claude" alt="Claude" width="28"> | [Claude Code](https://www.anthropic.com/claude-code) | `.mcp.json`, a note in `CLAUDE.md`; CSyk `grep` in place of `Grep`, and searches of the code from the shell sent to it |
+| <img src="https://github.com/openai.png?size=56" alt="OpenAI" width="28"> | [Codex](https://github.com/openai/codex) | `.codex/config.toml` and a note in `AGENTS.md` |
+| <img src="https://antigravity.google/assets/image/antigravity-logo.png" alt="Antigravity" width="28"> | [Antigravity](https://antigravity.google) | a workspace plugin with the server and a rule |
+| <img src="https://github.com/cursor.png?size=56" alt="Cursor" width="28"> | [Cursor](https://cursor.com) | `.cursor/mcp.json` and a rule for every chat |
+| <img src="https://opencode.ai/favicon.svg" alt="OpenCode" width="28"> | [OpenCode](https://opencode.ai) | `opencode.json` and a note in its `instructions` |
+| <img src="https://github.com/NousResearch.png?size=56" alt="Nous Research" width="28"> | [Hermes Agent](https://hermes-agent.nousresearch.com) | `~/.hermes/config.yaml` and a note in the context file Hermes reads |
 
 `csyk setup --user` writes the same for every project, in each agent's home folder. Any other agent
 that supports MCP works too: have it start `csyk serve`, which serves the folder it starts in. Every
