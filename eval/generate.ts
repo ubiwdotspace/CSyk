@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
+import { componentExtensions, componentOf, isComponentFile } from '../src/index/embedded.ts';
 import { isTestFile } from '../src/index/symbols.ts';
 import type { Corpus } from './harness/types.ts';
 import { parseCaseFile } from './harness/cases.ts';
@@ -11,10 +12,11 @@ import { answerAgain, callCases, impactCases, union, type CallCase } from './ora
 import { answers, fuzzyQuery, seeded, shuffle } from './oracle/sampling.ts';
 import { caseKinds, LspOracle, oracleServers } from './oracle/lsp-oracle.ts';
 
-const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart] [--count 30] [--seed 1] [--force] [--answer-again]
+const usage = `Usage: npm run generate -- --corpus <name> --category <A|B|C|D|E|G> [--lang ts|py|go|dart|astro|svelte|vue] [--count 30] [--seed 1] [--force] [--answer-again]
 
 Writes <corpus>.<category>.yaml with cases whose answers come from the
-language's own server (tsc --lsp, pyright, gopls, the Dart analysis server),
+language's own server (tsc --lsp, pyright, gopls, the Dart analysis server; for
+Astro, Svelte and Vue their framework's, from eval/tools, and C cases about components),
 to eval/cases/, or eval/cases/private/ for a corpus from corpora.local.yaml.
 Review the cases before trusting them. --answer-again keeps the C, D or G
 questions of the existing file and answers them again, as after a fix to
@@ -62,6 +64,8 @@ async function main(): Promise<void> {
   }
 
   const count = Number(values.count);
+  // Astro and Svelte: the uses no TypeScript compiler sees, in component files.
+  const components = values.lang === 'astro' || values.lang === 'svelte' || values.lang === 'vue';
   const random = seeded(Number(values.seed));
   if (!oracleServers[values.lang]) throw new Error(`--lang must be one of ${Object.keys(oracleServers).join(', ')}`);
   const oracle = await LspOracle.start(corpus.root, values.lang);
@@ -84,7 +88,9 @@ async function main(): Promise<void> {
           ? await callCases(oracle, sources, count, random)
           : category === 'G'
             ? await impactCases(oracle, sources, count, random)
-            : await symbolCases(oracle, category, count, random);
+            : components && category === 'C'
+              ? [...(await componentCases(oracle, Math.ceil(count / 2), random)), ...(await symbolCases(oracle, category, Math.floor(count / 2), random, true))]
+              : await symbolCases(oracle, category, count, random);
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, render(corpus, oracleServers[values.lang] ?? values.lang, category, Number(values.seed), cases));
     console.log(`${cases.length} case(s) written to ${out.slice(root.length + 1)}`);
@@ -110,12 +116,30 @@ async function usesAgain(oracle: LspOracle, cases: CallCase[]): Promise<CallCase
   return answered;
 }
 
-/** A, B and C cases: one symbol per file, from files in random order. */
+/**
+ * C cases for a component framework: a component file's uses (its query the file's path, as an
+ * agent names a component), from component files in random order, pages left out (no one uses
+ * them by name).
+ */
+async function componentCases(oracle: LspOracle, count: number, random: () => number): Promise<Generated[]> {
+  const cases: Generated[] = [];
+  const files = oracle.files.filter((f) => isComponentFile(f) && isSource(f) && componentOf(f).kind === 'component');
+  for (const file of shuffle(files, random)) {
+    if (cases.length >= count) break;
+    const refs = await oracle.componentReferences(file, componentOf(file).name);
+    if (refs.length < 1 || refs.length > 40) continue;
+    cases.push({ query: file, expect: refs.map((ref) => ({ file: ref.file, lines: [ref.line + 1, ref.line + 1] })) });
+  }
+  return cases;
+}
+
+/** A, B and C cases: one symbol per file, from files in random order; [inComponents], only symbols used in a component file. */
 async function symbolCases(
   oracle: LspOracle,
   category: string,
   count: number,
   random: () => number,
+  inComponents = false,
 ): Promise<Generated[]> {
   const cases: Generated[] = [];
   const seen = new Set<string>();
@@ -138,7 +162,7 @@ async function symbolCases(
       if (await oracle.isImport(file, symbol.selectionRange.start)) continue;
       const declarations = await oracle.declarations(name);
       const made = await makeCase(oracle, category, name, declarations, random, names);
-      if (made) {
+      if (made && (!inComponents || made.expect.some((e) => isComponentFile(e.file)))) {
         cases.push(made);
         break;
       }
@@ -209,12 +233,19 @@ async function stringCases(oracle: LspOracle, count: number, random: () => numbe
   return cases;
 }
 
+// The component files each framework's server reads; it reads no other kind.
+const own: Record<string, string> = { 'astro-ls': '.astro', svelteserver: '.svelte', 'vue-language-server': '.vue' };
+
 function render(corpus: Corpus, server: string, category: string, seed: number, cases: Generated[]): string {
   const at = corpus.commit ?? 'its working tree';
   const lines = [
     `# Generated by eval/generate.ts from ${corpus.name} at ${at}, seed ${seed}.`,
     `# Answers come from the ${server} language server. Review before trusting:`,
     "# drop cases no person would ask, and rewrite queries that read like a machine's.",
+    // Component files the framework's server does not read (MDX, another framework's): not scored.
+    ...(own[server]
+      ? [`unscored: [${[...componentExtensions].filter((e) => e !== own[server]).map((e) => JSON.stringify(e)).join(', ')}]`]
+      : []),
     'cases:',
   ];
   cases.forEach((c, i) => {

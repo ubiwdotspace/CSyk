@@ -1,0 +1,33 @@
+# Built by eval/agent/make-tasks.ts from the astro-paper cases, seed 1.
+# A task passes when the final answer names every expected item.
+tasks:
+  - id: T01
+    prompt: "Which files use the component in `src/layouts/PostLayout.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/pages/posts/[...slug]/index.astro"]
+  - id: T02
+    prompt: "Which files use `TocItem`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/pages/posts/[...slug]/_components/TocList.astro"]
+  - id: T03
+    prompt: "Which files use `getPostsByGroupCondition`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/pages/archives/index.astro"]
+  - id: T04
+    prompt: "Which files use the component in `src/components/Socials.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/components/Footer.astro", "src/pages/index.astro"]
+  - id: T05
+    prompt: "Which files use the component in `src/components/Card.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/pages/archives/index.astro", "src/pages/index.astro", "src/pages/posts/[...page].astro", "src/pages/tags/[tag]/[...page].astro"]
+  - id: T06
+    prompt: "Which files use the component in `src/custom/PostEnd.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/pages/posts/[...slug]/index.astro"]
+  - id: T07
+    prompt: "Which files use `resolveDefaultOgImagePath`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/layouts/Layout.astro"]
+  - id: T08
+    prompt: "Which files use `postFilter`? List every file that uses it, other than the one that declares it, as repository-relative paths."
+    expect: ["src/pages/archives/index.astro", "src/pages/posts/[...slug]/index.png.ts", "src/utils/getSortedPosts.ts", "src/utils/getUniqueTags.ts"]
+  - id: T09
+    prompt: "Which files use the component in `src/components/Datetime.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/components/Card.astro", "src/pages/posts/[...slug]/index.astro"]
+  - id: T10
+    prompt: "Which files use the component in `src/components/Main.astro`? List every file that uses it, as repository-relative paths."
+    expect: ["src/pages/about.astro", "src/pages/archives/index.astro", "src/pages/posts/[...page].astro", "src/pages/search.astro", "src/pages/tags/[tag]/[...page].astro", "src/pages/tags/index.astro"]

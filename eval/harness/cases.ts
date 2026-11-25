@@ -41,6 +41,8 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
   if (!isRecord(doc) || !Array.isArray(doc.cases)) {
     throw new Error(`${path}: expected a "cases" list`);
   }
+  // `unscored: [".mdx"]`: files the oracle does not read (the Astro server reads no MDX).
+  const unscored = Array.isArray(doc.unscored) ? doc.unscored.filter((e): e is string => typeof e === 'string') : [];
   const ids = new Set<string>();
   const cases = doc.cases.map((raw: unknown, i: number): Case => {
     const where = `${path}: case ${i + 1}`;
@@ -66,6 +68,7 @@ export function parseCaseFile(path: string, name: string, text: string): CaseFil
       ...(kind === undefined ? {} : { kind }),
       ...(direction === undefined ? {} : { direction }),
       expect: expect.map((loc: unknown) => parseLocation(loc, `${where} (${id})`)),
+      ...(unscored.length ? { unscored } : {}),
     };
   });
   if (!categories.includes(category)) throw new Error(`${path}: unknown category`);
@@ -76,7 +79,8 @@ function parseLocation(raw: unknown, where: string): Location {
   if (!isRecord(raw) || typeof raw.file !== 'string' || !raw.file) {
     throw new Error(`${where}: each expected location needs a file`);
   }
-  if (raw.file.startsWith('/') || raw.file.includes('..')) {
+  // A `..` segment leaves the repo; Astro's `[...slug].astro` does not.
+  if (raw.file.startsWith('/') || raw.file.split('/').includes('..')) {
     throw new Error(`${where}: ${raw.file} must be repo-relative`);
   }
   if (raw.lines === undefined) return { file: raw.file };

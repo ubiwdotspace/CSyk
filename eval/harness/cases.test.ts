@@ -51,5 +51,6 @@ describe('the committed cases', () => {
         }
       }
     }
-  });
+    // Every case file of every fetched corpus, read while the other tests run.
+  }, 60_000);
 });

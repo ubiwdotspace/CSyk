@@ -13,7 +13,7 @@ import { seeded, shuffle } from '../oracle/sampling.ts';
  * 20 tasks for the agent benchmark built from the corpus's generated cases,
  * whose answers come from the language server: where a symbol is defined
  * (A), who calls it and what it calls (D), and which function shows a
- * message (E). A task passes when the agent's final answer names every
+ * message (E), and which files use a name or a component (C). A task passes when the agent's final answer names every
  * expected item. Review the tasks before trusting them.
  */
 const { values } = parseArgs({ options: { corpus: { type: 'string' }, seed: { type: 'string', default: '1' } } });
@@ -58,6 +58,21 @@ for (const c of pick('E', 5)) {
     id: '',
     prompt: `Which function or component shows the text "${c.query}"? Name it and its file.`,
     expect: [home, c.expect[0]?.file ?? ''],
+  });
+}
+// Who uses a component or a name, as files: the question component files make hard (C).
+for (const c of pick('C', 40)) {
+  if (tasks.filter((t) => t.prompt.startsWith('Which files use')).length >= 10) break;
+  const component = /\.(?:astro|svelte|vue)$/.test(c.query);
+  const home = component ? c.query : ws.index.named(c.query)[0]?.file;
+  const users = [...new Set(c.expect.map((loc) => loc.file))].filter((f) => f !== home);
+  if (users.length === 0 || users.length > 6) continue;
+  tasks.push({
+    id: '',
+    prompt: component
+      ? `Which files use the component in \`${c.query}\`? List every file that uses it, as repository-relative paths.`
+      : `Which files use \`${c.query}\`? List every file that uses it, other than the one that declares it, as repository-relative paths.`,
+    expect: users,
   });
 }
 tasks.forEach((t, i) => (t.id = `T${String(i + 1).padStart(2, '0')}`));

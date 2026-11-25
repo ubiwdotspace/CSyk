@@ -33,7 +33,7 @@ export function csyk(): Adapter {
   return {
     name: 'csyk',
     inProcess: true,
-    supports: (c) => ['A', 'B', 'C', 'D', 'E', 'G'].includes(c.category),
+    supports: (c) => ['A', 'B', 'C', 'D', 'E', 'F', 'G'].includes(c.category),
     async run(c, corpus) {
       const { ws: opening, session } = open(corpus);
       const ws = await opening;

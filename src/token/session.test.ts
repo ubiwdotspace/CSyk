@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, utimesSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { Session } from './session.ts';
+import { codeMode, Session } from './session.ts';
 
 describe('Session', () => {
   it('remembers the call that showed a body, for that exact body', () => {
@@ -36,6 +36,26 @@ describe('Session', () => {
     utimesSync(marker, 5, 5);
     expect(session.shown('a.ts#f', 'h1')).toBeUndefined();
     expect(session.hint('find', 'hint')).toEqual(['hint']);
+  });
+
+  it('counts nothing as shown when it must not remember (Code Mode)', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'csyk-seen-')));
+    const file = join(dir, 'a.ts');
+    const log = join(dir, 'seen.jsonl');
+    writeFileSync(file, 'x\n');
+    utimesSync(file, 1, 1);
+    const session = new Session({ seen: log, now: () => 10_000, remember: false });
+    session.nextCall();
+    session.record('a.ts#f', 'h1');
+    writeFileSync(log, `${JSON.stringify({ file, from: 1, to: 40, at: 10_000 })}\n`);
+    expect(session.shown('a.ts#f', 'h1')).toBeUndefined();
+    expect(session.readByAgent(file, 1, 1)).toBe(false);
+  });
+
+  it('knows Code Mode from Claude Code\'s environment', () => {
+    expect(codeMode({ CLAUDE_CODE_EXPERIMENTAL_CODE_MODE: '1' })).toBe(true);
+    expect(codeMode({ CLAUDE_CODE_EXPERIMENTAL_CODE_MODE: '0' })).toBe(false);
+    expect(codeMode({})).toBe(false);
   });
 
   it('gives each hint once', () => {

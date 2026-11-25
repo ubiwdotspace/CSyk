@@ -1,0 +1,7 @@
+# Edit tasks (npm run agent -- --tasks edits): see zustand.edits.yaml.
+tasks:
+  - id: E01
+    check: dart
+    checkIn: packages/provider
+    prompt: Rename the exception class ProviderNotFoundException to ProviderMissingException everywhere in packages/provider.
+    expect: [ProviderMissingException]

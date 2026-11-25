@@ -1,0 +1,51 @@
+# F: a question about a concept, answered with the symbol that implements it. Written by hand
+# from the symbols' doc comments, in words that are not the symbol's name.
+cases:
+  - id: F01
+    query: "limit how large a request body may be"
+    expect:
+      - { file: "middleware/request_size.go", lines: [9, 18] }
+  - id: F02
+    query: "protect a route with a username and password"
+    expect:
+      - { file: "middleware/basic_auth.go", lines: [10, 28] }
+  - id: F03
+    query: "change the URL path of incoming requests before routing"
+    expect:
+      - { file: "middleware/path_rewrite.go", lines: [9, 16] }
+  - id: F04
+    query: "answer HEAD requests with the GET handler"
+    expect:
+      - { file: "middleware/get_head.go", lines: [10, 39] }
+  - id: F05
+    query: "refuse requests whose body is not an accepted media type"
+    expect:
+      - { file: "middleware/content_type.go", lines: [20, 45] }
+  - id: F06
+    query: "read a path parameter of the request"
+    expect:
+      - { file: "context.go", lines: [11, 13] }
+  - id: F07
+    query: "an endpoint for health checks that load balancers ping"
+    expect:
+      - { file: "middleware/heartbeat.go", lines: [12, 26] }
+  - id: F08
+    query: "remove a leading part of the path before the handler sees it"
+    expect:
+      - { file: "middleware/strip.go", lines: [73, 77] }
+  - id: F09
+    query: "give every request a unique identifier"
+    expect:
+      - { file: "middleware/request_id.go", lines: [67, 79] }
+  - id: F10
+    query: "keep the server alive when a handler panics"
+    expect:
+      - { file: "middleware/recoverer.go", lines: [22, 49] }
+  - id: F11
+    query: "gzip the responses"
+    expect:
+      - { file: "middleware/compress.go", lines: [45, 48] }
+  - id: F12
+    query: "visit every registered route of a router"
+    expect:
+      - { file: "tree.go", lines: [882, 884] }

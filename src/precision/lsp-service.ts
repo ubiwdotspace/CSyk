@@ -11,7 +11,7 @@ import { inDocLink, isCodeAt, parseFile } from '../index/parse.ts';
 import type { CodeSymbol } from '../index/symbols.ts';
 import { memoryBudget } from './memory.ts';
 import { listFiles } from '../workspace/files.ts';
-import { LspClient, type Position, type Span } from './lsp-client.ts';
+import { LspClient, type Position, type Problem, type Span } from './lsp-client.ts';
 
 const run = promisify(execFile);
 const require = createRequire(import.meta.url);
@@ -375,6 +375,18 @@ export class LspService {
     return found;
   }
 
+  /** The errors the server finds in [file] by [deadline] (see LspClient.diagnostics). */
+  diagnostics(file: string, deadline: number): Promise<Problem[] | undefined> {
+    return this.lsp.diagnostics(file, deadline);
+  }
+
+  /** Gives the server [text] for [file] in memory, until changed(file) gives it the disk's again. */
+  setText(file: string, text: string): Promise<void> {
+    this.definitions.clear();
+    this.mentions.clear();
+    return this.lsp.setText(file, text);
+  }
+
   /** Tells the server [file] changed on disk; what was kept may no longer hold. */
   changed(file: string): Promise<void> {
     this.definitions.clear();
@@ -558,7 +570,7 @@ export function nameColumn(line: string, name: string): number {
  * (`export default function name`, `export default name`, `name as
  * default`) or wrapped (`export default memo(name)`).
  */
-function isDefaultExport(text: string, name: string): boolean {
+export function isDefaultExport(text: string, name: string): boolean {
   if (name === 'default') return true;
   const escaped = name.replace(/[$]/g, '\\$');
   const itself = new RegExp(`export\\s+default\\s+(?:(?:async\\s+)?function\\*?\\s+|(?:abstract\\s+)?class\\s+)?${escaped}\\b|\\b${escaped}\\s+as\\s+default\\b`);

@@ -13,14 +13,15 @@ import { qwenSetups, runQwen } from '../agent/qwen.ts';
 import { mean, percentile } from '../harness/metrics.ts';
 import { seeded, shuffle } from '../oracle/sampling.ts';
 
-const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify|lsp-plugin|codegraph> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model sonnet] [--max-turns 40] [--agent claude|qwen|antigravity|codex|cursor]
+const usage = `Usage: npm run loc -- --setup <b0|csyk|csyk-lean|csyk-nohooks|serena|graphify|lsp-plugin|codegraph> --language <name> [--dataset polybench|swebench|multiswebench] [--count 10] [--seed 1] [--run <name>] [--only <id,…>] [--model gemini-3.8-flash-medium] [--max-turns 40] [--agent antigravity|claude|qwen|codex|cursor]
 
 Code localization on public issue benchmarks: for each issue, sampled at
 random from the whole dataset (no filter on difficulty) and checked out at its
-base commit, headless Claude Code (or, with --agent, Qwen Code, Antigravity, Codex or Cursor) is asked which files and functions must
-change, without editing. Its answer is scored against the files and functions
-the real fix changed. Records time, tokens, cost and accuracy; each run is
-billed to your Claude account.
+base commit, Gemini through the Antigravity command line (agy) is asked which files and functions
+must change, without editing. Gemini is the test source (owner, 2026-11-18): another agent
+(--agent claude, qwen, codex or cursor) or a model that is not Gemini runs only with
+--other-model, for a check by hand. The answer is scored against the files and functions the
+real fix changed. Records time, tokens, cost and accuracy.
 
   polybench       SWE-PolyBench Verified (Amazon, MIT): TypeScript, JavaScript, Python, Java
   swebench        SWE-bench Verified (Princeton and OpenAI, MIT): Python
@@ -70,12 +71,20 @@ async function main(): Promise<void> {
       seed: { type: 'string', default: '1' },
       run: { type: 'string' },
       only: { type: 'string' },
-      model: { type: 'string', default: 'sonnet' },
+      model: { type: 'string' },
       'max-turns': { type: 'string', default: '40' },
-      agent: { type: 'string', default: 'claude' },
+      agent: { type: 'string', default: 'antigravity' },
+      'other-model': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h' },
     },
   });
+  // Each agent's own model when none is named: Gemini for agy, the test source.
+  values.model ??= { antigravity: 'gemini-3.8-flash-medium', claude: 'sonnet' }[values.agent] ?? 'default';
+  if (!values.help && !values['other-model'] && (values.agent !== 'antigravity' || !values.model.startsWith('gemini-'))) {
+    console.log(`Gemini through agy is the test source: ${values.agent} with ${values.model} needs --other-model.`);
+    process.exitCode = 1;
+    return;
+  }
   const load = loaders[values.dataset];
   const agent = values.agent;
   const otherSetups: Record<string, readonly string[]> = { qwen: qwenSetups, antigravity: antigravitySetups, codex: codexSetups, cursor: cursorSetups };

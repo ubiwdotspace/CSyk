@@ -8,7 +8,10 @@ import type { Session } from '../token/session.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { calls, impact } from './calls.ts';
 import { status } from './status.ts';
+import { componentOf, isComponentFile } from '../index/embedded.ts';
 import { projectFile, readOther, refsToFile } from './other-files.ts';
+import { repoMap } from './map.ts';
+import { unused } from './unused.ts';
 import { def, find, grep, outline, read, readPath, refs, type ToolResult } from './tools.ts';
 
 // Bounds are enforced in runTool rather than listed, to keep the tool list short.
@@ -47,6 +50,7 @@ export const toolSchemas = {
       target,
       limit: z.number().optional(),
       code: z.boolean().optional().describe("Add each line's text"),
+      unused: z.boolean().optional().describe('For a folder or file: its exported symbols nothing else uses'),
       budget,
     },
   },
@@ -61,7 +65,7 @@ export const toolSchemas = {
     },
   },
   impact: {
-    description: 'Changed symbols since a revision, their callers, tests.',
+    description: 'New compiler errors since a revision, changed symbols, their callers, tests.',
     input: {
       since: z.string().optional().describe('Git revision, default HEAD'),
       depth: z.number().optional().describe('Caller levels, 1-3, default 2'),
@@ -114,9 +118,9 @@ export const listedTools = {
   find: { description: 'Find symbols by name or part of one.', args: ['query', 'kind', 'path'] },
   grep: { description: 'Regex search; each hit names its enclosing symbol.', args: ['pattern', 'literal', 'path', 'glob'] },
   read: { description: "A symbol's source by id or name, or a file or folder by path (a doc section: file.md#Heading); several, comma-separated.", args: ['target'] },
-  refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named.', args: ['target'] },
+  refs: { description: 'Every reference to a symbol, resolved by the compiler; for a file path (an image, a doc), where it is named; for a component file (.astro, .svelte, .vue), its uses.', args: ['target', 'unused'] },
   calls: { description: 'Who calls a symbol (in), or what it calls (out).', args: ['target', 'direction', 'depth'] },
-  impact: { description: 'Changed symbols since a revision, their callers, tests.', args: ['since'] },
+  impact: { description: 'New compiler errors, changed symbols, callers, tests since a revision.', args: ['since'] },
 } as const;
 
 /** A listed tool's description and its listed arguments' schemas. */
@@ -139,7 +143,10 @@ function readOne(
   session: Session,
 ): Promise<ToolResult> {
   const path = target.replace(/^\.\//, '').replace(/\/$/, '');
-  const isPath = !target.includes('#') && (ws.index.has(path) || ws.index.files.some((f) => f.startsWith(`${path}/`)));
+  // The repository or a folder: its map, files by how much the rest imports them.
+  if (path === '.' || path === '') return repoMap(ws, '', options.budget);
+  if (!target.includes('#') && !ws.index.has(path) && ws.index.files.some((f) => f.startsWith(`${path}/`))) return repoMap(ws, path, options.budget);
+  const isPath = !target.includes('#') && ws.index.has(path);
   if (isPath) return readPath(ws, path, options.budget);
   const other = target.includes('#') ? undefined : projectFile(ws, path);
   if (other) return readOther(ws, other, options.budget);
@@ -255,11 +262,18 @@ export async function runTool(
       return { text: parts.map((p) => p.text).join('\n\n'), locations: parts.flatMap((p) => p.locations) };
     }
     case 'refs': {
-      const { target, ...options } = z.object(toolSchemas.refs.input).parse(args);
+      const { target, unused: dead, ...options } = z.object(toolSchemas.refs.input).parse(args);
+      if (dead) return unused(ws, target, options.budget);
       // A file (an image, a doc, a config): the places that name it.
       const file = target.includes('#') ? undefined : projectFile(ws, target);
-      if (file) return refsToFile(ws, file, options.budget);
-      return refs(ws, target, given(options));
+      // A component file (Badge.astro) is its component: the places that use it.
+      const component = file && isComponentFile(file) ? ws.index.get(`${file}#${componentOf(file).name}`) : undefined;
+      if (file && !component) return refsToFile(ws, file, options.budget);
+      const answer = await refs(ws, component?.id ?? target, given(options));
+      // Agents read on to confirm a complete answer (Gemini, 9 reads after one on starlight):
+      // said once a session, where it applies.
+      const done = / · complete(\n|$)/.test(answer.text.split('\n')[0] ?? '') ? session.hint('complete', 'hint: complete means every use is listed above; no grep or read is needed to confirm it') : [];
+      return done.length ? { ...answer, text: `${answer.text}\n${done[0]}` } : answer;
     }
     case 'calls': {
       const { target, ...options } = z.object(toolSchemas.calls.input).parse(args);

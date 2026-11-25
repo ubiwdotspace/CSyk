@@ -16,21 +16,25 @@ import {
   DidChangeWatchedFilesNotification,
   DidCloseTextDocumentNotification,
   DidOpenTextDocumentNotification,
+  DocumentDiagnosticRequest,
   FileChangeType,
   DocumentSymbolRequest,
   ExitNotification,
   ImplementationRequest,
   InitializedNotification,
   InitializeRequest,
+  PublishDiagnosticsNotification,
   ReferencesRequest,
   ResponseError,
   ShutdownRequest,
   StreamMessageReader,
   StreamMessageWriter,
+  type Diagnostic,
   type DocumentSymbol,
   type Location,
   type LocationLink,
   type ProtocolConnection,
+  type ServerCapabilities,
   type SymbolInformation,
 } from 'vscode-languageserver-protocol/node';
 import { repoRelative } from '../paths.ts';
@@ -57,6 +61,20 @@ const languageIds: Record<string, string> = {
   '.py': 'python',
   '.go': 'go',
   '.dart': 'dart',
+  '.astro': 'astro',
+  '.svelte': 'svelte',
+  '.vue': 'vue',
+};
+
+/** A compiler error in a repo file: 0-based line, the server's code, its message. */
+export type Problem = { file: string; line: number; code: string; message: string };
+
+// What a server pushes (publishDiagnostics) and when, and when it last finished analyzing.
+type Status = {
+  idle: boolean;
+  alive: boolean;
+  idleAt: number;
+  pushed: Map<string, { at: number; items: Diagnostic[] }>;
 };
 
 /**
@@ -68,16 +86,22 @@ export class LspClient {
   private readonly opened = new Map<string, Promise<void>>();
 
   private readonly versions = new Map<string, number>();
+  // When each file was last opened or given new text: a pushed diagnostic before then is stale.
+  private readonly touched = new Map<string, number>();
+  // When any file last changed: an importer's errors pushed before then may be stale too.
+  private changedAt = 0;
   private readonly root: string;
   private readonly process: ChildProcess;
   private readonly connection: ProtocolConnection;
-  private readonly status: { idle: boolean; alive: boolean };
+  private readonly status: Status;
+  private readonly capabilities: ServerCapabilities;
 
-  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, status: { idle: boolean; alive: boolean }) {
+  private constructor(root: string, process: ChildProcess, connection: ProtocolConnection, status: Status, capabilities: ServerCapabilities) {
     this.root = root;
     this.process = process;
     this.connection = connection;
     this.status = status;
+    this.capabilities = capabilities;
   }
 
   /**
@@ -95,7 +119,8 @@ export class LspClient {
 
   /**
    * Starts [command] in [root] and completes the initialize handshake. With
-   * [settings], by section, the server gets them asked for or not.
+   * [settings], by section, the server gets them asked for or not; with
+   * [initializationOptions], it gets those in the handshake (the Astro server's TypeScript).
    */
   static async start(
     command: string,
@@ -103,6 +128,7 @@ export class LspClient {
     root: string,
     settings?: Record<string, unknown>,
     env?: NodeJS.ProcessEnv,
+    initializationOptions?: unknown,
   ): Promise<LspClient> {
     // Node starts a Windows batch file (Flutter's dart.bat) only through the shell.
     const batch = process.platform === 'win32' && /\.(cmd|bat)$/i.test(command);
@@ -115,7 +141,7 @@ export class LspClient {
       new StreamMessageWriter(child.stdin),
     );
     // Set up before the handshake, so no status is missed.
-    const status = { idle: false, alive: true };
+    const status: Status = { idle: false, alive: true, idleAt: 0, pushed: new Map() };
     // A server that exits, crashes or closes its pipes answers nothing more;
     // writing to it then must not throw where no one listens.
     const gone = () => {
@@ -126,15 +152,23 @@ export class LspClient {
     child.stdin.on('error', gone);
     connection.onClose(gone);
     connection.onNotification('$/analyzerStatus', (params: { isAnalyzing?: boolean }) => {
-      if (params?.isAnalyzing === false) status.idle = true;
+      if (params?.isAnalyzing === false) {
+        status.idle = true;
+        status.idleAt = Date.now();
+      } else if (params?.isAnalyzing === true) status.idleAt = 0;
+    });
+    connection.onNotification(PublishDiagnosticsNotification.type, (params) => {
+      if (!params.uri.startsWith('file:')) return;
+      status.pushed.set(repoRelative(root, fileURLToPath(params.uri)), { at: Date.now(), items: params.diagnostics });
     });
     if (settings) connection.onRequest(ConfigurationRequest.type, (params) => params.items.map((item) => settings[item.section ?? ''] ?? null));
     connection.listen();
     const rootUri = pathToFileURL(root).href;
-    await connection.sendRequest(InitializeRequest.type, {
+    const { capabilities } = await connection.sendRequest(InitializeRequest.type, {
       processId: process.pid,
       rootUri,
       workspaceFolders: [{ uri: rootUri, name: 'root' }],
+      ...(initializationOptions === undefined ? {} : { initializationOptions }),
       capabilities: {
         ...(settings ? { workspace: { configuration: true } } : {}),
         textDocument: {
@@ -143,12 +177,14 @@ export class LspClient {
           definition: { linkSupport: true },
           implementation: { linkSupport: true },
           callHierarchy: {},
+          publishDiagnostics: {},
+          diagnostic: {},
         },
       },
     });
     await connection.sendNotification(InitializedNotification.type, {});
     if (settings) await connection.sendNotification(DidChangeConfigurationNotification.type, { settings });
-    return new LspClient(root, child, connection, status);
+    return new LspClient(root, child, connection, status, capabilities);
   }
 
   /**
@@ -167,16 +203,73 @@ export class LspClient {
         this.opened.delete(file);
         await this.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
       } else {
-        const version = (this.versions.get(file) ?? 1) + 1;
-        this.versions.set(file, version);
-        await this.connection.sendNotification(DidChangeTextDocumentNotification.type, {
-          textDocument: { uri, version },
-          contentChanges: [{ text }],
-        });
+        await this.setText(file, text);
       }
     }
+    this.changedAt = Date.now();
     const type = text === undefined ? FileChangeType.Deleted : FileChangeType.Changed;
     await this.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [{ uri, type }] });
+  }
+
+  /**
+   * Gives the server [text] as [file]'s content, in memory only (the file on disk is not
+   * touched): `impact` asks for errors against a file's text before an edit, then gives the
+   * text back with changed().
+   */
+  async setText(file: string, text: string): Promise<void> {
+    await this.open(file);
+    if (!this.status.alive) return;
+    const version = (this.versions.get(file) ?? 1) + 1;
+    this.versions.set(file, version);
+    this.touched.set(file, Date.now());
+    this.changedAt = Date.now();
+    await this.connection
+      .sendNotification(DidChangeTextDocumentNotification.type, { textDocument: { uri: this.uri(file), version }, contentChanges: [{ text }] })
+      .catch(ignoreClosed);
+  }
+
+  /**
+   * The errors the server finds in [file] (warnings and hints left out), asked for when the
+   * server answers that (`textDocument/diagnostic`), else the ones it pushed since the file's
+   * text last changed; undefined when none came by [deadline]. A server that pushes only what
+   * has errors (Dart) answers none once it says it finished analyzing.
+   */
+  async diagnostics(file: string, deadline: number): Promise<Problem[] | undefined> {
+    await this.open(file);
+    const errors = (items: Diagnostic[]) =>
+      items
+        .filter((d) => (d.severity ?? 1) === 1)
+        .map((d) => ({ file, line: d.range.start.line, code: d.code === undefined ? '' : String(d.code), message: (typeof d.message === 'string' ? d.message : d.message.value).split('\n')[0] ?? '' }));
+    if (this.capabilities.diagnosticProvider) {
+      const cancel = new CancellationTokenSource();
+      let timer: NodeJS.Timeout | undefined;
+      const late = new Promise<'late'>((done) => {
+        timer = setTimeout(() => (cancel.cancel(), done('late')), Math.max(deadline - Date.now(), 0));
+      });
+      try {
+        const report = await Promise.race([
+          answerOrNone(() => this.connection.sendRequest(DocumentDiagnosticRequest.type, { textDocument: { uri: this.uri(file) } }, cancel.token)),
+          late,
+        ]);
+        if (report === 'late') return undefined;
+        if (report && report.kind === 'full') return errors(report.items);
+      } finally {
+        clearTimeout(timer);
+        cancel.dispose();
+      }
+    }
+    const since = Math.max(this.touched.get(file) ?? 0, this.changedAt);
+    // Pushed after the text it is for; then a short quiet, as gopls pushes parse errors first.
+    while (Date.now() < deadline && this.status.alive) {
+      const pushed = this.status.pushed.get(file);
+      const quiet = pushed && pushed.at >= since && Date.now() - pushed.at > 400;
+      if (quiet) return errors(pushed.items);
+      // Analysis finished since: what it last pushed holds, and a file it never pushed has none.
+      if (this.status.idleAt > since && Date.now() - this.status.idleAt > 400) return pushed ? errors(pushed.items) : [];
+      await new Promise((done) => setTimeout(done, 100));
+    }
+    const pushed = this.status.pushed.get(file);
+    return pushed && pushed.at >= since ? errors(pushed.items) : undefined;
   }
 
   /** Opens [file] in the server unless it already is. */
@@ -185,6 +278,7 @@ export class LspClient {
     if (!opening) {
       opening = (async () => {
         try {
+          this.touched.set(file, Date.now());
           await this.connection.sendNotification(DidOpenTextDocumentNotification.type, {
             textDocument: {
               uri: this.uri(file),

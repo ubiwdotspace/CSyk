@@ -10,6 +10,7 @@ import { distance, pool, serverFor, textMentions } from '../precision/lsp-servic
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import { defaultBudget, fit } from '../token/budget.ts';
 import type { Workspace } from '../workspace/workspace.ts';
+import { newErrors } from './errors.ts';
 import { classKinds, plural, references, resolve, unresolvedRow, type Location, type ToolResult } from './tools.ts';
 
 const run = promisify(execFile);
@@ -154,11 +155,35 @@ export async function impact(
       }
     }
   }
-  const rows: Row[] = [...changed.values()].map((s) => ({
+  // First what the edit broke: errors the compiler finds now and did not before.
+  const broken = await newErrors(ws, [...files], since, [...changed.values()].map((s) => s.name));
+  // A few a file: the rest of a file's are mostly what its first error brings along.
+  const perFile = new Map<string, number>();
+  const listed = broken.errors.filter((p) => {
+    const n = (perFile.get(p.file) ?? 0) + 1;
+    perFile.set(p.file, n);
+    return n <= maxErrorsPerFile;
+  });
+  const errorRows: Row[] = listed.slice(0, maxErrors).map((p) => {
+    const home = ws.index.containing(p.file, p.line + 1);
+    const unsure = broken.unsure.has(p.file) ? '  (may predate the edit)' : '';
+    return {
+      text: `error  ${p.file}:${p.line + 1}${home ? `  ${home.id}` : ''}  ${p.message}${p.code ? ` (${p.code})` : ''}${unsure}`,
+      compact: `error  ${p.file}:${p.line + 1}  ${p.message.slice(0, 80)}`,
+      locations: [{ file: p.file, line: p.line + 1 }],
+    };
+  });
+  const more = broken.errors.length - errorRows.length;
+  if (more > 0) {
+    const files = [...perFile].filter(([, n]) => n > maxErrorsPerFile).length;
+    const where = files ? `, ${maxErrorsPerFile} a file shown` : '';
+    errorRows.push({ text: `error  … ${more} more${where}`, compact: `error  … ${more} more`, locations: [] });
+  }
+  const rows: Row[] = [...errorRows, ...[...changed.values()].map((s) => ({
     text: `changed  ${s.id}  ${s.line}`,
     compact: `changed  ${s.id}`,
     locations: [{ file: s.file, line: s.line }],
-  }));
+  }))];
   const tests = new Set([...files].filter(isTestFile));
   const seen = new Set(changed.keys());
   // A caller reached again through another callee keeps the lines of both:
@@ -216,9 +241,24 @@ export async function impact(
   const stopped = notes.length > 0 ? ` · ${notes.join('; ')}; run calls on one for the rest` : '';
   const header =
     `impact · since ${since} · ${plural(changed.size, 'symbol')} changed in ${plural(files.size, 'file')}` +
-    ` · ${plural(tests.size, 'test file')} · ${precision}${stopped}`;
+    ` · ${plural(tests.size, 'test file')}${errorsNote(broken)} · ${precision}${stopped}`;
   const answer = shown(header, rows, budget, notes.length === 0 && precision === 'lsp' && unknown.size === 0);
   return { ...answer, text: answer.text + unconfirmedLines(ws, unknown) };
+}
+
+// Errors listed at most; the rest are counted.
+const maxErrors = 20;
+const maxErrorsPerFile = 3;
+
+// What the header says of the errors: how many are new, in how many files asked, what was not.
+function errorsNote(broken: Awaited<ReturnType<typeof newErrors>>): string {
+  const parts: string[] = [];
+  if (broken.asked > 0) {
+    const late = broken.asked - broken.answered;
+    parts.push(`${broken.errors.length ? plural(broken.errors.length, 'new error') : 'no new errors'} in ${plural(broken.asked, 'file')} compiled${late ? `, ${late} not answered in time` : ''}`);
+  }
+  if (broken.unchecked.length > 0) parts.push(`errors not checked in ${plural(broken.unchecked.length, 'file')} (no compiler)`);
+  return parts.length ? ` · ${parts.join(' · ')}` : '';
 }
 
 /** A row of `calls` or `impact`, the same without its lines, and the places it names. */

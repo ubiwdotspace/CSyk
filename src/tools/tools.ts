@@ -8,6 +8,11 @@ import { rgPath } from '@vscode/ripgrep';
 import type { SearchOptions } from '../index/symbol-index.ts';
 import { isTestFile, type CodeSymbol } from '../index/symbols.ts';
 import type { Position } from '../precision/lsp-client.ts';
+import { componentRefs, componentUses } from '../precision/components.ts';
+import { ConceptIndex, terms } from '../index/concepts.ts';
+import { componentExtensions, componentOf, isComponentFile, pascalCase } from '../index/embedded.ts';
+import { declaredGlobals } from '../workspace/packages.ts';
+import { nuxtComponents } from '../workspace/nuxt.ts';
 import { codeMentions, serverFor, type ReferenceOptions } from '../precision/lsp-service.ts';
 import { defaultBudget, estimateTokens, fit } from '../token/budget.ts';
 import { bodyHash, Session } from '../token/session.ts';
@@ -33,12 +38,18 @@ export async function find(
   options: SearchOptions & { budget?: number } = {},
   session = new Session(),
 ): Promise<ToolResult> {
-  const hits = ws.index.search(query, options);
+  let hits = ws.index.search(query, options);
+  // A tag a template writes (`<CustomersAddModal>`, `<base-button>`) names a component file.
+  if (hits.length === 0) hits = componentsByTag(ws, query);
+  // A question in words (`where are tokens refreshed`): names and meaning, fused.
+  const byMeaning = /\s/.test(query.trim()) && terms(query).length >= 2;
+  // A question's words match many names in part, so its names count half as much as its meaning.
+  if (byMeaning) hits = fuse([hits, 0.5], [(await conceptsOf(ws)).search(query, { ...options, limit: 10 }).map((c) => c.symbol), 1]).slice(0, options.limit ?? 10);
   if (hits.length === 0) {
     const near = ws.index.nearest(query);
     return { text: `no symbol matches${near.length ? `; nearest: ${near.join(', ')}` : ''} · index`, locations: [] };
   }
-  const fitted = fit(`${plural(hits.length, 'symbol')} · index`, hits.map(row), {
+  const fitted = fit(`${plural(hits.length, 'symbol')} · index${byMeaning ? ', by name and meaning (words of names, paths and comments)' : ''}`, hits.map(row), {
     budget: options.budget ?? defaultBudget,
     narrow: 'pass kind or path',
     compact: hits.map((s) => `${s.id}  ${s.kind} ${s.line}`),
@@ -51,6 +62,30 @@ export async function find(
     text: [fitted.text, ...body, ...hint].join('\n'),
     locations: hits.slice(0, fitted.shown).map((s) => ({ file: s.file, line: s.line })),
   };
+}
+
+// The meaning index of [ws], built on its first question in words and again when it has other files.
+const concepts = new WeakMap<Workspace, { count: number; at: number; index: Promise<ConceptIndex> }>();
+function conceptsOf(ws: Workspace): Promise<ConceptIndex> {
+  const kept = concepts.get(ws);
+  if (kept && kept.count === ws.index.files.length && Date.now() - kept.at < 60_000) return kept.index;
+  const index = ConceptIndex.build(ws.root, ws.index.files.flatMap((f) => ws.index.symbolsIn(f)));
+  concepts.set(ws, { count: ws.index.files.length, at: Date.now(), index });
+  return index;
+}
+
+// Reciprocal rank fusion of rankings, as hybrid search engines merge them: each symbol scores
+// weight/(60 + its rank) in each list it is in.
+function fuse(...lists: [CodeSymbol[], number][]): CodeSymbol[] {
+  const score = new Map<string, { symbol: CodeSymbol; score: number }>();
+  for (const [list, weight] of lists) {
+    list.forEach((symbol, rank) => {
+      const entry = score.get(symbol.id) ?? { symbol, score: 0 };
+      entry.score += weight / (60 + rank);
+      score.set(symbol.id, entry);
+    });
+  }
+  return [...score.values()].sort((a, b) => b.score - a.score).map((e) => e.symbol);
 }
 
 // Tokens a grep may add for the source around its hits. Measured on public
@@ -271,13 +306,14 @@ export async function refs(
     total: options.code ? found.length : new Set(found.map((p) => p.file)).size,
   });
   // Docs, specs, configs and translations that name it, which the compiler does not see.
-  const outside = await mentionsOutsideCode(ws.root, symbol.name);
+  const outside = await mentionsOutsideCode(ws.root, symbol.name, 6, new Set(found.map((p) => `${p.file}:${p.line + 1}`)));
   const more = outside.total > outside.shown.length ? ` (+${outside.total - outside.shown.length} more)` : '';
   // Every use the compiler confirmed, listed, and no mention it could not
   // resolve: nothing to search again for.
-  const complete = precision === 'lsp' && !fitted.truncated && found.length <= limit && unconfirmed.length === 0;
+  const complete = (precision === 'lsp' || precision === 'imports') && !fitted.truncated && found.length <= limit && unconfirmed.length === 0;
   const listed = complete ? fitted.text.replace(header, `${header} · complete`) : fitted.text;
-  const unknown = unconfirmed.length > 0 ? `\nunconfirmed, the compiler cannot tell: ${unresolvedRow(unconfirmed, where)}` : '';
+  const why = precision === 'imports' ? 'imported from where CSyk cannot follow' : 'the compiler cannot tell';
+  const unknown = unconfirmed.length > 0 ? `\nunconfirmed, ${why}: ${unresolvedRow(unconfirmed, where)}` : '';
   const text = outside.total > 0 ? `${listed}${unknown}\noutside code: ${outside.shown.join(', ')}${more}` : `${listed}${unknown}`;
   const shownFiles = options.code
     ? new Set(rows.slice(0, fitted.shown).map((r) => r.slice(0, r.indexOf(':'))))
@@ -345,6 +381,7 @@ export async function grep(
     return stdout;
   };
   let stdout = '';
+  let asWritten = false;
   try {
     // A missing path is searched as no match, not as ripgrep's error.
     if (options.path && !existsSync(join(ws.root, options.path))) throw Object.assign(new Error(), { code: 1 });
@@ -355,6 +392,12 @@ export async function grep(
     // regex (`f(x`), which is then searched for as written.
     if (code === 2 && !options.literal) stdout = await search(true).catch(() => '');
     else if (code !== 1) throw error;
+    // Code written as it reads (`escapeText(label)`, `a[0].b`) matches nothing as a regex:
+    // searched as written then, unless a regex was asked for.
+    else if (options.literal === undefined && /[()[\]{}.*+?|^$\\]/.test(pattern)) {
+      stdout = await search(true).catch(() => '');
+      asWritten = stdout.trim().length > 0;
+    }
   }
   // Files hit while the index still fills are indexed first, for their symbols.
   await ws.indexNow([...new Set(stdout.split('\n').map((entry) => /^(?:\.\/)?(.+?):\d+:/.exec(entry)?.[1] ?? ''))].slice(0, 200));
@@ -386,10 +429,10 @@ export async function grep(
   // place with its lines, else every file with its count. A rung shows all
   // it covers or gives way to the next: a list cut short hid the files past
   // it, and the agent grepped again for them.
-  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · complete`, ...hits.map(hitRow)]);
+  const rows = groupByFile([`${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text${asWritten ? ', as written: no regex match' : ''} · complete`, ...hits.map(hitRow)]);
   if (estimateTokens(rows.join('\n')) <= listBudget) return withSource(ws, hits, rows, session, options.brief);
   const lines = [
-    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text · lines per symbol · complete`,
+    `${plural(hits.length, 'hit')} in ${plural(places.size, 'place')} · text${asWritten ? ', as written: no regex match' : ''} · lines per symbol · complete`,
     ...[...byFile].map(([file, fileHits]) => `${file}  ${linesPerPlace(fileHits)}`),
   ];
   if (estimateTokens(lines.join('\n')) <= listBudget) {
@@ -401,7 +444,7 @@ export async function grep(
   const files = [...byFile.entries()].sort(([a, x], [b, y]) => (x[0]?.rank ?? 0) - (y[0]?.rank ?? 0) || y.length - x.length || a.localeCompare(b));
   const homes = (fileHits: Hit[]) => [...new Set(fileHits.flatMap((h) => (h.home ? [h.home.name] : [])))];
   const fitted = fit(
-    `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text · files with the most hits first`,
+    `${plural(hits.length, 'hit')} in ${plural(files.length, 'file')} · text${asWritten ? ', as written: no regex match' : ''} · files with the most hits first`,
     files.map(([file, fileHits]) => {
       const names = homes(fileHits);
       return `${file}  ${fileHits.length}${names.length ? ` · ${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}` : ''}`;
@@ -493,6 +536,43 @@ export async function references(
   ws: Workspace,
   symbol: CodeSymbol,
   options: Omit<ReferenceOptions, 'overloads'> = {},
+): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
+  if (isComponentFile(symbol.file)) return componentReferences(ws, symbol, options);
+  const answer = await compilerReferences(ws, symbol, options);
+  if (symbol.lang !== 'ts' && symbol.lang !== 'js') return answer;
+  // Astro, Svelte and Vue files, which the compiler does not read: uses through their imports.
+  const declares = (file: string, name: string) => ws.index.symbolsIn(file).some((s) => s.name === name && !s.parent);
+  const extra = await componentUses(ws.root, symbol, options.where, declares);
+  if (extra.found.length === 0 && extra.unconfirmed.length === 0) return answer;
+  const unconfirmed = [...(answer.unconfirmed ?? []), ...extra.unconfirmed];
+  return { ...answer, found: [...answer.found, ...extra.found], ...(unconfirmed.length ? { unconfirmed } : {}) };
+}
+
+/**
+ * References to what a component file declares: to its component, through the imports of its
+ * path ([componentRefs]); to the rest, mentions in the file itself, where its frontmatter's and
+ * script's names live, and for an export in code elsewhere too.
+ */
+async function componentReferences(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  options: Omit<ReferenceOptions, 'overloads'>,
+): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
+  if (symbol.line === 1 && symbol.name === componentOf(symbol.file).name && symbol.range[0] === 1) {
+    const { found, unconfirmed } = await componentRefs(ws.root, symbol, options.where);
+    return { found, precision: 'imports', ...(unconfirmed.length ? { unconfirmed } : {}) };
+  }
+  const extensions = new Set([...(serverFor('x.ts')?.extensions ?? []), ...componentExtensions]);
+  const found = (await codeMentions(ws.root, symbol.name, extensions, options.where)).filter(
+    (p) => !(p.file === symbol.file && p.line === symbol.line - 1) && (symbol.exported || p.file === symbol.file),
+  );
+  return { found, precision: 'text (no compiler reads this file)' };
+}
+
+async function compilerReferences(
+  ws: Workspace,
+  symbol: CodeSymbol,
+  options: Omit<ReferenceOptions, 'overloads'>,
 ): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
   const service = await ws.precision(symbol.file);
   const overloads = ws.index
@@ -690,19 +770,41 @@ export function resolve(ws: Workspace, target: string): { symbol?: CodeSymbol; n
   if (qualified.length) return { symbol: qualified[0], note: qualified.length > 1 ? `also: ${qualified.slice(1).map((s) => s.id).join(', ')}` : '' };
   const named = ws.index.named(target);
   if (named.length === 0) {
+    const tagged = componentsByTag(ws, target);
+    if (tagged[0]) return { symbol: tagged[0], note: tagged.length > 1 ? `also: ${tagged.slice(1).map((s) => s.id).join(', ')}` : '' };
     const byFile = defaultExportNamed(ws, target);
     if (byFile[0]) return { symbol: byFile[0], note: byFile.length > 1 ? `also: ${byFile.slice(1).map((s) => s.id).join(', ')}` : '' };
     const near = ws.index.search(target, { limit: 3 }).map((s) => s.id);
     return { note: `no symbol named ${target}${near.length ? `; nearest: ${near.join(', ')}` : ''}` };
   }
   // Ranked among the symbols of exactly this name, not cut first: a close name can rank higher.
-  const ranked = ws.index.search(target, { limit: Number.MAX_SAFE_INTEGER }).filter((s) => s.name === target);
+  // A page is reached by its URL, never by its name: a declaration of the same name comes first.
+  const ranked = ws.index
+    .search(target, { limit: Number.MAX_SAFE_INTEGER })
+    .filter((s) => s.name === target)
+    .sort((a, b) => Number(a.kind === 'route' && isComponentFile(a.file)) - Number(b.kind === 'route' && isComponentFile(b.file)));
   // An override gives way to the declaration it overrides, which calls through the base type reach.
   let best = ranked[0];
   for (let base = best && baseOf(ws, best, ranked); base; base = baseOf(ws, base, ranked)) best = base;
   if (!best) return { note: `no symbol named ${target}` };
   const others = ranked.filter((s) => s !== best);
   return { symbol: best, note: others.length ? `also named so: ${others.map((s) => s.id).join(', ')}` : '' };
+}
+
+/**
+ * The component files a template's tag [name] stands for, where the file is named otherwise: in
+ * kebab case (`<base-button>`), by Nuxt's path naming (`<CustomersAddModal>` for
+ * components/customers/AddModal.vue, `Lazy…`) or under a name a `.d.ts` makes global.
+ */
+function componentsByTag(ws: Workspace, name: string): CodeSymbol[] {
+  if (!/^[A-Za-z][\w-]*$/.test(name)) return [];
+  const pascal = name.includes('-') ? pascalCase(name) : name;
+  const files = new Set<string>();
+  for (const c of nuxtComponents(ws.root)) if (c.names.includes(pascal)) files.add(c.file);
+  for (const g of declaredGlobals(ws.root)) if (g.name === pascal && g.exported === 'default' && isComponentFile(g.target)) files.add(g.target);
+  const found = [...files].flatMap((file) => ws.index.get(`${file}#${componentOf(file).name}`) ?? []);
+  if (found.length === 0 && pascal !== name) found.push(...ws.index.named(pascal).filter((s) => isComponentFile(s.file) && s.line === 1));
+  return found;
 }
 
 /**

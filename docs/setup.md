@@ -128,6 +128,14 @@ answers in each one's format):
   shell read of more than 200 lines, or piped into another command, is not counted, as the agent
   may not have seen all of it.
 
+In Claude Code, each hook has a 10-second `timeout` and `"onFailure": "continue"`. In Code Mode
+(Claude Code 2.1.323 and later, experimental), a `PreToolUse` hook that fails or times out
+refuses the call it was asked about, so a CSyk hook that fails lets the call go ahead. An
+earlier `csyk setup` is brought up to date when it runs again. In Code Mode
+(`CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1`), nothing counts as already shown: Claude's script
+may call a tool and pass on only part of the answer, so `post-read` notes nothing and `read`
+always sends the code.
+
 The note tells each agent how to read code. Claude Code's `Edit` only changes a file its own
 `Read` has opened, and a `Read` of a few lines is enough: there the note says to read code with
 CSyk and, before an edit, to `Read` only the lines to change, with the offset and limit CSyk's

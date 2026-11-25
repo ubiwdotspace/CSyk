@@ -29,7 +29,7 @@ const reading: Record<'claude' | 'other', string> = {
  * calls with the wrong arguments before its first answer.
  */
 const argumentsLine = `- Arguments: \`grep(pattern, path?, glob?, literal?)\`, \`find(query, kind?, path?)\`, \`read(target)\`,
-  \`refs(target)\`, \`calls(target, direction?: in|out, depth?)\`, \`impact(since?)\`.`;
+  \`refs(target, unused?)\`, \`calls(target, direction?: in|out, depth?)\`, \`impact(since?)\`.`;
 
 /** The note for [agent]'s always-read instructions; kept short, as it costs tokens on every turn. */
 export const noteFor = (agent: string) =>
@@ -41,7 +41,9 @@ export const note = `## Code search (CSyk)
 - Search code with CSyk \`grep\` (a regex, as for Grep). Every hit names its enclosing function or
   class, and hits in a few small functions bring their source along, so you can often answer
   without opening files.
-- A name, or part of one → \`find\`; its uses → \`refs\`; callers or callees → \`calls\`.
+- A name, or part of one → \`find\`; its uses → \`refs\` (a component file by its path); callers
+  or callees → \`calls\`.
 ${reading.claude}- Start with every search the task suggests, in one turn: a \`grep\` for each error message, name
   or path it mentions, called in parallel. Each extra turn re-reads your whole context.
-- After editing, \`impact\` lists the changed symbols, their callers and the tests to run.`;
+- After editing, \`impact\` lists the compiler errors the edit made (no need to run tsc, go build
+  or dart analyze), the changed symbols, their callers and the tests to run.`;
