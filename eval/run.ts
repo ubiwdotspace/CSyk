@@ -113,7 +113,7 @@ async function runCases(
     const result = await adapter.run(c, corpus);
     const ms = performance.now() - start;
     scores.push(
-      scoreCase(c.id, c.category, result.hits, c.expect, {
+      scoreCase(c.id, c.category, result.hits.filter((h) => !c.unscored?.some((ext) => h.file.endsWith(ext))), c.expect, {
         tokens: countTokens(result.output),
         calls: result.calls,
         ms,

@@ -71,6 +71,58 @@ classes, and its answers say where they come from.
 The comparison with text search for every repository, and the time each tool takes, are in
 [BASELINES.md](BASELINES.md).
 
+## Components
+
+Who uses a component, or a TypeScript name used in component files, on six public projects
+pinned in `eval/corpora.yaml`. The answers come from each framework's own language server
+(Astro's, Svelte's, Vue's 2), which reads these files with the TypeScript around them; no
+TypeScript compiler reads them for CSyk. Each mention of the name is resolved by the server, as
+for the other languages, through a `.d.ts`'s `typeof import(…)` to the file. Recall and
+precision of `refs`, in percent; the CSyk before is `651fa7c`, before component files.
+
+| Project | What it tests | Cases | CSyk before | CSyk | ripgrep |
+|---|---|---:|---|---|---|
+| astro-paper | an Astro app, the `@/` alias of tsconfig paths | 20 | 28.3 / 30.2 | **100 / 100** | 100 / 74.8 |
+| starlight | an Astro monorepo, imports by package name and virtual modules | 20 | 15.6 / 23.9 | **100 / 100** | 96.7 / 45.0 |
+| svelte-realworld | a SvelteKit app, `$lib` | 10 | 50.0 / 100 | **100 / 100** | 100 / 90.0 |
+| vitesse | Vue, auto-imported components and functions (`components.d.ts`) | 7 | 23.8 / 32.0 | **100 / 100** | 100 / 49.3 |
+| nuxt-dashboard | Nuxt 4, auto-imports by Nuxt's conventions | 12 | 0 / 0 | **100 / 100** | 100 / 94.4 |
+
+ripgrep, given the component's name, finds nearly every use but lists more than the uses (the
+same name elsewhere, comments, other components so named) in more tokens: on starlight 1,950
+tokens an answer against CSyk's 119. The servers read no MDX, so hits in `.mdx` files (and in
+another framework's files) are not scored (`unscored` in the case file); MDX is checked by hand:
+on starlight, 75 docs pages import and use `Tabs`, and `refs` lists those 75.
+
+To run them: `npm install --prefix eval/tools` (the servers need TypeScript's JavaScript API, so
+they live apart from CSyk's TypeScript 7), `npm run corpora`, then in starlight, vitesse and
+nuxt-dashboard `pnpm install --frozen-lockfile --ignore-scripts`, in svelte-realworld `pnpm
+install --ignore-scripts` (its lockfile is broken at that commit) and `svelte-kit sync`, in
+nuxt-dashboard `nuxi prepare`, so the servers resolve packages and generated types. Then
+`npm run generate -- --corpus <name> --category C --lang <astro|svelte|vue>` and `npm run eval
+-- --adapter <csyk|b0> --corpus <name>`.
+
+### Gemini, asked who uses a component
+
+Who-uses-it tasks built from those cases (`npm run agent:tasks`, then `npm run agent`): Gemini
+(`gemini-3.8-flash-medium`) on the Antigravity command line, agy alone (`b0`) against agy as
+`csyk setup` sets it up, on CSyk `cdba0d0`. A task passes when the answer names every file that
+uses it. One run each; agy alone ran on another day than CSyk for astro-paper (2026-11-18),
+starlight (2026-11-18 and 19) and svelte-realworld (2026-11-18), on the same day for the other two.
+
+| Project | Tasks | Right, agy / with CSyk | Tokens mean, agy → with CSyk | Calls mean | Fewer tokens with CSyk |
+|---|---:|---|---|---|---|
+| astro-paper | 10 | 10 / 10 | 67k → **44k (−34.8%)** | 5.1 → 3.5 | 9 of 10 |
+| starlight | 10 | 10 / 10 | 234k → **111k (−52.6%)** | 12.1 → 8.0 | 9 of 10 |
+| svelte-realworld | 10 | 10 / 10 | 51k → **38k (−24.9%)** | 4.1 → 3.1 | 9 of 10 |
+| vitesse | 7 | 7 / 7 | 135k → **64k (−52.5%)** | 10.3 → 5.6 | 7 of 7 |
+| nuxt-dashboard | 10 | 10 / 10 | 100k → **42k (−57.9%)** | 7.9 → 3.4 | 10 of 10 |
+
+Both find every file; CSyk saves the reading. It saves most where components are used with no
+import (Vue's and Nuxt's auto-imports), which agy alone finds by opening files. The note's line
+that `refs` takes a component file by its path (`cdba0d0`) cut svelte-realworld's tokens from
+49k to 38k and starlight's from 181k to 111k, against CSyk without it.
+
 ## Agent sessions on real issues
 
 Answering single questions well is one thing; what matters in the end is whether an agent finds
@@ -423,11 +475,14 @@ Code alone again under each `--run` name.
 Agent sessions:
 
 ```sh
-npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-lean> --count 30 --seed 1
+npm run loc -- --dataset <polybench|swebench|multiswebench> --language <name> --setup <b0|csyk-setup> --count 30 --seed 1
 npm run loc:report
 ```
 
-`b0` is Claude Code alone and `csyk-lean` is with CSyk; `lsp-plugin`, `codegraph`, `serena` and
+Since 2026-11-18 the agent is Gemini (`gemini-3.8-flash-medium`) through the Antigravity
+command line, `agy`. `b0` is agy alone and `csyk-setup` is agy as `csyk setup` sets it up. The
+earlier results below were measured with Claude Code; running it again needs `--agent claude
+--other-model`, where `b0` is Claude Code alone and `csyk-lean` is with CSyk; `lsp-plugin`, `codegraph`, `serena` and
 `graphify` are the others above, each installed for the run. Each run writes its results to a file in
 `eval/results/` named after the setup, dataset and language; `--run <name>` keeps repeats of the
 same setup apart. Set `CSYK_LOC_DIR` to give a run its own copies of the repositories, so two

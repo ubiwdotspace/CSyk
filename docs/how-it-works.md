@@ -123,6 +123,19 @@ calls are the calls in its body, each followed to its definition. `impact` reads
 the symbols the change touches and follows their callers two levels up, stopping at tests, through
 at most 200 callers a level, code before tests and nearest first.
 
+**What an edit breaks.** `impact` first lists the compiler errors the change made, from the
+servers already running (tsc, pyright, gopls, the Dart server), so an agent need not run the
+compiler to find out. It asks the changed files and the files that use them: their importers,
+through files that re-export them (an `index.ts`, a Dart library, an `__init__.py`), and a Go
+package's other files, those that name what changed first, at most 30, within 15 seconds. Errors
+that were there before the edit are left out: each changed file's text at the revision is given to
+its server in memory (the disk is not touched), the files with errors are asked again, and only
+errors that run lacks are new, matched by code and message, not line. Three a file are shown, the
+rest counted. Checked by hand against the compilers themselves, a signature or name changed in one
+file: zustand 28 of 28 new errors (161 older ones left out), chi 15 of 15 call sites, provider 68
+of 68, fastapi-template 13 of 13 (102 older left out), in 0.7 to 6 seconds. Component files are
+not compiled, and a deleted file's importers are not found.
+
 **Speed.** Answers are cached until a file changes. A search for uses looks at the nearest
 mentions first and stops after five seconds, thirty for `calls` and `impact`, which follow callers
 two levels up and may wait for a language server still loading a large project; when it stops
@@ -177,7 +190,59 @@ the code), `lsp` (the language's compiler, through its language server) or `text
 when no language server is installed).
 
 If the agent asks again for code it has already seen and that has not changed, CSyk answers
-`[unchanged: <id>, shown at call #n]` instead of sending it again.
+`[unchanged: <id>, shown at call #n]` instead of sending it again. In Claude Code's Code Mode it always sends the code again:
+there a script calls the tools, and the model sees only what the script hands back.
+
+## Components (Astro, Svelte, Vue, MDX)
+
+An `.astro`, `.svelte`, `.vue` or `.mdx` file is read for its code alone: the Astro frontmatter,
+every `<script>`, MDX's `import` and `export` lines, the expressions in its markup (`{…}`, Vue's
+`{{ … }}` and bound attributes such as `:title` or `@click`) and the names of components used as
+tags (Vue's `<my-button>` as `MyButton`). An MDX file's frontmatter, fenced code and inline code are
+examples, not code, and its headings are sections as a Markdown doc's. The markup, styles, comments and
+plain text are blanked, line and column kept, and what is left is parsed as TSX. So `find` gives
+the file's component (named after the file, `my-button.vue` as `MyButton`; a page is a route) and
+what its scripts declare, which belong to the component; `grep` names the component a hit is in;
+and a name written in the markup's plain text is not a use.
+
+The compiler does not read these files, so `refs` and `calls` add their uses through imports: a
+name the file imports from the declaration's module (or from a barrel that re-exports it, two
+levels at most) is a use wherever the file writes it in code. A component's own uses are the
+files that import its path, by default or as `{ default as X }`, and then write that name, often
+as a tag; a re-export counts, and the files that import it from there. Such an answer says
+`imports` where a compiler's says `lsp`. An import is followed as the compiler would: relative,
+by the nearest tsconfig's or jsconfig's `paths` (through `extends`), by `$lib/`, `@/` or `~/`, to a
+module a `.d.ts` declares by name (`declare module 'virtual:…' { … import('./x.astro') … }`), or to
+a workspace package by its `package.json` name and `exports`, a built `dist/` file read as the
+`src/` it came from. Names used with no import count when a `.d.ts` makes them global
+(`TheFooter: typeof import('./components/TheFooter.vue')['default']`, `const isDark: typeof
+import('./composables/dark').isDark`), and in a Nuxt app by Nuxt's conventions, since its
+generated `.d.ts` files are not in git: a component under `components/` by its path's name
+(`components/home/HomeChart.vue` is `HomeChart`, `components/customers/AddModal.vue`
+`CustomersAddModal`), what `composables/` and `utils/` export as it is. A mention imported from a
+module that cannot be followed (a package outside the repository, an alias CSyk does not know) is
+listed as unconfirmed.
+
+## Maps, meaning and unused code
+
+Three answers borrow from tools built for other jobs, each kept light and given only when asked.
+
+- **A map** (`read .`, `read <folder>`), as Aider's repo map: the folder's files ranked by PageRank
+  over the file import graph, so a file the much-imported files import ranks high, each with how
+  many files import it and the names they import from it. Imports are read for TS and JS (as for
+  components), Python (`from … import`, from any folder above the file, submodules apart), Go
+  (packages, by every `go.mod`) and Dart (`package:` imports, by every `pubspec.yaml`).
+- **Meaning** (`find` given a question of two words or more), without embeddings: BM25 over the
+  stemmed words of each symbol's name, its file's path, its signature, the comment above it or its
+  docstring, and the names its body uses; a small table of code verbs that mean the same (make,
+  create, build) at half weight; what code does before the types it uses. It is fused with the
+  name search by reciprocal rank fusion, the names at half weight. Built on the first such
+  question, kept until the index changes.
+- **Unused exports** (`refs <folder>` with `unused`), as knip or Go's deadcode: a name no other
+  file mentions is unused; one named elsewhere is asked of the compiler, within 20 seconds, and
+  unused when none of its references is outside its own file. Index and main files, pages and
+  routes and what a package.json exports are entry points and stay out; the answer calls the rest
+  candidates, since a dynamic import, a string or a framework may still reach them.
 
 ## Limitations
 

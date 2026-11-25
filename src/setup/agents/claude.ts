@@ -9,7 +9,9 @@ export const claude: Agent = {
   name: 'Claude Code',
   found: () => Boolean(onPath('claude')),
   steps(scope, withRefusals) {
-    const run = (name: string) => [{ type: 'command', command: hookCommand(name, 'claude') }];
+    // In Code Mode (2.1.323) a PreToolUse hook that cannot start, crashes or times out refuses the
+    // call it was asked about, unless told to let it go ahead: a CSyk hook must never block work.
+    const run = (name: string) => [{ type: 'command', command: hookCommand(name, 'claude'), timeout: 10, onFailure: 'continue' }];
     // A shell search of the code (rg, grep, git grep) is turned down for CSyk grep: with the
     // built-in Grep off, agents search with the shell instead. --hooks also turns down whole
     // reads of long files and greps for a bare name.

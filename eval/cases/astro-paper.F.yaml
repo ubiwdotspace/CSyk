@@ -1,0 +1,35 @@
+# F: a question about a concept, answered with the symbol that implements it. Written by hand
+# from the symbols' doc comments, in words that are not the symbol's name.
+cases:
+  - id: F01
+    query: "order articles newest first"
+    expect:
+      - { file: "src/utils/getSortedPosts.ts", lines: [10, 22] }
+  - id: F02
+    query: "hide drafts and articles scheduled for later"
+    expect:
+      - { file: "src/utils/postFilter.ts", lines: [23, 32] }
+  - id: F03
+    query: "list every tag used by the articles, once each"
+    expect:
+      - { file: "src/utils/getUniqueTags.ts", lines: [17, 28] }
+  - id: F04
+    query: "turn a title into a URL-safe string"
+    expect:
+      - { file: "src/utils/slugify.ts", lines: [11, 16] }
+  - id: F05
+    query: "build the nested table of contents from headings"
+    expect:
+      - { file: "src/utils/buildTocTree.ts", lines: [15, 28] }
+  - id: F06
+    query: "pick the font file for a given weight"
+    expect:
+      - { file: "src/utils/getFontPathByWeight.ts", lines: [3, 22] }
+  - id: F07
+    query: "wrap tables so they scroll horizontally"
+    expect:
+      - { file: "src/utils/rehypeTableWrapper.js", lines: [8, 29] }
+  - id: F08
+    query: "fall back to the default social preview image"
+    expect:
+      - { file: "src/utils/resolveDefaultOgImagePath.ts", lines: [24, 51] }

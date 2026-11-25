@@ -7,6 +7,15 @@ import { join } from 'node:path';
 // changes it, for measuring (Infinity: never long).
 const longSession = Number(process.env.CSYK_LONG_SESSION) || 3000;
 
+/**
+ * Whether the agent runs in Claude Code's Code Mode (2.1.323, experimental): there it writes
+ * JavaScript that calls its tools, CSyk's included, and gives itself only what the script
+ * returns. A tool's answer, or a file its Read took in, may never reach the model, so nothing
+ * counts as shown: `[unchanged]` would point at code the agent never saw. Hooks and the MCP
+ * server inherit Claude Code's environment, settings' `env` included.
+ */
+export const codeMode = (env: NodeJS.ProcessEnv = process.env): boolean => env.CLAUDE_CODE_EXPERIMENTAL_CODE_MODE === '1';
+
 /** How long a shown body stays "already shown" for hosts that compact without telling us. */
 const ledgerTtl = 30 * 60 * 1000;
 
@@ -51,11 +60,14 @@ export class Session {
   private readonly seen: string | undefined;
   private seenCache: { size: number; reads: SeenRead[] } = { size: -1, reads: [] };
   private readonly now: () => number;
+  private readonly remembers: boolean;
 
-  constructor(options: { marker?: string; seen?: string; now?: () => number } = {}) {
+  /** [remember] false: nothing counts as shown, neither CSyk's own bodies nor the agent's reads (Code Mode). */
+  constructor(options: { marker?: string; seen?: string; now?: () => number; remember?: boolean } = {}) {
     this.marker = options.marker;
     this.seen = options.seen;
     this.now = options.now ?? Date.now;
+    this.remembers = options.remember ?? true;
     this.resetAt = this.now();
   }
 
@@ -65,7 +77,7 @@ export class Session {
    */
   readByAgent(file: string, from: number, to: number): boolean {
     this.checkReset();
-    if (!this.seen) return false;
+    if (!this.seen || !this.remembers) return false;
     let modified: number;
     try {
       modified = statSync(file).mtimeMs;
@@ -110,7 +122,7 @@ export class Session {
   /** The call that showed this exact body of [id], if it is still in context. */
   shown(id: string, hash: string): number | undefined {
     this.checkReset();
-    const entry = this.shownAt.get(id);
+    const entry = this.remembers ? this.shownAt.get(id) : undefined;
     if (!entry || entry.hash !== hash || this.now() - entry.at > ledgerTtl) return undefined;
     return entry.call;
   }

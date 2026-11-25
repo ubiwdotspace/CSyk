@@ -1,0 +1,35 @@
+# F: a question about a concept, answered with the symbol that implements it. Written by hand
+# from the symbols' doc comments, in words that are not the symbol's name.
+cases:
+  - id: F01
+    query: "save the store state to local storage and restore it"
+    expect:
+      - { file: "src/middleware/persist.ts", lines: [403, 403] }
+  - id: F02
+    query: "inspect state changes in the redux browser extension"
+    expect:
+      - { file: "src/middleware/devtools.ts", lines: [434, 434] }
+  - id: F03
+    query: "compare two objects one level deep"
+    expect:
+      - { file: "src/vanilla/shallow.ts", lines: [48, 74] }
+  - id: F04
+    query: "listen to changes of one slice of the state only"
+    expect:
+      - { file: "src/middleware/subscribeWithSelector.ts", lines: [72, 73] }
+  - id: F05
+    query: "make a store outside of React"
+    expect:
+      - { file: "src/vanilla.ts", lines: [99, 100] }
+  - id: F06
+    query: "write updates by mutating a draft"
+    expect:
+      - { file: "src/middleware/immer.ts", lines: [87, 87] }
+  - id: F07
+    query: "reducer with dispatched actions"
+    expect:
+      - { file: "src/middleware/redux.ts", lines: [50, 50] }
+  - id: F08
+    query: "storage that serializes state as text"
+    expect:
+      - { file: "src/middleware/persist.ts", lines: [31, 61] }

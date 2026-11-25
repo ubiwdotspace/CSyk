@@ -3,6 +3,7 @@ import { existsSync, symlinkSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { note } from '../../src/guide.ts';
 import { watchResources } from '../harness/resources.ts';
@@ -19,7 +20,15 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 export const antigravitySetups = ['b0', 'csyk-lean', 'csyk-setup'] as const;
 
 async function homeFor(setup: string, cwd: string): Promise<string> {
-  const home = join(homedir(), '.cache/csyk-bench-home', `agy-${setup}`);
+  // One home per setup and project: runs side by side on two projects each rewrite their own
+  // (a shared one was wiped under a running session, which then hung).
+  // Named by a hash, not the setup: a session that looks around its HOME must not learn which
+  // setup it is, nor find another's (edit1: one read a concurrent session's transcript).
+  // CSYK_AGY_HOME_<SETUP> (CSYK_AGY_HOME_CSYK_SETUP) names a home to reuse: since 2026-11-19 agy
+  // asks a new home to sign in again, while one that has run before keeps working. Reused one
+  // session at a time only, as its brain folder is wiped after each.
+  const kept = process.env[`CSYK_AGY_HOME_${setup.toUpperCase().replace(/-/g, '_')}`];
+  const home = kept ?? join(homedir(), '.cache/csyk-bench-home', `agy-${createHash('sha1').update(`${setup}\0${cwd}`).digest('hex').slice(0, 12)}`);
   const config = join(home, '.gemini/config');
   await mkdir(config, { recursive: true });
   // agy keeps its sign-in in the login keychain, which macOS finds under HOME: only that is
@@ -77,15 +86,28 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
   const args = ['-p', prompt, '--model', model, '--output-format', 'stream-json', '--dangerously-skip-permissions', '--disable-slash-commands'];
   const start = performance.now();
   let watch: ReturnType<typeof watchResources> | undefined;
+  // A session can hang (once, 79 minutes with 2 s of CPU): stopped at the limit, it is not scored.
+  const limitMs = Number(process.env.CSYK_AGENT_TIMEOUT ?? 1200) * 1000;
+  let timedOut = false;
   const lines = await new Promise<string[]>((done, fail) => {
     const child = spawn('agy', args, { cwd, env: { ...process.env, HOME: home }, stdio: ['ignore', 'pipe', 'inherit'] });
     if (child.pid) watch = watchResources(child.pid);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+      setTimeout(() => child.kill('SIGKILL'), 5000).unref();
+    }, limitMs);
     let out = '';
     child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString('utf8')));
     child.on('error', fail);
-    child.on('close', () => done(out.split('\n').filter(Boolean)));
+    child.on('close', () => {
+      clearTimeout(timer);
+      done(out.split('\n').filter(Boolean));
+    });
   });
   const ms = performance.now() - start;
+  // What agy keeps of the session (its transcript, its plans): gone, so no later session reads it.
+  await rm(join(home, '.gemini/antigravity-cli/brain'), { recursive: true, force: true });
   const { peakMb, cpuSeconds } = (await watch?.stop()) ?? { peakMb: 0, cpuSeconds: 0 };
   if (process.env.CSYK_TRANSCRIPTS) {
     await mkdir(process.env.CSYK_TRANSCRIPTS, { recursive: true });
@@ -105,6 +127,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
   let errors = 0;
   let peakContext = 0;
   const byTool: Record<string, number> = {};
+  const commands: string[] = [];
   const total: Required<Usage> = { input_tokens: 0, output_tokens: 0, thinking_tokens: 0, cache_read_tokens: 0 };
   let answer = '';
   for (const line of lines) {
@@ -133,6 +156,7 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
       const message = typeof error === 'object' && error ? String((error as { message?: unknown }).message ?? '') : String(error ?? '');
       const name = step.state === 'DONE' ? tool : message.includes('pre-tool hook') ? `denied:${tool}` : `failed:${tool}`;
       byTool[name] = (byTool[name] ?? 0) + 1;
+      if (tool === 'run_command') commands.push(String(params.CommandLine ?? params.commandLine ?? params.command ?? JSON.stringify(params)).slice(0, 300));
       toolTokens += countTokens(step.tool_info?.output ?? message);
       if (error) errors++;
     }
@@ -143,6 +167,8 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     // Everything the model read and wrote, the cache included, as for the other agents.
     tokens: total.input_tokens + total.cache_read_tokens + total.output_tokens + total.thinking_tokens,
     toolTokens,
+    commands,
+    home,
     byTool,
     errors,
     peakContext,
@@ -153,5 +179,6 @@ export async function runAntigravity(prompt: string, cwd: string, setup: string,
     ms,
     peakMb,
     cpuSeconds,
+    ...(timedOut ? { timedOut: true as const } : {}),
   };
 }

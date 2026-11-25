@@ -124,6 +124,26 @@ describe('csyk setup for Cursor, OpenCode and Hermes Agent', () => {
 describe('the same hooks for every agent that has them', () => {
   const commands = (value: unknown) => JSON.stringify(value).match(/hook [a-z-]+(?: --agent [a-z]+)?/g) ?? [];
 
+  it('Claude Code: hooks that let the call through when they fail, brought up to date over an older setup', () => {
+    const project = temp('project');
+    const home = temp('home');
+    execFileSync('mkdir', ['-p', join(project, '.claude')]);
+    run(project, home, '--agent', 'claude');
+    const settings = join(project, '.claude', 'settings.json');
+    const first = JSON.parse(readFileSync(settings, 'utf8'));
+    expect(first.permissions.deny).toEqual(['Grep']);
+    const hook = first.hooks.PreToolUse[0].hooks[0];
+    expect(hook).toMatchObject({ type: 'command', timeout: 10, onFailure: 'continue' });
+    // As 0.2.0 wrote it, with the user's own hook beside it.
+    const own = { matcher: 'Bash', hooks: [{ type: 'command', command: 'my-check' }] };
+    const old = { ...first, hooks: { ...first.hooks, PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: hook.command }] }, own] } };
+    writeFileSync(settings, JSON.stringify(old));
+    run(project, home, '--agent', 'claude');
+    const again = JSON.parse(readFileSync(settings, 'utf8'));
+    expect(again.hooks.PreToolUse).toEqual([first.hooks.PreToolUse[0], own]);
+    expect(commands(again)).toEqual(['hook pre-bash', 'hook post-read', 'hook session-reset', 'hook session-reset']);
+  }, 30_000);
+
   it('Codex and Cursor in the project: pre-bash and session-reset, in each format, written once', () => {
     const project = temp('project');
     const home = temp('home');

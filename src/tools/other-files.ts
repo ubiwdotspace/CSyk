@@ -60,12 +60,14 @@ export async function refsToFile(ws: Workspace, file: string, budget = defaultBu
   return { text: fitted.text, locations: named.slice(0, fitted.shown).map((h) => ({ file: h.file, line: h.line })) };
 }
 
-/** Where [name] appears as a whole word outside code (docs, specs, configs, translations): `file:line`, at most [limit]. */
-export async function mentionsOutsideCode(root: string, name: string, limit = 6): Promise<{ shown: string[]; total: number }> {
+/** Where [name] appears as a whole word outside code (docs, specs, configs, translations): `file:line`, at most [limit], less the lines of [uses]. */
+export async function mentionsOutsideCode(root: string, name: string, limit = 6, uses: ReadonlySet<string> = new Set()): Promise<{ shown: string[]; total: number }> {
   if (name.length < 3) return { shown: [], total: 0 };
   // Lock files name every dependency and say nothing about the code.
-  const skip = [...[...codeExtensions].map((ext) => `!*${ext}`), '!*.lock', '!*-lock.json', '!*-lock.yaml'];
-  const hits = await search(root, ['-w', '-F', ...skip.flatMap((glob) => ['-g', glob]), '-e', name]);
+  // MDX is code and prose: its prose names things as a doc does.
+  const skip = [...[...codeExtensions].filter((ext) => ext !== '.mdx').map((ext) => `!*${ext}`), '!*.lock', '!*-lock.json', '!*-lock.yaml'];
+  // An MDX line that uses it is a use already, not a mention.
+  const hits = (await search(root, ['-w', '-F', ...skip.flatMap((glob) => ['-g', glob]), '-e', name])).filter((h) => !uses.has(`${h.file}:${h.line}`));
   return { shown: hits.slice(0, limit).map((h) => `${h.file}:${h.line}`), total: hits.length };
 }
 

@@ -55,7 +55,7 @@ describe('the MCP server', () => {
     expect(file).toContain("throw new Error('Session expired");
     expect(await call('read', { target: 'src/cart/total.ts:calculateTotal' })).toContain('src/cart/total.ts#calculateTotal');
     expect(await call('read', { target: 'src/auth/token-store.ts#save' })).toContain('save(');
-    expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  calculateTotal');
+    expect(await call('read', { target: 'src/cart/' })).toContain('src/cart/total.ts  ← 3  calculateTotal, calculateTax');
   });
 
   it('answers references from the compiler', async () => {
@@ -67,8 +67,11 @@ describe('the MCP server', () => {
         // Imported as sumOf there.
         'src/cart/receipt.ts  1, 6·receiptTotal',
         'test/cart.test.ts  1, 5',
+        // Once a session: a complete answer needs no confirming.
+        'hint: complete means every use is listed above; no grep or read is needed to confirm it',
       ].join('\n'),
     );
+    expect(await call('refs', { target: 'calculateTotal' })).not.toContain('hint: complete');
   }, 30_000);
 
   it('reads what agents write for a place: file:line, Class.method, a wrong path', async () => {

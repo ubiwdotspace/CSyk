@@ -1,0 +1,10 @@
+# Edit tasks (npm run agent -- --tasks edits): see zustand.edits.yaml.
+tasks:
+  - id: E01
+    check: go
+    prompt: Give NewRouteContext in context.go a `capacity int` parameter, used as the initial capacity of the URL param keys and values, and update every caller to pass 0.
+    expect: ['capacity int']
+  - id: E02
+    check: go
+    prompt: Rename URLParamFromCtx to URLParamFromContext everywhere.
+    expect: [URLParamFromContext]

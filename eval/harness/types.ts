@@ -24,6 +24,8 @@ export type Case = {
   /** For D: callers of the symbol (`in`) or what it calls (`out`). */
   direction?: 'in' | 'out';
   expect: Location[];
+  /** Extensions of files the answers' source does not read: hits there are not scored, either way. */
+  unscored?: string[];
 };
 
 export type Corpus = {

@@ -3,7 +3,7 @@ import { appendFileSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmS
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { toPosix } from '../paths.ts';
-import { resetMarker, seenLog } from '../token/session.ts';
+import { codeMode, resetMarker, seenLog } from '../token/session.ts';
 
 /** What Claude Code sends a hook on stdin, the fields used here; other agents' events are read into it (formats.ts). */
 export type HookInput = {
@@ -21,7 +21,7 @@ export type Denial = {
 // The extensions CSyk indexes, as in index/parse.ts; written out here so a
 // hook, which runs on every tool call, does not load the parsers.
 export const hookedExtensions: ReadonlySet<string> = new Set([
-  '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.dart',
+  '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.dart', '.astro', '.svelte', '.vue', '.mdx',
 ]);
 
 // Files longer than this are worth a list of their symbols before a whole read.
@@ -244,9 +244,11 @@ const wholeShellRead = 200;
 /**
  * PostToolUse on the agent's own file reads (Claude Code's Read; `cat`, `sed -n 'a,bp'`,
  * `head` or `nl` alone in a shell): notes the lines of source files in a served workspace it
- * now holds, so CSyk `read` points at them instead of sending them again.
+ * now holds, so CSyk `read` points at them instead of sending them again. Nothing in Code Mode,
+ * where a script's Read may never reach the model.
  */
-export function postRead(input: HookInput, roots: readonly string[], now = Date.now()): void {
+export function postRead(input: HookInput, roots: readonly string[], now = Date.now(), env: NodeJS.ProcessEnv = process.env): void {
+  if (codeMode(env)) return;
   const cwd = cwdOf(input);
   const reads = input.tool_name === 'Read' ? toolRead(input.tool_input ?? {}, cwd) : shellReads(String(input.tool_input?.command ?? ''), cwd);
   for (const read of reads) {
