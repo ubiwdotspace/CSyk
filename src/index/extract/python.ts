@@ -35,8 +35,10 @@ export function extractPython(root: Node, sink: SymbolSink): void {
       sink.add(name, route ? 'route' : parent ? 'method' : 'function', outer, exported, parent);
       return;
     }
-    if (node.type === 'class_definition' && !parent) {
-      const owner = sink.add(name, 'class', outer, exported);
+    // A class in a class (`ViewTestCases.EditObjectViewTestCase`) is a class too, whose
+    // subclasses name it through its holder.
+    if (node.type === 'class_definition') {
+      const owner = sink.add(name, 'class', outer, exported, parent);
       const body = node.childForFieldName('body');
       for (const member of body?.namedChildren ?? []) {
         if (member) visit(member, owner);

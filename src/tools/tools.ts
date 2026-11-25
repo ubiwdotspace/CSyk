@@ -1,6 +1,6 @@
 // size-ok: the six tools share their formatting, ranking and budget code.
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, extname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -44,7 +44,15 @@ export async function find(
   // A question in words (`where are tokens refreshed`): names and meaning, fused.
   const byMeaning = /\s/.test(query.trim()) && terms(query).length >= 2;
   // A question's words match many names in part, so its names count half as much as its meaning.
-  if (byMeaning) hits = fuse([hits, 0.5], [(await conceptsOf(ws)).search(query, { ...options, limit: 10 }).map((c) => c.symbol), 1]).slice(0, options.limit ?? 10);
+  if (byMeaning) {
+    // A name whose words start with the query's, in order (`view args` for `view_args`, `calc
+    // total` for calculateTotal), is what was asked for: it stays first, ahead of what the words
+    // mean, half the answers at most. A question's words (`where are tokens refreshed`) are not
+    // how a name's words start.
+    const named = hits.filter((s) => hasWords(s.name, query)).slice(0, Math.ceil((options.limit ?? 10) / 2));
+    const fused = fuse([hits, 0.5], [(await conceptsOf(ws)).search(query, { ...options, limit: 10 }).map((c) => c.symbol), 1]);
+    hits = [...named, ...fused.filter((s) => !named.includes(s))].slice(0, options.limit ?? 10);
+  }
   if (hits.length === 0) {
     const near = ws.index.nearest(query);
     return { text: `no symbol matches${near.length ? `; nearest: ${near.join(', ')}` : ''} · index`, locations: [] };
@@ -62,6 +70,27 @@ export async function find(
     text: [fitted.text, ...body, ...hint].join('\n'),
     locations: hits.slice(0, fitted.shown).map((s) => ({ file: s.file, line: s.line })),
   };
+}
+
+// Whether each word of [query], in order, starts a word of [name] (split at case changes,
+// digits and punctuation), the words of the name between them skipped.
+function hasWords(name: string, query: string): boolean {
+  const split = (text: string) =>
+    text
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+  const words = split(name);
+  const asked = split(query);
+  let at = 0;
+  for (const word of asked) {
+    while (at < words.length && !words[at]?.startsWith(word)) at++;
+    if (at === words.length) return false;
+    at++;
+  }
+  return asked.length > 0;
 }
 
 // The meaning index of [ws], built on its first question in words and again when it has other files.
@@ -575,9 +604,10 @@ async function compilerReferences(
   options: Omit<ReferenceOptions, 'overloads'>,
 ): Promise<{ found: Position[]; precision: string; unconfirmed?: Position[] }> {
   const service = await ws.precision(symbol.file);
-  const overloads = ws.index
-    .symbolsIn(symbol.file)
-    .filter((s) => s !== symbol && s.name === symbol.name && s.parent === symbol.parent);
+  const overloads = [
+    ...ws.index.symbolsIn(symbol.file).filter((s) => s !== symbol && s.name === symbol.name && s.parent === symbol.parent),
+    ...buildTwins(ws, symbol),
+  ];
   // A call through a supertype's method may reach this one: those methods count as it.
   const { methods: related, closed } = options.viaSupertypes ? await supertypeMethods(ws, symbol) : { methods: [], closed: true };
   // Go: its server says which interfaces fit. TS and Dart: the server's own
@@ -612,6 +642,39 @@ async function compilerReferences(
     (p) => !(p.file === symbol.file && p.line === symbol.line - 1),
   );
   return { found, precision: ws.stopped(symbol.file) ? 'text (the language server stopped twice)' : 'text (no language server)' };
+}
+
+// A Go declaration's twins: the same name and receiver in another file of its folder, one of
+// the two left out of this machine's build (`notifyOnResize` in terminal_unix.go and
+// terminal_windows.go). A call resolves to the one this machine builds, and is a call of every
+// twin. Not `init` and `main`, which every file or program may have, nor a test package's names.
+function buildTwins(ws: Workspace, symbol: CodeSymbol): CodeSymbol[] {
+  if (symbol.lang !== 'go' || symbol.name === 'init' || symbol.name === 'main' || symbol.file.endsWith('_test.go')) return [];
+  const qualified = (s: CodeSymbol) => s.id.slice(s.id.indexOf('#') + 1).replace(/~\d+$/, '');
+  return ws.index
+    .named(symbol.name)
+    .filter(
+      (s) =>
+        s.file !== symbol.file &&
+        s.lang === 'go' &&
+        !s.file.endsWith('_test.go') &&
+        (s.otherBuild || symbol.otherBuild) &&
+        dirname(s.file) === dirname(symbol.file) &&
+        qualified(s) === qualified(symbol) &&
+        !ignored(ws, s.file),
+    );
+}
+
+// Whether a Go file is built by no one (`//go:build ignore`): a generator or example program,
+// whose `run` is not the package's.
+function ignored(ws: Workspace, file: string): boolean {
+  let head = '';
+  try {
+    head = readFileSync(join(ws.root, file), 'utf8').slice(0, 2048);
+  } catch {
+    return false;
+  }
+  return /^\/\/\s*(?:go:build|\+build)\s+ignore\b/m.test(head);
 }
 
 /**
@@ -664,7 +727,8 @@ async function ancestorNames(ws: Workspace, type: CodeSymbol): Promise<Set<strin
 // Flutter's State is not in the workspace and adds nothing.
 async function supertypeMethods(ws: Workspace, symbol: CodeSymbol): Promise<{ methods: CodeSymbol[]; closed: boolean }> {
   const owner = symbol.parent ? ws.index.get(symbol.parent) : undefined;
-  if (!owner) return { methods: [], closed: true };
+  // A constructor is no override: `InheritedProvider.value(…)` never runs `StreamProvider.value`.
+  if (!owner || isConstructor(symbol)) return { methods: [], closed: true };
   const methods: CodeSymbol[] = [];
   // Whether every supertype is declared in the workspace, framework bases none.
   let closed = true;
@@ -681,13 +745,21 @@ async function supertypeMethods(ws: Workspace, symbol: CodeSymbol): Promise<{ me
           seen.add(base.id);
           next.push(base);
           const method = ws.index.symbolsIn(base.file).find((s) => s.parent === base.id && s.name === symbol.name);
-          if (method) methods.push(method);
+          if (method && !isConstructor(method)) methods.push(method);
         }
       }
     }
     types = next;
   }
   return { methods, closed };
+}
+
+// Whether [symbol] is a Dart named constructor (`StreamProvider.value(…)`,
+// `factory Config.fromJson(…)`), which its declaration starts with its class's name.
+export function isConstructor(symbol: CodeSymbol): boolean {
+  if (symbol.lang !== 'dart' || !symbol.parent) return false;
+  const owner = symbol.parent.slice(symbol.parent.indexOf('#') + 1).split('.').at(-1) ?? '';
+  return new RegExp(`^(?:(?:const|factory|external)\\s+)*${owner.replace(/\$/g, '\\$')}\\s*\\.\\s*${symbol.name.replace(/\$/g, '\\$')}\\b`).test(symbol.signature);
 }
 
 /**

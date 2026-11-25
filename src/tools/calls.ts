@@ -231,7 +231,9 @@ export async function impact(
         callerRows.set(id, { step, lines: [...caller.lines], callees: [symbol.name], row });
         receivers.set(id, await receiverOf(ws, symbol, caller));
         rows.push(row);
-        if (caller.home && !isTestCase(caller.home)) next.push(caller.home);
+        const follow = caller.home && !isTestCase(caller.home) ? followed(ws, caller.home) : undefined;
+        // Many attributes of one class lead to it once.
+        if (follow && !next.some((n) => n.id === follow.id)) next.push(follow);
       }
     }
     if (step < depth && next.length > maxFollow) notes.push(`${maxFollow} of ${next.length} callers at level ${step} followed, nearest first`);
@@ -297,6 +299,18 @@ async function callersOf(
   }
   const callers = [...byHome.values()].sort((a, b) => a.file.localeCompare(b.file) || (a.lines[0] ?? 0) - (b.lines[0] ?? 0));
   return { callers, precision, unconfirmed };
+}
+
+// What a caller's own callers are found for: a Python class attribute (`type = ChoiceField(…)`
+// in a serializer) runs when its class is made, so what reaches it are the class's uses, not
+// those of the attribute's name.
+function followed(ws: Workspace, home: CodeSymbol): CodeSymbol {
+  if (home.lang !== 'py' || home.kind !== 'field' || !home.parent) return home;
+  // `self.cache = make()` in a method is that method's call.
+  const method = ws.index.symbolsIn(home.file).find((s) => s.parent === home.parent && s.kind === 'method' && s.range[0] <= home.line && s.range[1] >= home.line);
+  if (method) return method;
+  const owner = ws.index.get(home.parent);
+  return owner && classKinds.has(owner.kind) ? owner : home;
 }
 
 // Uses the compiler could not resolve of the first three symbols that have
@@ -428,6 +442,8 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
         const callee = calleeAt(ws, span.file, span.nameLine + 1, name.text);
         // A member access counts only when it reaches a function.
         if (!name.called && !(callee.symbol && callableKinds.has(callee.symbol.kind))) continue;
+        // Go writes a conversion as a call (`Attr(x)`, `headerSource(h)`): a type is no callee.
+        if (symbol.lang === 'go' && callee.symbol && goTypeKinds.has(callee.symbol.kind)) continue;
         if (callee.symbol) {
           declared.push(callee);
           continue;
@@ -460,6 +476,8 @@ async function calleesOf(ws: Workspace, symbol: CodeSymbol): Promise<{ callees: 
   const precision = !service ? 'index' : service.alive ? 'lsp' : 'index, unconfirmed: the language server stopped; it starts again on the next call';
   return { callees: [...byId.values()], precision };
 }
+
+const goTypeKinds = new Set(['class', 'interface', 'type', 'enum']);
 
 // The callee declared at [line] of [file] and called as [name]: the symbol
 // declared there, a constructor (named by its class, placed at its own

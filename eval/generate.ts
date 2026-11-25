@@ -27,7 +27,7 @@ type Generated = { query: string; direction?: 'in' | 'out'; expect: { file: stri
 // Code a case should be about: not tests, end-to-end suites, stories, or
 // generated and vendored code such as WebAssembly glue or protobuf stubs.
 const generated =
-  /(\.stories\.|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.|\.pb\.go$|_gen\.go$|\.g\.dart$|\.freezed\.dart$)/;
+  /(\.stories\.|(^|\/)(vendor|generated|__generated__)\/|-bindings\.|\.generated\.|\.min\.|\.pb\.go$|_gen\.go$|\.g\.dart$|\.freezed\.dart$|\.mapper\.dart$|\.gen\.dart$)/;
 const isSource = (file: string) => !isTestFile(file) && !generated.test(file);
 
 // Names worth searching for: identifiers of five characters or more.

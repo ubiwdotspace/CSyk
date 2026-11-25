@@ -9,19 +9,22 @@ import { graphify } from './adapters/graphify.ts';
 import { serena } from './adapters/serena.ts';
 import { loadCaseFiles } from './harness/cases.ts';
 import { assertPinned, loadCorpora } from './harness/corpora.ts';
-import { scoreCase, summarize, type CaseScore } from './harness/metrics.ts';
+import { matches, scoreCase, summarize, type CaseScore } from './harness/metrics.ts';
 import { renderTable } from './harness/report.ts';
 import { watchResources } from './harness/resources.ts';
 import { countTokens } from './harness/tokens.ts';
-import type { Adapter, Case, Corpus } from './harness/types.ts';
+import type { Adapter, Case, Corpus, Hit, Location } from './harness/types.ts';
 
 const adapters: Record<string, () => Adapter> = { b0: () => b0Ripgrep, csyk, serena, graphify };
 
-const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>[,<name>…]] [--category <A-G>[,<A-G>…]] [--limit <n>]
+const usage = `Usage: npm run eval -- [--adapter b0|csyk|serena|graphify] [--corpus <name>[,<name>…]] [--category <A-G>[,<A-G>…]] [--limit <n>] [--misses <file>]
 
 Runs the cases in eval/cases/ (and eval/cases/private/) through an adapter,
 prints one table per corpus and writes every score to eval/results/. --limit
-keeps the first n cases of each kind per corpus.`;
+keeps the first n cases of each kind per corpus. --misses writes each case
+that did not score full marks to <file> as JSON: its query, the expected
+places, what was missed and what was answered beyond them, and the answer as
+the agent reads it.`;
 
 async function main(): Promise<void> {
   const { values } = parseArgs({
@@ -30,6 +33,7 @@ async function main(): Promise<void> {
       corpus: { type: 'string' },
       category: { type: 'string' },
       limit: { type: 'string' },
+      misses: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -52,6 +56,7 @@ async function main(): Promise<void> {
   if (files.length === 0) throw new Error('No case files match.');
 
   const results: Record<string, CaseScore[]> = {};
+  const misses: Miss[] = [];
   // Measured over the whole run, the adapter's servers and language servers
   // included; run one corpus per process to keep corpora apart. The
   // tokenizer is loaded first, so its memory is not counted for the tool.
@@ -68,7 +73,7 @@ async function main(): Promise<void> {
       assertPinned(corpus);
       // Cases are written in random order, so the first n are a fair sample.
       const cases = files.filter((f) => f.corpus === corpusName).flatMap((f) => f.cases.slice(0, Number(values.limit ?? Infinity)));
-      const { scores, skipped } = await runCases(adapter, corpus, cases);
+      const { scores, skipped } = await runCases(adapter, corpus, cases, values.misses ? misses : undefined);
       results[corpusName] = scores;
       tables.push(renderTable(`${adapter.name} · ${corpusName}`, summarize(scores), skipped));
     }
@@ -94,13 +99,20 @@ async function main(): Promise<void> {
   await mkdir(dirname(out), { recursive: true });
   await writeFile(out, `${JSON.stringify({ adapter: adapter.name, resources, results }, null, 2)}\n`);
   console.log(`Scores written to ${out.slice(root.length + 1)}`);
+  if (values.misses) {
+    await writeFile(values.misses, `${JSON.stringify(misses, null, 2)}\n`);
+    console.log(`${misses.length} case(s) short of full marks written to ${values.misses}`);
+  }
 }
+
+type Miss = { corpus: string; id: string; category: string; query: string; direction?: string; score: CaseScore; expect: Location[]; missed: Location[]; extra: Hit[]; output: string };
 
 /** Scores [adapter] on every case it answers; counts the ones it does not. */
 async function runCases(
   adapter: Adapter,
   corpus: Corpus,
   cases: Case[],
+  misses?: Miss[],
 ): Promise<{ scores: CaseScore[]; skipped: number }> {
   const scores: CaseScore[] = [];
   let skipped = 0;
@@ -112,13 +124,24 @@ async function runCases(
     const start = performance.now();
     const result = await adapter.run(c, corpus);
     const ms = performance.now() - start;
-    scores.push(
-      scoreCase(c.id, c.category, result.hits.filter((h) => !c.unscored?.some((ext) => h.file.endsWith(ext))), c.expect, {
-        tokens: countTokens(result.output),
-        calls: result.calls,
-        ms,
-      }),
-    );
+    const hits = result.hits.filter((h) => !c.unscored?.some((ext) => h.file.endsWith(ext)));
+    const score = scoreCase(c.id, c.category, hits, c.expect, { tokens: countTokens(result.output), calls: result.calls, ms });
+    scores.push(score);
+    const full = [score.p1, score.r5, score.recall, score.precision].every((x) => x === undefined || x === 1);
+    if (misses && !full) {
+      misses.push({
+        corpus: corpus.name,
+        id: c.id,
+        category: c.category,
+        query: c.query,
+        ...(c.direction ? { direction: c.direction } : {}),
+        score,
+        expect: c.expect,
+        missed: c.expect.filter((loc) => !hits.some((h) => matches(h, loc))),
+        extra: hits.filter((h) => !c.expect.some((loc) => matches(h, loc))),
+        output: result.output,
+      });
+    }
   }
   return { scores, skipped };
 }

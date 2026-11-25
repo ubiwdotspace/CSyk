@@ -270,6 +270,17 @@ describe('extractSymbols for Python', () => {
       'const lf_data',
     ]);
   });
+
+  it('finds a class in a class, under the one around it', async () => {
+    const text = ['class ViewTestCases:', '    class EditViewTestCase(Base):', '        def test_edit(self): pass', '    class Meta:', '        ordering = 1'].join('\n');
+    expect(await kinds('testing/views.py', text)).toEqual([
+      'class ViewTestCases',
+      'class ViewTestCases.EditViewTestCase',
+      'method ViewTestCases.EditViewTestCase.test_edit',
+      'class ViewTestCases.Meta',
+      'field ViewTestCases.Meta.ordering',
+    ]);
+  });
 });
 
 describe('extractSymbols for Go', () => {
@@ -339,6 +350,37 @@ describe('extractSymbols for Dart', () => {
       'type Callback',
     ]);
   });
+
+  it("finds named constructors, and an enhanced enum's members", async () => {
+    const text = [
+      'class Config {',
+      '  Config(this.url);',
+      '  Config.empty() : url = "";',
+      '  const Config.fixed(this.url);',
+      '  factory Config.fromJson(Map m) { return Config(m["url"]); }',
+      '  factory Config.other() = OtherConfig;',
+      '  bool operator ==(Object o) => true;',
+      '}',
+      'enum Ratio {',
+      '  wide, tall;',
+      '  static Ratio fromStorageValue(String v) => Ratio.wide;',
+      '  String get label => name;',
+      '  const Ratio();',
+      '}',
+    ].join('\n');
+    expect(await kinds('lib/config.dart', text)).toEqual([
+      'class Config',
+      'method Config.empty',
+      'method Config.fixed',
+      'method Config.fromJson',
+      'method Config.other',
+      'enum Ratio',
+      'field Ratio.wide',
+      'field Ratio.tall',
+      'method Ratio.fromStorageValue',
+      'method Ratio.label',
+    ]);
+  });
 });
 
 describe('extractSymbols for NestJS', () => {
@@ -384,6 +426,6 @@ describe('isCallAt', () => {
   it('finds calls in Python, Go and Dart', async () => {
     expect(await calledLines('a.py', ['target()', 'self.target(1)', '@target', 'def f(): pass', 'x = target'].join('\n'))).toEqual([0, 1, 2]);
     expect(await calledLines('a.go', ['package a', 'func f() {', '\ttarget()', '\tpkg.target(1)', '\tx := target', '}'].join('\n'))).toEqual([2, 3]);
-    expect(await calledLines('a.dart', ['void f() {', '  target(1);', '  a.target(2);', '  final x = target;', '}'].join('\n'))).toEqual([1, 2]);
+    expect(await calledLines('a.dart', ['void f() {', '  target(1);', '  a.target(2);', '  final x = target;', '  a?.target(3);', '}'].join('\n'))).toEqual([1, 2, 4]);
   });
 });

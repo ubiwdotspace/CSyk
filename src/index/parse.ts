@@ -249,7 +249,7 @@ export function declaresFunctionAt(tree: Tree, line: number, column: number): bo
 
 // Parents through which a callee's own name is reached: `a.b`, `pkg.F`,
 // Dart's `.b` selector.
-const memberTypes = new Set(['member_expression', 'attribute', 'selector_expression', 'unconditional_assignable_selector']);
+const memberTypes = new Set(['member_expression', 'attribute', 'selector_expression', 'unconditional_assignable_selector', 'conditional_assignable_selector']);
 
 /**
  * Whether the name at the 0-based [line] and [column] of [tree] is called

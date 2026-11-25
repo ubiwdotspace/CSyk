@@ -65,8 +65,13 @@ export async function newErrors(ws: Workspace, changed: readonly string[], since
     const answers = await pool([...which], 16, async (file) => ({ file, found: await services.get(file)?.diagnostics(file, deadline) }));
     return new Map(answers.filter((a) => a !== undefined).map((a) => [a.file, a.found]));
   };
-  const after = await ask(asked);
-  // The text before the edit, for each changed file the revision has; an added file has none.
+  // Only the errors this edit could have made: not an import of a package the machine has not
+  // installed (unless the edit wrote it), and, in a file that uses what changed, only on a line
+  // that names it. Errors on every line of a project whose packages are missing (netbox without
+  // Django) would otherwise all be asked about again, and listed when that runs out of time.
+  const added = await addedLines(ws.root, since, checkable);
+  // The text before the edit, for each changed file the revision has; an added file has none,
+  // and every line of it is the edit's.
   const before = new Map<string, string>();
   for (const file of checkable) {
     if (!services.has(file)) continue;
@@ -75,6 +80,23 @@ export async function newErrors(ws: Workspace, changed: readonly string[], since
       () => undefined,
     );
     if (text !== undefined) before.set(file, text);
+  }
+  const project = await projectNames(ws, since);
+  const texts = new Map<string, string[]>();
+  const lineOf = async (p: Problem) => {
+    if (!texts.has(p.file)) texts.set(p.file, (await readFile(join(ws.root, p.file), 'utf8').catch(() => '')).split('\n'));
+    return texts.get(p.file)?.[p.line] ?? '';
+  };
+  const relevant = async (p: Problem) => {
+    const written = (added.get(p.file)?.has(p.line) ?? false) || (checkable.includes(p.file) && !before.has(p.file));
+    if (!written && (await missingPackage(p, project))) return false;
+    return checkable.includes(p.file) || !pattern || pattern.test(await lineOf(p));
+  };
+  const after = new Map<string, Problem[] | undefined>();
+  for (const [file, found] of await ask(asked)) {
+    const kept: Problem[] = [];
+    for (const p of found ?? []) if (await relevant(p)) kept.push(p);
+    after.set(file, found && kept);
   }
   // Only a file with errors now can have new ones: the rest are not asked again.
   const erring = asked.filter((f) => (after.get(f) ?? []).length > 0);
@@ -144,3 +166,71 @@ async function namesBefore(root: string, since: string, files: readonly string[]
 }
 
 const key = (p: Problem) => `${p.code}\u0000${p.message}`;
+
+// Whether [p] says an import names a package that is not the project's, one the machine has not
+// installed: pyright's `Import "django.conf" could not be resolved`, TypeScript's bare
+// `Cannot find module 'react'`, Dart's `package:` URI of another package. A module named like a
+// file or folder the edit changed, moved or deleted is the project's: its importers broke.
+async function missingPackage(p: Problem, project: Project): Promise<boolean> {
+  const python = /^Import "([\w.]+)" could not be resolved/.exec(p.message);
+  const ts = /^Cannot find module '([^']+)'/.exec(p.message);
+  const dart = /^Target of URI doesn't exist: 'package:(\w+)\/([^']*)'/.exec(p.message);
+  const parts = python?.[1]?.split('.') ?? ts?.[1]?.split('/') ?? (dart ? [dart[1] ?? '', ...(dart[2] ?? '').split('/')] : undefined);
+  if (!parts) return false;
+  // Its first name: `django.db.models` is Django's, whatever models.py the edit changed.
+  if (project.touched.has((parts[0] ?? '').replace(/\.\w+$/, ''))) return false;
+  if (python) return !project.folders.has(parts[0] ?? '');
+  if (ts) return !/^(\.|\/|@\/|~|#|\$)/.test(ts[1] ?? '') && !project.folders.has(parts[0] ?? '');
+  return !(await project.dartPackages()).has(parts[0] ?? '');
+}
+
+type Project = { folders: Set<string>; touched: Set<string>; dartPackages: () => Promise<Set<string>> };
+
+// The names an import of the project's own code may start with: its folders and Python modules;
+// the stems and folders of the files the edit since [since] changed, moved or deleted; and,
+// when asked, its Dart packages' names from their pubspec.yaml.
+async function projectNames(ws: Workspace, since: string): Promise<Project> {
+  const parts = (file: string) => file.split('/').map((part) => part.replace(/\.\w+$/, ''));
+  const diff = await run('git', ['diff', '--relative', '--name-only', '--no-renames', since, '--'], { cwd: ws.root, maxBuffer: 64 * 1024 * 1024 }).then(
+    (r) => r.stdout.split('\n').filter(Boolean),
+    () => [],
+  );
+  let dart: Promise<Set<string>> | undefined;
+  return {
+    folders: new Set(ws.index.files.flatMap(parts)),
+    touched: new Set(diff.flatMap(parts)),
+    dartPackages: () =>
+      (dart ??= run('git', ['ls-files', '--', 'pubspec.yaml', '*/pubspec.yaml'], { cwd: ws.root }).then(
+        async (r) => {
+          const names = new Set<string>();
+          for (const file of r.stdout.split('\n').filter(Boolean)) {
+            const name = /^name:\s*([\w]+)/m.exec(await readFile(join(ws.root, file), 'utf8').catch(() => ''))?.[1];
+            if (name) names.add(name);
+          }
+          return names;
+        },
+        () => new Set<string>(),
+      )),
+  };
+}
+
+// The lines (0-based) the edit since [since] wrote in [files], by file.
+async function addedLines(root: string, since: string, files: readonly string[]): Promise<Map<string, Set<number>>> {
+  const diff = await run('git', ['diff', '--relative', '--unified=0', '--no-color', '--no-ext-diff', since, '--', ...files], {
+    cwd: root,
+    maxBuffer: 64 * 1024 * 1024,
+  }).then((r) => r.stdout, () => '');
+  const found = new Map<string, Set<number>>();
+  let file = '';
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('+++ ')) file = line.replace(/^\+\+\+ (b\/)?/, '');
+    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
+    if (!hunk) continue;
+    const start = Number(hunk[1]) - 1;
+    const count = hunk[2] === undefined ? 1 : Number(hunk[2]);
+    const lines = found.get(file) ?? new Set<number>();
+    for (let i = 0; i < count; i++) lines.add(start + i);
+    found.set(file, lines);
+  }
+  return found;
+}
