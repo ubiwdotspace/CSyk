@@ -1,16 +1,21 @@
 <p align="center">
-  <img src="docs/logo.png" alt="CSyk, the one who knows where the code is" width="200">
+  <a href="https://ubiw.space">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/ubiw-lockup-horizontal-reversed.svg">
+      <img src="docs/brand/ubiw-lockup-horizontal-color.svg" alt="UBIW" width="220">
+    </picture>
+  </a>
 </p>
 
 <h1 align="center">CSyk</h1>
 
-<p align="center"><em>He doesn't read the file. He knows the line.</em></p>
+<p align="center"><em>It doesn't read the file. It knows the line.</em></p>
 
 <p align="center">
-  <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-blue">
-  <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-339933">
-  <img alt="Works with Claude Code, Codex, Antigravity, Cursor, OpenCode and Hermes Agent" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Cursor%20%C2%B7%20OpenCode%20%C2%B7%20Hermes-d97757">
-  <img alt="TypeScript, JavaScript, Python, Go, Dart" src="https://img.shields.io/badge/languages-TypeScript%20%C2%B7%20JavaScript%20%C2%B7%20Python%20%C2%B7%20Go%20%C2%B7%20Dart-555">
+  <img alt="Licence: Apache-2.0" src="https://img.shields.io/badge/licence-Apache--2.0-1B2340">
+  <img alt="Node 22.18 or later" src="https://img.shields.io/badge/node-22.18%2B-1B2340">
+  <img alt="Works with Claude Code, Codex, Antigravity, Cursor, OpenCode and Hermes Agent" src="https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Cursor%20%C2%B7%20OpenCode%20%C2%B7%20Hermes-1F4BBD">
+  <img alt="TypeScript, JavaScript, Python, Go, Dart" src="https://img.shields.io/badge/languages-TypeScript%20%C2%B7%20JavaScript%20%C2%B7%20Python%20%C2%B7%20Go%20%C2%B7%20Dart-183B98">
 </p>
 
 Code search for AI coding agents. Your agent asks where something is defined, who uses it, who
@@ -29,7 +34,7 @@ into the agent as an MCP server.
 Runs on your machine: code never leaves it, and nothing is sent anywhere. macOS, Linux and
 Windows.
 
-> **Preview (0.1).** The numbers below come from public repositories and benchmarks, all
+> **Preview (0.4).** The numbers below come from public repositories and benchmarks, all
 > reproducible from this repository. CSyk has not yet been used widely on private codebases. When
 > an answer is wrong or misses something, [open an issue](https://github.com/ubiwdotspace/CSyk/issues)
 > with what you asked, what came back and what was right: each one becomes a test.
@@ -216,4 +221,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately, as
 
 ## Licence
 
-Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The UBIW logo in [`docs/brand/`](docs/brand/) is
+© UBIW Studio, all rights reserved, and is not covered by the licence.
+
+---
+
+<p align="center"><a href="https://ubiw.space">A UBIW product</a> · <a href="mailto:support@ubiw.space">support@ubiw.space</a></p>
