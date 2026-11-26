@@ -61,7 +61,7 @@ export async function impactCases(
     );
     const changed = bodies.slice(0, random() < 0.5 ? 1 : 2);
     if (changed.length === 0) continue;
-    const expect = await impactAnswer(oracle, changed.map((s) => spanOf(file, s)));
+    const expect = await impactAnswer(oracle, changed.map((s) => spanOf(file, s)), 40);
     if (expect.length <= changed.length || expect.length > 40) continue;
     // A line strictly inside each body, so the change is the function's own.
     const edits = changed.map((s) => {
@@ -78,13 +78,20 @@ export async function callAnswer(oracle: LspOracle, position: Position, directio
   return ranges(await oracle.calls(position, direction));
 }
 
-/** A G case's answer: the [changed] functions and their callers two levels up. */
-export async function impactAnswer(oracle: LspOracle, changed: Span[]): Promise<Expected[]> {
+/**
+ * A G case's answer: the [changed] functions and their callers two levels up. Past [most]
+ * places it stops asking, as the case will be dropped: a method every widget overrides has
+ * hundreds of callers, each of them a slow question to the server.
+ */
+export async function impactAnswer(oracle: LspOracle, changed: Span[], most = Number.POSITIVE_INFINITY): Promise<Expected[]> {
   const spans = [...changed];
   let level = changed;
   for (let step = 0; step < 2; step++) {
     const next: Span[] = [];
-    for (const span of level) next.push(...(await oracle.calls({ file: span.file, line: span.nameLine, character: span.nameColumn }, 'in')));
+    for (const span of level) {
+      next.push(...(await oracle.calls({ file: span.file, line: span.nameLine, character: span.nameColumn }, 'in')));
+      if (ranges([...spans, ...next]).length > most) return ranges([...spans, ...next]);
+    }
     spans.push(...next);
     level = next;
   }

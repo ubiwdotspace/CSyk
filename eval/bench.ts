@@ -9,11 +9,12 @@ import { mean } from './harness/metrics.ts';
 
 const usage = `Usage: npm run bench -- [--tier 5|10|20|30|50] [--lang ts|py|go|dart] [--only <tools>] [--setup csyk-setup] [--run <name>] [--skip questions|agents]
 
-Measures a change at a chosen size: single questions on the twelve
-repositories, then Gemini through agy (the test source) on public issues in
-TypeScript, JavaScript, Python and Go, with --setup and with agy alone side by
-side. Tiers nest: a tier's issues and questions are the first ones of every
-larger tier, so going up a tier only runs what is new.
+Measures a change at a chosen size: single questions on the twenty
+repositories (two libraries and three projects per language), then Gemini
+through agy (the test source) on public issues in TypeScript, JavaScript,
+Python and Go, with --setup and with agy alone side by side. Tiers nest: a
+tier's issues and questions are the first ones of every larger tier, so going
+up a tier only runs what is new.
 
   --tier   questions of each kind per repository, and issues per language
            (default 5). While optimizing: 5, 10, 20, 30; for a release: 50.
@@ -32,12 +33,13 @@ Agent sessions use your agy sign-in's Gemini quota.`;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const kindsOf: Record<string, string[]> = { find: ['A', 'B'], read: ['A'], grep: ['E'], refs: ['C'], calls: ['D'], impact: ['G'] };
-// Each language's repositories (eval/corpora.yaml) and benchmarks of issues.
+// Each language's repositories (eval/corpora.yaml): two well-known libraries, then three
+// projects (apps and servers people run); and its benchmarks of issues.
 const languages: Record<string, { corpora: string[]; issues: string[] }> = {
-  ts: { corpora: ['mini-ts', 'zustand', 'excalidraw', 'nest', 'jitsi-meet', 'parse-server'], issues: ['TypeScript', 'JavaScript'] },
-  py: { corpora: ['fastapi-template', 'dispatch', 'django'], issues: ['Python'] },
-  go: { corpora: ['chi', 'pocketbase', 'prometheus'], issues: ['Go'] },
-  dart: { corpora: ['provider', 'wonderous', 'flame'], issues: [] },
+  ts: { corpora: ['mini-ts', 'zustand', 'nest', 'excalidraw', 'jitsi-meet', 'parse-server'], issues: ['TypeScript', 'JavaScript'] },
+  py: { corpora: ['django', 'flask', 'fastapi-template', 'dispatch', 'netbox'], issues: ['Python'] },
+  go: { corpora: ['chi', 'gin', 'pocketbase', 'prometheus', 'fzf'], issues: ['Go'] },
+  dart: { corpora: ['provider', 'flame', 'wonderous', 'localsend', 'kazumi'], issues: [] },
 };
 const allBenchmarks = [
   ['polybench', 'TypeScript'],

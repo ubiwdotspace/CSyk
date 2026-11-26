@@ -16,6 +16,7 @@ import {
   DidChangeWatchedFilesNotification,
   DidCloseTextDocumentNotification,
   DidOpenTextDocumentNotification,
+  DiagnosticRefreshRequest,
   DocumentDiagnosticRequest,
   FileChangeType,
   DocumentSymbolRequest,
@@ -25,6 +26,8 @@ import {
   InitializeRequest,
   PublishDiagnosticsNotification,
   ReferencesRequest,
+  RegistrationRequest,
+  UnregistrationRequest,
   ResponseError,
   ShutdownRequest,
   StreamMessageReader,
@@ -74,8 +77,28 @@ type Status = {
   idle: boolean;
   alive: boolean;
   idleAt: number;
+  /**
+   * Pull diagnostics it registered after starting (pyright does), by id: the file extensions
+   * they are for, or none for every file.
+   */
+  pull: Map<string, string[] | undefined>;
   pushed: Map<string, { at: number; items: Diagnostic[] }>;
 };
+
+// The file extensions a registration's document selector names (`**/*.py`, language `python`),
+// or none when it names none it can be told by, which counts as every file.
+function selectorExtensions(options: unknown): string[] | undefined {
+  const selector = (options as { documentSelector?: { language?: string; pattern?: string }[] | null } | undefined)?.documentSelector;
+  if (!selector?.length) return undefined;
+  const byLanguage: Record<string, string[]> = { python: ['.py', '.pyi'], go: ['.go'], dart: ['.dart'], typescript: ['.ts', '.mts', '.cts'], typescriptreact: ['.tsx'], javascript: ['.js', '.mjs', '.cjs'], javascriptreact: ['.jsx'], vue: ['.vue'], svelte: ['.svelte'], astro: ['.astro'] };
+  const found: string[] = [];
+  for (const filter of selector) {
+    if (filter.language && byLanguage[filter.language]) found.push(...(byLanguage[filter.language] ?? []));
+    else if (filter.pattern) found.push(...[...filter.pattern.matchAll(/\*(\.\w+)/g)].map((m) => m[1] ?? ''));
+    else return undefined;
+  }
+  return found.length ? found : undefined;
+}
 
 /**
  * A language server over stdio, spoken to in repo-relative paths. Files are
@@ -141,7 +164,7 @@ export class LspClient {
       new StreamMessageWriter(child.stdin),
     );
     // Set up before the handshake, so no status is missed.
-    const status: Status = { idle: false, alive: true, idleAt: 0, pushed: new Map() };
+    const status: Status = { idle: false, alive: true, idleAt: 0, pushed: new Map(), pull: new Map() };
     // A server that exits, crashes or closes its pipes answers nothing more;
     // writing to it then must not throw where no one listens.
     const gone = () => {
@@ -161,6 +184,17 @@ export class LspClient {
       if (!params.uri.startsWith('file:')) return;
       status.pushed.set(repoRelative(root, fileURLToPath(params.uri)), { at: Date.now(), items: params.diagnostics });
     });
+    // Pull diagnostics a server offers once started: asked, they answer for the text as it is now,
+    // where a push comes only when something changed.
+    connection.onRequest(RegistrationRequest.type, (params) => {
+      for (const r of params.registrations) {
+        if (r.method === DocumentDiagnosticRequest.method) status.pull.set(r.id, selectorExtensions(r.registerOptions));
+      }
+    });
+    connection.onRequest(UnregistrationRequest.type, (params) => {
+      for (const r of params.unregisterations) status.pull.delete(r.id);
+    });
+    connection.onRequest(DiagnosticRefreshRequest.type, () => undefined);
     if (settings) connection.onRequest(ConfigurationRequest.type, (params) => params.items.map((item) => settings[item.section ?? ''] ?? null));
     connection.listen();
     const rootUri = pathToFileURL(root).href;
@@ -178,7 +212,7 @@ export class LspClient {
           implementation: { linkSupport: true },
           callHierarchy: {},
           publishDiagnostics: {},
-          diagnostic: {},
+          diagnostic: { dynamicRegistration: true },
         },
       },
     });
@@ -240,7 +274,7 @@ export class LspClient {
       items
         .filter((d) => (d.severity ?? 1) === 1)
         .map((d) => ({ file, line: d.range.start.line, code: d.code === undefined ? '' : String(d.code), message: (typeof d.message === 'string' ? d.message : d.message.value).split('\n')[0] ?? '' }));
-    if (this.capabilities.diagnosticProvider) {
+    if (this.capabilities.diagnosticProvider || [...this.status.pull.values()].some((for_) => !for_ || for_.includes(extname(file)))) {
       const cancel = new CancellationTokenSource();
       let timer: NodeJS.Timeout | undefined;
       const late = new Promise<'late'>((done) => {

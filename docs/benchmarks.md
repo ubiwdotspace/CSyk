@@ -4,14 +4,22 @@ Two kinds of measurement, both reproducible from this repository: single questio
 against each language's own compiler, and whole agent sessions on public benchmarks of real GitHub
 issues.
 
+> **Where testing stands.** Testing so far has focused on the main languages: TypeScript,
+> JavaScript, Python, Go and Dart. Each of them is tested on two well-known libraries and three
+> real projects (apps and servers people run), and the single questions below were measured again
+> on all twenty on 2026-11-25, after the fixes those projects showed were needed. Astro, Svelte,
+> Vue and MDX components are measured on six small projects only. The other numbers on this page
+> are older: each section says when it was measured, most in October and early November 2026 with
+> Claude Code, before version 0.4 and before the switch to Gemini, and they have not been measured
+> again since.
+
 ## Single questions
 
-Twelve public repositories, each pinned to one commit. The test questions are generated from each
-language's own compiler, which also gives the right answers. There are 30 questions of each kind
-per repository, fewer when a small repository has fewer. Measured on 2026-11-03 with version 0.1.0;
-three answers to uses were completed by reading the code (a default export imported under another
-name, a component rendered in seven files, a JavaScript function called from TypeScript), where
-CSyk listed real uses the key left out.
+Twenty public repositories, each pinned to one commit: for each language two well-known
+libraries, then three real projects. The test questions are generated from each language's own
+compiler, which also gives the right answers. There are 30 questions of each kind per repository
+(50 for part of a name, edit impact and some others on the larger ones), fewer when a small
+repository has fewer. Measured on 2026-11-25 with the code after version 0.4.0.
 
 The six kinds of question:
 
@@ -28,18 +36,53 @@ The six kinds of question:
 
 | Repository | Exact name | Part of a name | Uses: found / correct | Callers and calls: found / correct | Message | Edit impact: found / correct |
 |---|---|---|---|---|---|---|
-| zustand (TypeScript, small) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 100% / 90.5% |
-| excalidraw (TypeScript, medium) | 100% | 100% | 100% / 100% | 100% / 94.7% | 100% | 98.3% / 98.3% |
-| nest (TypeScript, large) | 100% | 100% | 100% / 100% | 96.7% / 87.3% | 100% | 99.8% / 98.8% |
-| provider (Dart, small) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 96.9% |
-| wonderous (Dart, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 98.2% |
-| flame (Dart, large) | 100% | 100% | 100% / 100% | 97.9% / 100% | 100% | 74.4% / 93.8% |
-| fastapi-template (Python, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 100% |
-| dispatch (Python, medium) | 100% | 100% | 100% / 100% | 100% / 95.2% | 100% | 99.8% / 95.1% |
-| django (Python, large) | 100% | 100% | 96.7% / 96.7% | 100% / 95.6% | 100% | 97.5% / 85.1% |
-| chi (Go, small) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 99.2% |
-| pocketbase (Go, medium) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99.2% / 99% |
-| prometheus (Go, large) | 100% | 100% | 96.7% / 96.7% | 100% / 98.6% | 100% | 96.8% / 98.2% |
+| zustand (TypeScript, library) | 100% | 100% | 100% / 100% | 100% / 96.3% | 100% | 100% / 90.5% |
+| nest (TypeScript, library) | 100% | 100% | 100% / 100% | 97.7% / 89.4% | 100% | 99.6% / 96.9% |
+| excalidraw (TypeScript, project) | 100% | 100% | 100% / 100% | 100% / 96.2% | 100% | 97.2% / 98.1% |
+| jitsi-meet (TypeScript, project) | 100% | 100% | 100% / 98% | 100% / 98.2% | 100% | 98% / 95.4% |
+| parse-server (JavaScript, project) | 100% | 100% | 100% / 100% | 100% / 96.6% | 100% | 95.6% / 96.4% |
+| django (Python, library) | 98% | 100% | 98% / 98% | 100% / 95.6% | 100% | 97.9% / 85.8% |
+| flask (Python, library) | 100% | 100% | 100% / 100% | 96.2% / 90.9% | 100% | 100% / 89.7% |
+| fastapi-template (Python, project) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 100% |
+| dispatch (Python, project) | 100% | 100% | 100% / 100% | 100% / 97.1% | 100% | 99.8% / 96.1% |
+| netbox (Python, project) | 100% | 100% | 96.1% / 96.7% | 96.7% / 95.8% | 100% | 100% / 81.1% |
+| chi (Go, library) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99.2% / 99.3% |
+| gin (Go, library) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 99.4% |
+| pocketbase (Go, project) | 100% | 100% | 100% / 100% | 98% / 98% | 100% | 96.7% / 99.4% |
+| prometheus (Go, project) | 100% | 100% | 97.1% / 98% | 100% / 98.8% | 100% | 95.8% / 93.4% |
+| fzf (Go, project) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 100% / 96.2% |
+| provider (Dart, library) | 100% | 100% | 100% / 100% | 100% / 97.7% | 100% | 74.4% / 96.9% |
+| flame (Dart, library) | 100% | 100% | 100% / 100% | 96.6% / 100% | 100% | 73.4% / 92.2% |
+| wonderous (Dart, project) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 99% / 98.3% |
+| localsend (Dart, project) | 100% | 100% | 100% / 100% | 95.6% / 96.7% | 100% | 93% / 89.6% |
+| kazumi (Dart, project) | 100% | 100% | 100% / 100% | 100% / 100% | 100% | 94.4% / 97.4% |
+
+What the projects changed, against version 0.4.0 on the same questions the same day:
+
+- **Edit impact listed errors the edit did not make.** A project checked out without its packages
+  installed (netbox without Django) has an unresolved import on almost every file, and those
+  errors were listed as new when comparing them with the ones before the edit ran out of time.
+  `impact` now leaves out imports of packages that are not the project's (unless the edit wrote
+  them), keeps only the errors on lines that name what changed in the files that use it, and asks
+  pyright for its diagnostics directly, as it offers once started, rather than waiting for what it
+  pushes. Edit impact, correct: netbox 46.8% → 81.1%, django 65.3% → 85.8%, fastapi-template
+  76.1% → 100%, dispatch 89.2% → 96.1%; the median answer on the Python repositories went from
+  15 to 17 s to 0.2 to 2.0 s.
+- **Part of a name** fell to 85.7–98% on most repositories once names and meaning were fused for
+  questions in words: a name holding every word of the question, in order, now comes first. 100%
+  on all twenty.
+- **Go files built only on another platform** (`terminal_windows.go` beside `terminal_unix.go`):
+  a call resolves to the one this machine builds, so an edit to the other found no callers. Edit
+  impact on fzf, found: 86.3% → 100%.
+- **Dart**: named constructors (`Config.fromJson`) and the methods of an enhanced enum were not
+  symbols, so an edit in one counted as an edit to the whole class; `a?.f()` was not read as a
+  call. Python: a class inside a class (Django's test case collections) was not a symbol.
+
+A share of what is scored as not correct is the answer key's: on the six new repositories,
+reading each miss showed that about 155 of netbox's and flask's places are real callers pyright
+does not follow (calls through `cls(...)`, decorators inside tests, callbacks such as
+`choices=get_data_backend_choices`), and fzf's extra places are callers in files built only on
+another platform.
 
 Callers and calls are scored against each compiler's call hierarchy, which counts less as a call
 than CSyk does. CSyk also counts a function passed as a callback (`hits.sort(pointDistanceSq)`),
@@ -492,7 +535,7 @@ Single questions:
 
 ```sh
 npm install
-npm run corpora                              # fetch the twelve pinned repositories into eval/corpora/
+npm run corpora                              # fetch the pinned repositories into eval/corpora/
 npm test                                     # unit tests
 npm run eval -- --adapter csyk --corpus excalidraw
 npm run eval -- --adapter b0                 # every question through text search and file reads

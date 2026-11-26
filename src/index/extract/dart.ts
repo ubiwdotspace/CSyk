@@ -6,6 +6,14 @@ import type { CodeSymbol } from '../symbols.ts';
 const widgetBase = /^(Stateless|Stateful|Consumer|ConsumerStateful|Hook|HookConsumer)Widget\b|^(Consumer)?State</;
 
 const signatureTypes = new Set(['function_signature', 'getter_signature', 'setter_signature']);
+// A named constructor (`A.named(…)`, `factory A.fromJson(…)`) is a member called by its second
+// name. The unnamed one shares its class's name and stays part of the class.
+const constructorTypes = new Set([
+  'constructor_signature',
+  'constant_constructor_signature',
+  'factory_constructor_signature',
+  'redirecting_factory_constructor_signature',
+]);
 
 /**
  * Dart declarations: classes (widgets labelled), mixins, extensions and
@@ -30,7 +38,13 @@ export function extractDart(root: Node, sink: SymbolSink): void {
       if (member.type !== 'method_signature' && member.type !== 'declaration') return;
       const signature = member.namedChildren.find((c) => c !== null && signatureTypes.has(c.type));
       const name = signature?.childForFieldName('name');
-      if (name) sink.add(name, 'method', withBody(member, members, at), exported(name.text), owner);
+      if (name) {
+        sink.add(name, 'method', withBody(member, members, at), exported(name.text), owner);
+        return;
+      }
+      const constructor = member.namedChildren.find((c) => c !== null && constructorTypes.has(c.type));
+      const named = constructor?.namedChildren.filter((c): c is Node => c?.type === 'identifier')[1];
+      if (named) sink.add(named, 'method', withBody(member, members, at), exported(named.text), owner);
     });
   };
 
@@ -61,6 +75,8 @@ export function extractDart(root: Node, sink: SymbolSink): void {
           const valueName = value?.type === 'enum_constant' ? value.childForFieldName('name') : null;
           if (value && valueName) sink.add(valueName, 'field', value, exported(name.text), owner);
         }
+        // An enhanced enum's methods, getters and named constructors follow its values.
+        declareMembers(node.childForFieldName('body'), owner);
         return;
       }
       case 'type_alias': {

@@ -249,8 +249,9 @@ export class LspService {
     // Every text mention is resolved, nearest first, so a search cut short by
     // its deadline has the likeliest answers. The server answers nothing in a
     // comment or string, so only files with answers are parsed afterwards.
-    // An unnamed default export (`default`) is written only under the names it is imported as.
-    const mentions = symbol.name === 'default' ? [] : await this.mentionsOf(symbol.name);
+    // An unnamed default export (`default`) is written only under the names it is imported as;
+    // a Python method called `default` is written by its name.
+    const mentions = symbol.name === 'default' && symbol.lang !== 'py' ? [] : await this.mentionsOf(symbol.name);
     const text = await readFile(join(this.root, symbol.file), 'utf8');
     const aliases = [...importAliases(symbol.name, mentions), ...(await defaultAliases(symbol, text, (name) => this.mentionsOf(name)))];
     const renamed = await Promise.all(

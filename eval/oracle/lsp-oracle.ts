@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { SymbolKind, type DocumentSymbol } from 'vscode-languageserver-protocol';
+import type { Tree } from 'web-tree-sitter';
 import { isCallAt, isCodeAt, isImportAt, isMemberAt, parseFile } from '../../src/index/parse.ts';
 import { LspClient, type Position, type Span } from '../../src/precision/lsp-client.ts';
 import { importAliases, resolvesTo, servers, type ServerSpec } from '../../src/precision/lsp-service.ts';
@@ -88,6 +89,10 @@ export class LspOracle {
   readonly files: readonly string[];
   private readonly lsp: LspClient;
   private readonly spec: ServerSpec;
+  // Parsed files, the most recently used last: the corpus does not change while cases are made,
+  // and a name mentioned in many large files (localsend's 60 translation files) would parse each
+  // of them again for every name.
+  private readonly trees = new Map<string, Tree | undefined>();
 
   private constructor(root: string, files: string[], lsp: LspClient, spec: ServerSpec) {
     this.root = root;
@@ -293,9 +298,8 @@ export class LspOracle {
     const callers = new Map<string, Span>();
     for (const ref of await this.references(name, declaration)) {
       const text = await this.text(ref.file);
-      const tree = await parseFile(ref.file, text);
+      const tree = await this.tree(ref.file);
       const called = tree ? isCallAt(tree, ref.line, ref.character) || (property && isMemberAt(tree, ref.line, ref.character)) : false;
-      tree?.delete();
       if (!called) continue;
       const home = await this.callerAt(ref.file, ref.line);
       const span = home
@@ -336,12 +340,27 @@ export class LspOracle {
 
   /** Whether the name at [at] in [file] is bound by an import. */
   async isImport(file: string, at: { line: number; character: number }): Promise<boolean> {
-    const tree = await parseFile(file, await this.text(file));
-    try {
-      return tree ? isImportAt(tree, at.line, at.character) : false;
-    } finally {
-      tree?.delete();
+    const tree = await this.tree(file);
+    return tree ? isImportAt(tree, at.line, at.character) : false;
+  }
+
+  private async tree(file: string): Promise<Tree | undefined> {
+    if (this.trees.has(file)) {
+      const tree = this.trees.get(file);
+      this.trees.delete(file);
+      this.trees.set(file, tree);
+      return tree;
     }
+    const tree = await parseFile(file, await this.text(file));
+    this.trees.set(file, tree);
+    if (this.trees.size > 256) {
+      const [oldest] = this.trees.keys();
+      if (oldest !== undefined) {
+        this.trees.get(oldest)?.delete();
+        this.trees.delete(oldest);
+      }
+    }
+    return tree;
   }
 
   /** Every symbol name in the outlines of [files]. */
@@ -356,6 +375,8 @@ export class LspOracle {
   }
 
   async stop(): Promise<void> {
+    for (const tree of this.trees.values()) tree?.delete();
+    this.trees.clear();
     await this.lsp.stop();
   }
 
@@ -377,13 +398,9 @@ export class LspOracle {
     const mentions = await this.mentions(name);
     const code: Position[] = [];
     for (const file of new Set(mentions.map((m) => m.file))) {
-      const tree = await parseFile(file, await this.text(file));
-      try {
-        for (const m of mentions) {
-          if (m.file === file && (!tree || isCodeAt(tree, m.line, m.character))) code.push(m);
-        }
-      } finally {
-        tree?.delete();
+      const tree = await this.tree(file);
+      for (const m of mentions) {
+        if (m.file === file && (!tree || isCodeAt(tree, m.line, m.character))) code.push(m);
       }
     }
     return code;

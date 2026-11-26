@@ -38,6 +38,11 @@ Windows.
 > reproducible from this repository. CSyk has not yet been used widely on private codebases. When
 > an answer is wrong or misses something, [open an issue](https://github.com/ubiwdotspace/CSyk/issues)
 > with what you asked, what came back and what was right: each one becomes a test.
+>
+> Testing so far has focused on the main languages (TypeScript, JavaScript, Python, Go, Dart).
+> Most numbers here are from earlier versions, measured with Claude Code, and have not been
+> measured again or tuned since; Astro, Svelte, Vue and MDX are the least tested.
+> [Where testing stands](docs/benchmarks.md#benchmarks).
 
 ---
 
@@ -181,8 +186,9 @@ does not do: rename, hover and diagnostics.
 
 ## Numbers
 
-The same questions on twelve public repositories (three per language, small to large), and Claude
-Code on the first ten issues of four public benchmarks of real GitHub issues:
+Earlier numbers, from early November 2026 and not measured again since: the same questions on
+twelve public repositories (three per language, small to large), and Claude Code on the first ten
+issues of four public benchmarks of real GitHub issues:
 
 | | Text search | **CSyk** | Serena | Graphify |
 |---|---|---|---|---|
